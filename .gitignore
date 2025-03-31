@@ -1,0 +1,14 @@
+.coverage
+coverage.xml
+.idea
+.DS_Store
+.venv
+*venv
+__pycache__
+*.egg-info*
+.python-version
+logs
+tmp/
+
+# Local testing resources
+*db.sqlite3
