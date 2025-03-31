@@ -14,17 +14,42 @@ import {
   Textarea,
   Header,
   Input,
+  Spinner
 } from "@cloudscape-design/components";
 
-const LogConverterPage = () => {
+import { Configuration, TransformerApi, TransformerHeuristicCreateRequest, TransformerHeuristicCreateResponse
+  } from '../generated-api-client';
+
+/*
+A simple web page that allows users to import log entries and generate transformers to map them to OCSF.  Each
+transformer is composed of: (1) a targeting heuristic, such as a regex, that identifies specific entries in the log
+stream, (2) a OCSR category to normalize entries to, and (3) transformation logic which maps entries of
+that type into an OCSF-compliant JSON blob.
+
+Current features:
+- The ability to import raw log entries and display them.
+- The ability to write and test regexes as a targeting heuristic.
+
+Planned features:
+- A button to receive a GenAI recommendation for a transformer.
+*/
+
+const OcsfPlaygroundPage = () => {
+  // Shared state objects
+  const [isRecommending, setIsRecommending] = useState(false);
+
   // States for log entries
   const [logs, setLogs] = useState<string[]>([]);
   const [selectedLogIds, setSelectedLogIds] = useState<string[]>([]);
   const [importDialogVisible, setImportDialogVisible] = useState(false);
   const [importText, setImportText] = useState("");
   
-  // New state for regex pattern
+  // State for regex pattern
   const [regexPattern, setRegexPattern] = useState("");
+  const [regexGuidance, setRegexGuidance] = useState("");
+  const [regexGuidanceTemp, setRegexGuidanceTemp] = useState("");
+  const [regexGuidanceModalVisible, setRegexGuidanceModalVisible] = useState(false);
+  const [regexRationale, setRegexRationale] = useState("");
   const [regexError, setRegexError] = useState<string | null>(null);
 
   // Style for log content with proper typing
@@ -39,6 +64,10 @@ const LogConverterPage = () => {
     display: 'block',
     border: '1px solid #dfe3e8'
   };
+
+  // API Configuration
+  const apiConfig = new Configuration({ basePath: "http://localhost:8000" });
+  const apiClient = new TransformerApi(apiConfig);
 
   // Function to handle row click for selection
   const handleRowClick = (item: { id: string; content: string }) => {
@@ -69,7 +98,7 @@ const LogConverterPage = () => {
     }
   };
 
-  // New function to test regex against log entries
+  // Function to test regex against log entries
   const testRegexPattern = () => {
     if (!regexPattern.trim()) {
       setRegexError("Please enter a regex pattern");
@@ -92,6 +121,44 @@ const LogConverterPage = () => {
     } catch (error) {
       // Handle invalid regex
       setRegexError(`Invalid regex: ${(error as Error).message}`);
+    }
+  };
+
+  // Handle Get Regex Recommendation Request
+  const handleGetRegexRecommendation = async () => {
+    // Make sure one, and only one, log entry is selected
+    if (selectedLogIds.length !== 1) {
+      alert("Please select exactly one log entry to get a regex recommendation.");
+      return;
+    }
+    const selectedLog = logs[parseInt(selectedLogIds[0])];
+
+    setIsRecommending(true); // Start visual spinner
+
+    try {
+      // Call the API to get regex recommendation
+      const payload: TransformerHeuristicCreateRequest = {
+        input_entry: selectedLog,
+        existing_heuristic: regexPattern,
+        user_guidance: regexGuidance
+      };
+      const response = await apiClient.transformerHeuristicCreateCreate(payload);
+
+      // Update state with response data
+      setRegexPattern(response.data.new_heuristic);
+      setRegexRationale(response.data.rationale);
+
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        const serverErrorMessage = error.response.data.error || "An unknown error occurred.";
+        console.error("Server error:", serverErrorMessage);
+        alert(`Failed to test transformation. Error:\n\n${serverErrorMessage}`);
+      } else {
+        console.error("Unexpected error:", error);
+        alert("An unexpected error occurred. Please try again later.");
+      }
+    } finally {
+      setIsRecommending(false); // Stop visual spinner
     }
   };
 
@@ -207,6 +274,8 @@ const LogConverterPage = () => {
             <Box>
               <Header variant="h3">Regex Pattern Testing</Header>
               <SpaceBetween size="m">
+
+                {/* Field to create and edit the regex */}
                 <FormField
                   label="Log Pattern Matcher"
                   description="Enter a regular expression to match log entries."
@@ -220,9 +289,56 @@ const LogConverterPage = () => {
                   />
                 </FormField>
                 
+                {/* Button to test the regex by highlighting the log entries it applies to */}
                 <Button onClick={testRegexPattern}>
                   Test Pattern
                 </Button>
+
+                {/* Button to get a GenAI recommendation for the Regex */}
+                <Button onClick={handleGetRegexRecommendation}>
+                  {isRecommending ? <Spinner/> : "Get GenAI Recommendation"}
+                </Button>
+
+                {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation for the Regex */}
+                <Button onClick={() => {
+                  setRegexGuidanceModalVisible(true);
+                  setRegexGuidanceTemp(regexGuidance);
+                }}>
+                  Set User Guidance
+                </Button>
+                <Modal
+                  onDismiss={() => setRegexGuidanceModalVisible(false)}
+                  visible={regexGuidanceModalVisible}
+                  footer={
+                    <Box float="right">
+                      <SpaceBetween direction="horizontal" size="xs">
+                        <Button variant="link" onClick={() => {
+                          setRegexGuidanceModalVisible(false);
+                        }}>
+                          Cancel
+                        </Button>
+                        <Button variant="primary" onClick={() => {
+                          setRegexGuidanceModalVisible(false);
+                          setRegexGuidance(regexGuidanceTemp);
+                        }}>
+                          Set
+                        </Button>
+                      </SpaceBetween>
+                    </Box>
+                  }
+                  header="GenAI User Guidance (Regex)"
+                >
+                  <FormField
+                    label="If you have guidance for the LLM when generating your regex, set it here:"
+                  >
+                    <Textarea
+                      value={regexGuidanceTemp}
+                      onChange={({ detail }) => setRegexGuidanceTemp(detail.value)}
+                      placeholder="Instead of the default behavior, I want you to do X instead..."
+                      rows={25}
+                    />
+                  </FormField>
+                </Modal>
                 
                 {selectedLogIds.length > 0 && (
                   <Box>
@@ -278,4 +394,4 @@ const LogConverterPage = () => {
   );
 };
 
-export default LogConverterPage;
+export default OcsfPlaygroundPage;

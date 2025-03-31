@@ -93,7 +93,7 @@ class TransformsIndexViewTestCase(TestCase):
             "validation_outcome": "PASSED"
         }
 
-    @patch("transform_api.views.TransformsIndexView._perform_transformation")
+    @patch("playground_api.views.TransformsIndexView._perform_transformation")
     def test_post_happy_path(self, mock_perform_transformation):
         # Mock the transformation result
         mock_transform_report = MagicMock()
@@ -122,7 +122,7 @@ class TransformsIndexViewTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("input_shape", response.json())
 
-    @patch("transform_api.views.TransformsIndexView._perform_transformation")
+    @patch("playground_api.views.TransformsIndexView._perform_transformation")
     def test_post_inaccessible_target_cluster(self, mock_perform_transformation):
         # Mock the `_perform_transformation` method to raise `TestTargetInnaccessibleError`
         mock_perform_transformation.side_effect = TestTargetInnaccessibleError("Cluster not accessible")
@@ -135,7 +135,7 @@ class TransformsIndexViewTestCase(TestCase):
         self.assertEqual(response.json(), {"error": "Cluster not accessible"})
         mock_perform_transformation.assert_called_once()
 
-    @patch("transform_api.views.TransformsIndexView._perform_transformation")
+    @patch("playground_api.views.TransformsIndexView._perform_transformation")
     def test_post_general_transformation_failure(self, mock_perform_transformation):
         # Mock the `_perform_transformation` method to raise a general exception
         mock_perform_transformation.side_effect = RuntimeError("General failure")
@@ -148,8 +148,8 @@ class TransformsIndexViewTestCase(TestCase):
         self.assertEqual(response.json(), {"error": "General failure"})
         mock_perform_transformation.assert_called_once()
 
-    @patch("transform_api.views.TransformsIndexCreateResponseSerializer")
-    @patch("transform_api.views.TransformsIndexView._perform_transformation")
+    @patch("playground_api.views.TransformsIndexCreateResponseSerializer")
+    @patch("playground_api.views.TransformsIndexView._perform_transformation")
     def test_post_invalid_response(self, mock_perform_transformation, mock_response_serializer):
         # Mock the transformation result
         mock_transform_report = MagicMock()
@@ -252,7 +252,7 @@ class TransformsIndexTestViewTestCase(TestCase):
             "validation_outcome": "PASSED"
         }
 
-    @patch("transform_api.views.TransformsIndexTestView._perform_test")
+    @patch("playground_api.views.TransformsIndexTestView._perform_test")
     def test_post_happy_path(self, mock_perform_test):
         # Mock the validation result
         mock_validation_report = MagicMock()
@@ -281,7 +281,7 @@ class TransformsIndexTestViewTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("input_shape", response.json())
 
-    @patch("transform_api.views.TransformsIndexTestView._perform_test")
+    @patch("playground_api.views.TransformsIndexTestView._perform_test")
     def test_post_inaccessible_target_cluster(self, mock_perform_test):
         # Mock the `_perform_test` method to raise `TestTargetInnaccessibleError`
         mock_perform_test.side_effect = TestTargetInnaccessibleError("Cluster not accessible")
@@ -294,7 +294,7 @@ class TransformsIndexTestViewTestCase(TestCase):
         self.assertEqual(response.json(), {"error": "Cluster not accessible"})
         mock_perform_test.assert_called_once()
 
-    @patch("transform_api.views.TransformsIndexTestView._perform_test")
+    @patch("playground_api.views.TransformsIndexTestView._perform_test")
     def test_post_general_testing_failure(self, mock_perform_test):
         # Mock the `_perform_test` method to raise a general exception
         mock_perform_test.side_effect = RuntimeError("General failure")
@@ -307,8 +307,8 @@ class TransformsIndexTestViewTestCase(TestCase):
         self.assertEqual(response.json(), {"error": "General failure"})
         mock_perform_test.assert_called_once()
 
-    @patch("transform_api.views.TransformsIndexTestResponseSerializer")
-    @patch("transform_api.views.TransformsIndexTestView._perform_test")
+    @patch("playground_api.views.TransformsIndexTestResponseSerializer")
+    @patch("playground_api.views.TransformsIndexTestView._perform_test")
     def test_post_invalid_response(self, mock_perform_test, mock_response_serializer):
         # Mock the validation result
         mock_validation_report = MagicMock()

@@ -24,221 +24,48 @@ import type { RequestArgs } from './base';
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
 /**
- * * `Elasticsearch 6.8` - ES_6_8 * `Elasticsearch 7.10` - ES_7_10
- * @export
- * @enum {string}
- */
-
-export const SourceVersionEnum = {
-    _68: 'Elasticsearch 6.8',
-    _710: 'Elasticsearch 7.10'
-} as const;
-
-export type SourceVersionEnum = typeof SourceVersionEnum[keyof typeof SourceVersionEnum];
-
-
-/**
- * * `OpenSearch 2.17` - OS_2_17
- * @export
- * @enum {string}
- */
-
-export const TargetVersionEnum = {
-    OpenSearch217: 'OpenSearch 2.17'
-} as const;
-
-export type TargetVersionEnum = typeof TargetVersionEnum[keyof typeof TargetVersionEnum];
-
-
-/**
- * * `Python` - PYTHON
- * @export
- * @enum {string}
- */
-
-export const TransformLanguageEnum = {
-    Python: 'Python'
-} as const;
-
-export type TransformLanguageEnum = typeof TransformLanguageEnum[keyof typeof TransformLanguageEnum];
-
-
-/**
  * 
  * @export
- * @interface TransformsIndexCreateRequest
+ * @interface TransformerHeuristicCreateRequest
  */
-export interface TransformsIndexCreateRequest {
-    /**
-     * 
-     * @type {SourceVersionEnum}
-     * @memberof TransformsIndexCreateRequest
-     */
-    'source_version': SourceVersionEnum;
-    /**
-     * 
-     * @type {TargetVersionEnum}
-     * @memberof TransformsIndexCreateRequest
-     */
-    'target_version': TargetVersionEnum;
-    /**
-     * 
-     * @type {TransformLanguageEnum}
-     * @memberof TransformsIndexCreateRequest
-     */
-    'transform_language': TransformLanguageEnum;
-    /**
-     * 
-     * @type {TransformsIndexCreateRequestInputShape}
-     * @memberof TransformsIndexCreateRequest
-     */
-    'input_shape': TransformsIndexCreateRequestInputShape;
+export interface TransformerHeuristicCreateRequest {
     /**
      * 
      * @type {string}
-     * @memberof TransformsIndexCreateRequest
+     * @memberof TransformerHeuristicCreateRequest
      */
-    'transform_logic'?: string;
+    'input_entry': string;
     /**
      * 
      * @type {string}
-     * @memberof TransformsIndexCreateRequest
+     * @memberof TransformerHeuristicCreateRequest
+     */
+    'existing_heuristic'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerHeuristicCreateRequest
      */
     'user_guidance'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof TransformsIndexCreateRequest
-     */
-    'test_target_url'?: string;
-}
-
-
-/**
- * 
- * @export
- * @interface TransformsIndexCreateRequestInputShape
- */
-export interface TransformsIndexCreateRequestInputShape {
-    /**
-     * 
-     * @type {string}
-     * @memberof TransformsIndexCreateRequestInputShape
-     */
-    'index_name': string;
-    /**
-     * 
-     * @type {object}
-     * @memberof TransformsIndexCreateRequestInputShape
-     */
-    'index_json': object;
 }
 /**
  * 
  * @export
- * @interface TransformsIndexCreateResponse
+ * @interface TransformerHeuristicCreateResponse
  */
-export interface TransformsIndexCreateResponse {
-    /**
-     * 
-     * @type {Array<TransformsIndexCreateRequestInputShape>}
-     * @memberof TransformsIndexCreateResponse
-     */
-    'output_shape': Array<TransformsIndexCreateRequestInputShape>;
+export interface TransformerHeuristicCreateResponse {
     /**
      * 
      * @type {string}
-     * @memberof TransformsIndexCreateResponse
+     * @memberof TransformerHeuristicCreateResponse
      */
-    'transform_logic': string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof TransformsIndexCreateResponse
-     */
-    'validation_report': Array<string>;
+    'new_heuristic': string;
     /**
      * 
      * @type {string}
-     * @memberof TransformsIndexCreateResponse
+     * @memberof TransformerHeuristicCreateResponse
      */
-    'validation_outcome': string;
-}
-/**
- * 
- * @export
- * @interface TransformsIndexTestRequest
- */
-export interface TransformsIndexTestRequest {
-    /**
-     * 
-     * @type {TransformLanguageEnum}
-     * @memberof TransformsIndexTestRequest
-     */
-    'transform_language': TransformLanguageEnum;
-    /**
-     * 
-     * @type {SourceVersionEnum}
-     * @memberof TransformsIndexTestRequest
-     */
-    'source_version': SourceVersionEnum;
-    /**
-     * 
-     * @type {TargetVersionEnum}
-     * @memberof TransformsIndexTestRequest
-     */
-    'target_version': TargetVersionEnum;
-    /**
-     * 
-     * @type {TransformsIndexCreateRequestInputShape}
-     * @memberof TransformsIndexTestRequest
-     */
-    'input_shape': TransformsIndexCreateRequestInputShape;
-    /**
-     * 
-     * @type {string}
-     * @memberof TransformsIndexTestRequest
-     */
-    'transform_logic': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof TransformsIndexTestRequest
-     */
-    'test_target_url'?: string;
-}
-
-
-/**
- * 
- * @export
- * @interface TransformsIndexTestResponse
- */
-export interface TransformsIndexTestResponse {
-    /**
-     * 
-     * @type {Array<TransformsIndexCreateRequestInputShape>}
-     * @memberof TransformsIndexTestResponse
-     */
-    'output_shape': Array<TransformsIndexCreateRequestInputShape>;
-    /**
-     * 
-     * @type {string}
-     * @memberof TransformsIndexTestResponse
-     */
-    'transform_logic': string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof TransformsIndexTestResponse
-     */
-    'validation_report': Array<string>;
-    /**
-     * 
-     * @type {string}
-     * @memberof TransformsIndexTestResponse
-     */
-    'validation_outcome': string;
+    'rationale': string;
 }
 
 /**
@@ -474,21 +301,21 @@ export type ApiSchemaRetrieveLangEnum = typeof ApiSchemaRetrieveLangEnum[keyof t
 
 
 /**
- * TransformsApi - axios parameter creator
+ * TransformerApi - axios parameter creator
  * @export
  */
-export const TransformsApiAxiosParamCreator = function (configuration?: Configuration) {
+export const TransformerApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
          * 
-         * @param {TransformsIndexCreateRequest} transformsIndexCreateRequest 
+         * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        transformsIndexCreateCreate: async (transformsIndexCreateRequest: TransformsIndexCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'transformsIndexCreateRequest' is not null or undefined
-            assertParamExists('transformsIndexCreateCreate', 'transformsIndexCreateRequest', transformsIndexCreateRequest)
-            const localVarPath = `/transforms/index/create/`;
+        transformerHeuristicCreateCreate: async (transformerHeuristicCreateRequest: TransformerHeuristicCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'transformerHeuristicCreateRequest' is not null or undefined
+            assertParamExists('transformerHeuristicCreateCreate', 'transformerHeuristicCreateRequest', transformerHeuristicCreateRequest)
+            const localVarPath = `/transformer/heuristic/create/`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -513,48 +340,7 @@ export const TransformsApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(transformsIndexCreateRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {TransformsIndexTestRequest} transformsIndexTestRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        transformsIndexTestCreate: async (transformsIndexTestRequest: TransformsIndexTestRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'transformsIndexTestRequest' is not null or undefined
-            assertParamExists('transformsIndexTestCreate', 'transformsIndexTestRequest', transformsIndexTestRequest)
-            const localVarPath = `/transforms/index/test/`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication basicAuth required
-            // http basic authentication required
-            setBasicAuthToObject(localVarRequestOptions, configuration)
-
-            // authentication cookieAuth required
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(transformsIndexTestRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(transformerHeuristicCreateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -565,94 +351,62 @@ export const TransformsApiAxiosParamCreator = function (configuration?: Configur
 };
 
 /**
- * TransformsApi - functional programming interface
+ * TransformerApi - functional programming interface
  * @export
  */
-export const TransformsApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = TransformsApiAxiosParamCreator(configuration)
+export const TransformerApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = TransformerApiAxiosParamCreator(configuration)
     return {
         /**
          * 
-         * @param {TransformsIndexCreateRequest} transformsIndexCreateRequest 
+         * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async transformsIndexCreateCreate(transformsIndexCreateRequest: TransformsIndexCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TransformsIndexCreateResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.transformsIndexCreateCreate(transformsIndexCreateRequest, options);
+        async transformerHeuristicCreateCreate(transformerHeuristicCreateRequest: TransformerHeuristicCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TransformerHeuristicCreateResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.transformerHeuristicCreateCreate(transformerHeuristicCreateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['TransformsApi.transformsIndexCreateCreate']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {TransformsIndexTestRequest} transformsIndexTestRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async transformsIndexTestCreate(transformsIndexTestRequest: TransformsIndexTestRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TransformsIndexTestResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.transformsIndexTestCreate(transformsIndexTestRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['TransformsApi.transformsIndexTestCreate']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['TransformerApi.transformerHeuristicCreateCreate']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
 
 /**
- * TransformsApi - factory interface
+ * TransformerApi - factory interface
  * @export
  */
-export const TransformsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = TransformsApiFp(configuration)
+export const TransformerApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = TransformerApiFp(configuration)
     return {
         /**
          * 
-         * @param {TransformsIndexCreateRequest} transformsIndexCreateRequest 
+         * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        transformsIndexCreateCreate(transformsIndexCreateRequest: TransformsIndexCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<TransformsIndexCreateResponse> {
-            return localVarFp.transformsIndexCreateCreate(transformsIndexCreateRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {TransformsIndexTestRequest} transformsIndexTestRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        transformsIndexTestCreate(transformsIndexTestRequest: TransformsIndexTestRequest, options?: RawAxiosRequestConfig): AxiosPromise<TransformsIndexTestResponse> {
-            return localVarFp.transformsIndexTestCreate(transformsIndexTestRequest, options).then((request) => request(axios, basePath));
+        transformerHeuristicCreateCreate(transformerHeuristicCreateRequest: TransformerHeuristicCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<TransformerHeuristicCreateResponse> {
+            return localVarFp.transformerHeuristicCreateCreate(transformerHeuristicCreateRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
 
 /**
- * TransformsApi - object-oriented interface
+ * TransformerApi - object-oriented interface
  * @export
- * @class TransformsApi
+ * @class TransformerApi
  * @extends {BaseAPI}
  */
-export class TransformsApi extends BaseAPI {
+export class TransformerApi extends BaseAPI {
     /**
      * 
-     * @param {TransformsIndexCreateRequest} transformsIndexCreateRequest 
+     * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
-     * @memberof TransformsApi
+     * @memberof TransformerApi
      */
-    public transformsIndexCreateCreate(transformsIndexCreateRequest: TransformsIndexCreateRequest, options?: RawAxiosRequestConfig) {
-        return TransformsApiFp(this.configuration).transformsIndexCreateCreate(transformsIndexCreateRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {TransformsIndexTestRequest} transformsIndexTestRequest 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof TransformsApi
-     */
-    public transformsIndexTestCreate(transformsIndexTestRequest: TransformsIndexTestRequest, options?: RawAxiosRequestConfig) {
-        return TransformsApiFp(this.configuration).transformsIndexTestCreate(transformsIndexTestRequest, options).then((request) => request(this.axios, this.basePath));
+    public transformerHeuristicCreateCreate(transformerHeuristicCreateRequest: TransformerHeuristicCreateRequest, options?: RawAxiosRequestConfig) {
+        return TransformerApiFp(this.configuration).transformerHeuristicCreateCreate(transformerHeuristicCreateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

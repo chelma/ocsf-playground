@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'drf_spectacular',
-    'transform_api'
+    'playground_api'
 ]
 
 MIDDLEWARE = [
@@ -83,8 +83,8 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Transformation API',
-    'DESCRIPTION': 'API for JSON transformation logic.',
+    'TITLE': 'Playground API',
+    'DESCRIPTION': 'API for the Playground.',
     'VERSION': '0.1.0',
 }
 
@@ -160,16 +160,16 @@ LOGGING = {
         },
     },
     'handlers': {
-        'transform_api_debug_file': {
+        'playground_api_debug_file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': 'logs/transform_api.debug.log',
+            'filename': 'logs/playground_api.debug.log',
             'formatter': 'verbose',
         },
-        'transform_api_info_file': {
+        'playground_api_info_file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': 'logs/transform_api.info.log',
+            'filename': 'logs/playground_api.info.log',
             'formatter': 'verbose',
         },
         'transform_expert_debug_file': {
@@ -192,8 +192,8 @@ LOGGING = {
         },
     },
     'loggers': {
-        'transform_api': {
-            'handlers': ['transform_api_debug_file', 'transform_api_info_file'],
+        'playground_api': {
+            'handlers': ['playground_api_debug_file', 'playground_api_info_file'],
             'level': 'DEBUG',  # Logs DEBUG and higher for your app
             'propagate': False,  # Prevent log messages from propagating to other loggers
         },
