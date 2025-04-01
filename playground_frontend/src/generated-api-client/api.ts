@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Transformation API
- * API for JSON transformation logic.
+ * Playground API
+ * API for the Playground.
  *
  * The version of the OpenAPI document: 0.1.0
  * 

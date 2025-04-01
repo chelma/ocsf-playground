@@ -2,7 +2,7 @@ from django.test import TestCase
 from rest_framework.serializers import ValidationError
 
 from playground_api.serializers import EnumChoiceField, IndexShapeField, TransformsIndexCreateRequestSerializer, TransformsIndexCreateResponseSerializer
-from transform_expert.parameters import TransformLanguage
+from regex_expert.parameters import TransformLanguage
 
 
 class EnumChoiceFieldTestCase(TestCase):

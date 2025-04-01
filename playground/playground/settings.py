@@ -172,16 +172,16 @@ LOGGING = {
             'filename': 'logs/playground_api.info.log',
             'formatter': 'verbose',
         },
-        'transform_expert_debug_file': {
+        'regex_expert_debug_file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': 'logs/transform_expert.debug.log',
+            'filename': 'logs/regex_expert.debug.log',
             'formatter': 'verbose',
         },
-        'transform_expert_info_file': {
+        'regex_expert_info_file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': 'logs/transform_expert.info.log',
+            'filename': 'logs/regex_expert.info.log',
             'formatter': 'verbose',
         },
         'django_debug_file': {
@@ -197,8 +197,8 @@ LOGGING = {
             'level': 'DEBUG',  # Logs DEBUG and higher for your app
             'propagate': False,  # Prevent log messages from propagating to other loggers
         },
-        'transform_expert': {
-            'handlers': ['transform_expert_debug_file', 'transform_expert_info_file'],
+        'regex_expert': {
+            'handlers': ['regex_expert_debug_file', 'regex_expert_info_file'],
             'level': 'DEBUG',  # Logs DEBUG and higher for your app
             'propagate': False,  # Prevent log messages from propagating to other loggers
         },

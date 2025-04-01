@@ -2,9 +2,9 @@ import logging
 from requests import HTTPError, ConnectionError
 from typing import Optional, Dict, Any
 
-from transform_expert.utils.rest_client import RESTClient
+from regex_expert.utils.rest_client import RESTClient
 
-logger = logging.getLogger("transform_expert")
+logger = logging.getLogger("regex_expert")
 
 class OpenSearchClient():
     rest_client: RESTClient

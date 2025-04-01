@@ -1,8 +1,8 @@
 from django.test import TestCase
 from unittest.mock import patch
 from requests import HTTPError, ConnectionError
-from transform_expert.utils.opensearch_client import OpenSearchClient
-from transform_expert.utils.rest_client import RESTClient, ConnectionDetails
+from regex_expert.utils.opensearch_client import OpenSearchClient
+from regex_expert.utils.rest_client import RESTClient, ConnectionDetails
 
 
 class OpenSearchClientTestCase(TestCase):
@@ -12,7 +12,7 @@ class OpenSearchClientTestCase(TestCase):
         self.rest_client = RESTClient(connection_details=self.connection_details)
         self.os_client = OpenSearchClient(rest_client=self.rest_client)
 
-    @patch("transform_expert.utils.rest_client.RESTClient.get")
+    @patch("regex_expert.utils.rest_client.RESTClient.get")
     def test_is_accessible_happy_path(self, mock_get):
         # Mock a successful GET request
         mock_get.return_value = {}
@@ -23,7 +23,7 @@ class OpenSearchClientTestCase(TestCase):
         mock_get.assert_called_once_with("")
         self.assertTrue(result)
 
-    @patch("transform_expert.utils.rest_client.RESTClient.get")
+    @patch("regex_expert.utils.rest_client.RESTClient.get")
     def test_is_accessible_error_path(self, mock_get):
         # Mock HTTPError
         mock_get.side_effect = HTTPError("Not Found")
@@ -44,7 +44,7 @@ class OpenSearchClientTestCase(TestCase):
         mock_get.assert_called_once_with("")
         self.assertFalse(result)
 
-    @patch("transform_expert.utils.rest_client.RESTClient.put")
+    @patch("regex_expert.utils.rest_client.RESTClient.put")
     def test_create_index_happy_path(self, mock_put):
         # Mock a successful PUT request
         mock_response = {"acknowledged": True}
@@ -58,7 +58,7 @@ class OpenSearchClientTestCase(TestCase):
         mock_put.assert_called_once_with("test-index", data=settings)
         self.assertEqual(result, mock_response)
 
-    @patch("transform_expert.utils.rest_client.RESTClient.get")
+    @patch("regex_expert.utils.rest_client.RESTClient.get")
     def test_describe_index_happy_path(self, mock_get):
         # Mock a successful GET request
         mock_response = {"index": "test-index", "settings": {}}
@@ -71,7 +71,7 @@ class OpenSearchClientTestCase(TestCase):
         mock_get.assert_called_once_with("test-index")
         self.assertEqual(result, mock_response)
 
-    @patch("transform_expert.utils.rest_client.RESTClient.put")
+    @patch("regex_expert.utils.rest_client.RESTClient.put")
     def test_update_index_happy_path(self, mock_put):
         # Mock a successful PUT request
         mock_response = {"acknowledged": True}
@@ -85,7 +85,7 @@ class OpenSearchClientTestCase(TestCase):
         mock_put.assert_called_once_with("test-index/_settings", data=settings)
         self.assertEqual(result, mock_response)
 
-    @patch("transform_expert.utils.rest_client.RESTClient.delete")
+    @patch("regex_expert.utils.rest_client.RESTClient.delete")
     def test_delete_index_happy_path(self, mock_delete):
         # Mock a successful DELETE request
         mock_response = {"acknowledged": True}

@@ -3,7 +3,7 @@ import requests
 from django.test import TestCase
 from unittest.mock import patch, MagicMock
 
-from transform_expert.utils.rest_client import RESTClient, ConnectionDetails
+from regex_expert.utils.rest_client import RESTClient, ConnectionDetails
 
 
 class RESTClientTestCase(TestCase):

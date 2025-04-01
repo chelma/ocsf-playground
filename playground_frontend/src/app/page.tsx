@@ -152,7 +152,7 @@ const OcsfPlaygroundPage = () => {
       if (error.response && error.response.data) {
         const serverErrorMessage = error.response.data.error || "An unknown error occurred.";
         console.error("Server error:", serverErrorMessage);
-        alert(`Failed to test transformation. Error:\n\n${serverErrorMessage}`);
+        alert(`Failed to get regex recommendation. Error:\n\n${serverErrorMessage}`);
       } else {
         console.error("Unexpected error:", error);
         alert("An unexpected error occurred. Please try again later.");
@@ -289,23 +289,27 @@ const OcsfPlaygroundPage = () => {
                   />
                 </FormField>
                 
-                {/* Button to test the regex by highlighting the log entries it applies to */}
-                <Button onClick={testRegexPattern}>
-                  Test Pattern
-                </Button>
+                {/* Buttons in a horizontal row */}
+                <SpaceBetween direction="horizontal" size="xs">
+                  {/* Button to test the regex by highlighting the log entries it applies to */}
+                  <Button onClick={testRegexPattern}>
+                    Test Pattern
+                  </Button>
 
-                {/* Button to get a GenAI recommendation for the Regex */}
-                <Button onClick={handleGetRegexRecommendation}>
-                  {isRecommending ? <Spinner/> : "Get GenAI Recommendation"}
-                </Button>
+                  {/* Button to get a GenAI recommendation for the Regex */}
+                  <Button onClick={handleGetRegexRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
+                    {isRecommending ? <Spinner/> : "Get GenAI Recommendation"}
+                  </Button>
 
-                {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation for the Regex */}
-                <Button onClick={() => {
-                  setRegexGuidanceModalVisible(true);
-                  setRegexGuidanceTemp(regexGuidance);
-                }}>
-                  Set User Guidance
-                </Button>
+                  {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation for the Regex */}
+                  <Button iconAlign="left" iconName="gen-ai" onClick={() => {
+                    setRegexGuidanceModalVisible(true);
+                    setRegexGuidanceTemp(regexGuidance);
+                  }}>
+                    Set User Guidance
+                  </Button>
+                </SpaceBetween>
+                
                 <Modal
                   onDismiss={() => setRegexGuidanceModalVisible(false)}
                   visible={regexGuidanceModalVisible}

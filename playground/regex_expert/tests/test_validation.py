@@ -2,9 +2,9 @@ from unittest.mock import MagicMock
 
 from django.test import TestCase
 
-from transform_expert.utils.transforms import TransformPython, TransformTask
-from transform_expert.validation import test_target_connection, TestTargetInnaccessibleError, ValidationReport, IndexTransformValidator
-from transform_expert.utils.opensearch_client import OpenSearchClient
+from regex_expert.utils.regexes import RegexJavascript, RegexTask
+from regex_expert.validation import test_target_connection, TestTargetInnaccessibleError, ValidationReport, IndexTransformValidator
+from regex_expert.utils.opensearch_client import OpenSearchClient
 
 
 class TestTargetConnectionCase(TestCase):
@@ -88,7 +88,7 @@ class TestIndexTransformValidatorCase(TestCase):
             }
         ]
 
-        self.test_transform = TransformPython(
+        self.test_transform = RegexJavascript(
             imports = "from typing import Dict, Any, List\nimport copy",
             description = "This transformation function converts Elasticsearch 6.8 index settings to OpenSearch 2.17 compatible format.\nIt handles the removal of mapping types and creates separate indexes for each type in multi-type mappings.",
             code =  "def transform(source_json: Dict[str, Any]) -> List[Dict[str, Any]]:\n    result = []\n    index_name = source_json['index_name']\n    index_json = source_json['index_json']\n    \n    # Extract settings\n    settings = index_json.get('settings', {})\n    \n    # Extract mappings\n    mappings = index_json.get('mappings', {})\n    \n    # If there are multiple types, create separate indexes for each type\n    if len(mappings) > 1:\n        for type_name, type_mapping in mappings.items():\n            new_index_name = f\"{index_name}-{type_name}\"\n            new_index_json = {\n                'settings': copy.deepcopy(settings),\n                'mappings': type_mapping\n            }\n            result.append({\n                'index_name': new_index_name,\n                'index_json': new_index_json\n            })\n    else:\n        # If there's only one type or no types, just remove the type layer\n        new_mappings = next(iter(mappings.values())) if mappings else {}\n        new_index_json = {\n            'settings': settings,\n            'mappings': new_mappings\n        }\n        result.append({\n            'index_name': index_name,\n            'index_json': new_index_json\n        })\n    \n    return result"
@@ -106,7 +106,7 @@ class TestIndexTransformValidatorCase(TestCase):
             {"acknowledged": True}
         ]
 
-        test_task = TransformTask(
+        test_task = RegexTask(
             transform_id="test-transform",
             input=self.test_input,
             context=[],
@@ -129,7 +129,7 @@ class TestIndexTransformValidatorCase(TestCase):
         # Set up our test inputs
         mock_connection = None
 
-        test_task = TransformTask(
+        test_task = RegexTask(
             transform_id="test-transform",
             input=self.test_input,
             context=[],

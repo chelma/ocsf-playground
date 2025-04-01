@@ -4,11 +4,11 @@ import json
 import logging
 from typing import Any, Callable, Dict, List
 
-from transform_expert.utils.opensearch_client import OpenSearchClient
-from transform_expert.utils.transforms import TransformTask, load_transform
+from regex_expert.utils.opensearch_client import OpenSearchClient
+from regex_expert.utils.regexes import RegexTask, load_transform
 
 
-logger = logging.getLogger("transform_expert")
+logger = logging.getLogger("regex_expert")
 
 
 class TestTargetInnaccessibleError(Exception):
@@ -25,7 +25,7 @@ def test_target_connection(test_client: OpenSearchClient):
 
 @dataclass
 class ValidationReport:
-    task: TransformTask
+    task: RegexTask
     report_entries: List[str]
     passed: bool
 
@@ -41,7 +41,7 @@ class ValidationReport:
         self.report_entries.append(entry)
 
 class TransformValidatorBase(ABC):
-    def __init__(self, transform_task: TransformTask, test_client: OpenSearchClient):
+    def __init__(self, transform_task: RegexTask, test_client: OpenSearchClient):
         self.transform_task = transform_task
         self.test_client = test_client
 

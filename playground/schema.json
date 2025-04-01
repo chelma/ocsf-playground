@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Transformation API
+  title: Playground API
   version: 0.1.0
-  description: API for JSON transformation logic.
+  description: API for the Playground.
 paths:
   /api/schema/:
     get:
