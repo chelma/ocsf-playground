@@ -50,6 +50,7 @@ const OcsfPlaygroundPage = () => {
   const [regexGuidanceTemp, setRegexGuidanceTemp] = useState("");
   const [regexGuidanceModalVisible, setRegexGuidanceModalVisible] = useState(false);
   const [regexRationale, setRegexRationale] = useState("");
+  const [regexRationaleModalVisible, setRegexRationaleModalVisible] = useState(false);
   const [regexError, setRegexError] = useState<string | null>(null);
 
   // Style for log content with proper typing
@@ -122,6 +123,14 @@ const OcsfPlaygroundPage = () => {
       // Handle invalid regex
       setRegexError(`Invalid regex: ${(error as Error).message}`);
     }
+  };
+
+  // Function to clear selected logs, regex pattern and rationale
+  const handleClear = () => {
+    setRegexPattern("");
+    setSelectedLogIds([]);
+    setRegexRationale("");
+    setRegexError(null);
   };
 
   // Handle Get Regex Recommendation Request
@@ -289,13 +298,21 @@ const OcsfPlaygroundPage = () => {
                   />
                 </FormField>
                 
-                {/* Buttons in a horizontal row */}
+                {/* Buttons in a horizontal row for pattern testing */}
                 <SpaceBetween direction="horizontal" size="xs">
                   {/* Button to test the regex by highlighting the log entries it applies to */}
                   <Button onClick={testRegexPattern}>
                     Test Pattern
                   </Button>
 
+                  {/* Button to clear selections and input */}
+                  <Button onClick={handleClear}>
+                    Clear
+                  </Button>
+                </SpaceBetween>
+                
+                {/* GenAI buttons in a separate row */}
+                <SpaceBetween direction="horizontal" size="xs">
                   {/* Button to get a GenAI recommendation for the Regex */}
                   <Button onClick={handleGetRegexRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
                     {isRecommending ? <Spinner/> : "Get GenAI Recommendation"}
@@ -307,6 +324,16 @@ const OcsfPlaygroundPage = () => {
                     setRegexGuidanceTemp(regexGuidance);
                   }}>
                     Set User Guidance
+                  </Button>
+                  
+                  {/* Button to view the rationale for the generated regex */}
+                  <Button 
+                    iconAlign="left" 
+                    iconName="status-info" 
+                    onClick={() => setRegexRationaleModalVisible(true)}
+                    disabled={!regexRationale}
+                  >
+                    View Rationale
                   </Button>
                 </SpaceBetween>
                 
@@ -342,6 +369,24 @@ const OcsfPlaygroundPage = () => {
                       rows={25}
                     />
                   </FormField>
+                </Modal>
+                
+                {/* Modal for displaying regex rationale */}
+                <Modal
+                  onDismiss={() => setRegexRationaleModalVisible(false)}
+                  visible={regexRationaleModalVisible}
+                  footer={
+                    <Box float="right">
+                      <Button variant="primary" onClick={() => setRegexRationaleModalVisible(false)}>
+                        Close
+                      </Button>
+                    </Box>
+                  }
+                  header="Regex Generation Rationale"
+                >
+                  <Box>
+                    <p style={{ whiteSpace: 'pre-wrap' }}>{regexRationale}</p>
+                  </Box>
                 </Modal>
                 
                 {selectedLogIds.length > 0 && (
