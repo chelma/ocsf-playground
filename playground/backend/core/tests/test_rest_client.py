@@ -3,7 +3,7 @@ import requests
 from django.test import TestCase
 from unittest.mock import patch, MagicMock
 
-from backend.core.utils.rest_client import RESTClient, ConnectionDetails
+from backend.core.rest_client import RESTClient, ConnectionDetails
 
 
 class RESTClientTestCase(TestCase):

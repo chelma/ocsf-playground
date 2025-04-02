@@ -7,8 +7,8 @@ from langchain_core.messages import HumanMessage
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from backend.regex_expert.expert import get_expert, invoke_expert
-from backend.regex_expert.utils.regexes import RegexTask
+from backend.regex_expert.expert_def import get_regex_expert, invoke_regex_expert
+from backend.regex_expert.task_def import RegexTask
 from backend.regex_expert.parameters import RegexFlavor
 
 from .serializers import (TransformerHeuristicCreateRequestSerializer, TransformerHeuristicCreateResponseSerializer)
@@ -56,7 +56,7 @@ class TransformerHeuristicCreateView(APIView):
         return Response(response_serializer.data, status=status.HTTP_200_OK)
 
     def _create_regex(self, regex_id: str, request: TransformerHeuristicCreateRequestSerializer) -> RegexTask:
-            expert = get_expert(
+            expert = get_regex_expert(
                 regex_flavor=RegexFlavor.JAVASCRIPT # Hardcoded for now
             )
 
@@ -70,12 +70,12 @@ class TransformerHeuristicCreateView(APIView):
             ]
 
             regex_task = RegexTask(
-                regex_id=regex_id,
+                task_id=regex_id,
                 input=request.validated_data["input_entry"],
                 context=turns,
                 regex=None
             )
 
-            result = invoke_expert(expert, regex_task)
+            result = invoke_regex_expert(expert, regex_task)
 
             return result

@@ -1,15 +1,14 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 
-from langchain_core.messages import BaseMessage
+from backend.core.tasks import PlaygroundTask
 
 
 logger = logging.getLogger("regex_expert")
 
 @dataclass
-class RegexBase(ABC):
+class Regex:
     value: str
     rationale: str
 
@@ -18,26 +17,26 @@ class RegexBase(ABC):
             "value": self.value,
             "rationale": self.rationale
         }
-
-    @abstractmethod
-    def get_tool_name(self) -> str:
-        pass
-
-@dataclass
-class RegexJavascript(RegexBase):
-    def get_tool_name(self) -> str:
-        return "MakeJavascriptRegex"
     
 @dataclass
-class RegexTask:
-    regex_id: str
+class RegexTask(PlaygroundTask):
     input: str
-    context: List[BaseMessage]
-    regex: RegexBase = None
+    regex: Regex = None
+
+    def get_work_item(self) -> Any:
+        return self.regex
+    
+    def set_work_item(self, new_work_item: Any):
+        if not isinstance(new_work_item, Regex):
+            raise TypeError("new_work_item must be of type Regex")
+        self.regex = new_work_item
+
+    def get_tool_name(self) -> str:
+        return "MakeJavascriptRegex"
 
     def to_json(self) -> Dict[str, Any]:
         return {
-            "regex_id": self.regex_id,
+            "regex_id": self.task_id,
             "input": self.input,
             "context": [turn.to_json() for turn in self.context],
             "regex": self.regex.to_json() if self.regex else None
