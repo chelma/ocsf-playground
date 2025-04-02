@@ -30,9 +30,6 @@ Additionally, you must ALWAYS follow these output_guidelines for the regex you p
 - You MUST NOT use the following regex features: lookaheads, lookbehinds, backreferences, or recursion.
 - If the user provided any user_guidance, ensure that the regex adheres to it and that your rationale of the regex
     explains how the guidance was followed.  Specifically call out what the user's guidance was.
-- While you may generate multiple functions to assist in the transformation and make the code more readable,
-    the final transformation should be a single function.  It MUST have the following signature:
-        `def transform(source_json: Dict[str, Any]) -> List[Dict[str, Any]]:`
 </output_guidelines>
 
 The specific flavor of regex you are creating is:
@@ -44,7 +41,7 @@ If there is any grounded knowledge on this regex_flavor, it will be provided her
 If there is any special guidance for this regex_flavor, it will be provided here:
 <regex_guidance>{regex_guidance}</regex_guidance>
 
-The user has provided the following guidance for this transformation:
+The user has provided the following guidance for this task:
 <user_guidance>{user_guidance}</user_guidance>
 
 The input entry is:

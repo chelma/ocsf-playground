@@ -21,7 +21,7 @@ def get_tool_bundle(regex_flavor: RegexFlavor) -> ToolBundle:
         return ToolBundle(
             task_tool=make_javascript_regex_tool,
         )
-    raise NotImplementedError(f"No tool bundle found for transform language: {regex_flavor}")
+    raise NotImplementedError(f"No tool bundle found for regex flavor: {regex_flavor}")
 
 class MakeJavascriptRegex(BaseModel):
     """Makes a standard ECMAScript regex (per Javascript's RegExp)."""
