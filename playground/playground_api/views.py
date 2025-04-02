@@ -7,9 +7,9 @@ from langchain_core.messages import HumanMessage
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from regex_expert.expert import get_expert, invoke_expert
-from regex_expert.utils.regexes import RegexTask
-from regex_expert.parameters import RegexFlavor
+from backend.regex_expert.expert import get_expert, invoke_expert
+from backend.regex_expert.utils.regexes import RegexTask
+from backend.regex_expert.parameters import RegexFlavor
 
 from .serializers import (TransformerHeuristicCreateRequestSerializer, TransformerHeuristicCreateResponseSerializer)
 

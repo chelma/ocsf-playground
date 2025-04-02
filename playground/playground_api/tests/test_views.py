@@ -3,7 +3,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from regex_expert.validation import TestTargetInnaccessibleError
+from backend_core.regex_expert.validation import TestTargetInnaccessibleError
 
 
 class TransformsIndexViewTestCase(TestCase):

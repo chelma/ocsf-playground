@@ -3,7 +3,7 @@ import requests
 import logging
 from typing import Optional, Dict, Any
 
-logger = logging.getLogger("regex_expert")
+logger = logging.getLogger("core")
 
 @dataclass
 class ConnectionDetails:

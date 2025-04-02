@@ -9,10 +9,10 @@ from langchain_core.language_models import LanguageModelInput
 from langchain_core.messages import BaseMessage, SystemMessage, ToolMessage
 from langchain_core.runnables import Runnable
 
-from regex_expert.parameters import RegexFlavor
-from regex_expert.prompting import get_system_prompt_factory
-from regex_expert.tools import ToolBundle, get_tool_bundle
-from regex_expert.utils.regexes import RegexTask
+from backend.regex_expert.parameters import RegexFlavor
+from backend.regex_expert.prompting import get_system_prompt_factory
+from backend.regex_expert.tools import ToolBundle, get_tool_bundle
+from backend.regex_expert.utils.regexes import RegexTask
 
 
 logger = logging.getLogger("regex_expert")

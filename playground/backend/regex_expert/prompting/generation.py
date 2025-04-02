@@ -2,9 +2,9 @@ from typing import Any, Callable, Dict
 
 from langchain_core.messages import SystemMessage
 
-from regex_expert.parameters import RegexFlavor
-from regex_expert.prompting.knowledge import get_regex_guidance, get_regex_knowledge
-from regex_expert.prompting.templates import javascript_regex_prompt_template
+from backend.regex_expert.parameters import RegexFlavor
+from backend.regex_expert.prompting.knowledge import get_regex_guidance, get_regex_knowledge
+from backend.regex_expert.prompting.templates import javascript_regex_prompt_template
 
 
 def _get_base_template(regex_flavor: RegexFlavor) -> str:

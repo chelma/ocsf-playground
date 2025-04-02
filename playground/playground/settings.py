@@ -175,13 +175,13 @@ LOGGING = {
         'regex_expert_debug_file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': 'logs/regex_expert.debug.log',
+            'filename': 'logs/backend_core.regex_expert.debug.log',
             'formatter': 'verbose',
         },
         'regex_expert_info_file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': 'logs/regex_expert.info.log',
+            'filename': 'logs/backend_core.regex_expert.info.log',
             'formatter': 'verbose',
         },
         'django_debug_file': {

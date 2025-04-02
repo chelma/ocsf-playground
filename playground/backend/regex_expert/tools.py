@@ -5,8 +5,8 @@ from typing import List
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
-from regex_expert.utils.regexes import RegexJavascript
-from regex_expert.parameters import RegexFlavor
+from backend.regex_expert.utils.regexes import RegexJavascript
+from backend.regex_expert.parameters import RegexFlavor
 
 
 logger = logging.getLogger("regex_expert")
