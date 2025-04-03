@@ -19,11 +19,14 @@ def get_tool_bundle(ocsf_version: OcsfVersion) -> ToolBundle:
 
 class SelectOcsfCategory(BaseModel):
     """Select an OCSF category for specific data entry."""
-    value: str = Field(description="A string value containing the full OCSF Category name and NOTHING ELSE.")
+    name: str = Field(description="A string value containing the full OCSF Category name and NOTHING ELSE.")
+    id: str = Field(description="A string value containing the OCSF Category id and NOTHING ELSE.")
     rationale: str = Field(description="A thorough explanation of why this particular OCSF category is the best pick available for the data entry.")
 
-def select_ocsf_category(value: str, rationale: str) -> OcsfCategory:
-    return OcsfCategory(value=value, rationale=rationale)
+def select_ocsf_category(name: str, id: str, rationale: str) -> OcsfCategory:
+    category = f"{name} ({id})"
+
+    return OcsfCategory(value=category, rationale=rationale)
 
 select_ocsf_category_tool = StructuredTool.from_function(
     func=select_ocsf_category,

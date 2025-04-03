@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, CSSProperties } from "react";
+import React, { useState, CSSProperties, useEffect } from "react";
 import "@cloudscape-design/global-styles/index.css";
 import {
   Box,
@@ -14,11 +14,13 @@ import {
   Textarea,
   Header,
   Input,
-  Spinner
+  Spinner,
+  Select,
+  SelectProps
 } from "@cloudscape-design/components";
 
-import { Configuration, TransformerApi, TransformerHeuristicCreateRequest, TransformerHeuristicCreateResponse
-  } from '../generated-api-client';
+import { Configuration, TransformerApi, TransformerHeuristicCreateRequest, OcsfCategoryEnum, OcsfVersionEnum,
+  TransformerCategorizeV110Request } from '../generated-api-client';
 
 /*
 A simple web page that allows users to import log entries and generate transformers to map them to OCSF.  Each
@@ -35,6 +37,16 @@ Planned features:
 */
 
 const OcsfPlaygroundPage = () => {
+  // Select options for dropdowns using enumerated types
+  const ocsfCategoryOptions: SelectProps.Options = Object.values(OcsfCategoryEnum).map((value) => ({
+    label: value,
+    value,
+  }));
+  const ocsfVersionOptions: SelectProps.Options = Object.values(OcsfVersionEnum).map((value) => ({
+    label: value,
+    value,
+  }));
+
   // Shared state objects
   const [isRecommending, setIsRecommending] = useState(false);
 
@@ -52,6 +64,16 @@ const OcsfPlaygroundPage = () => {
   const [regexRationale, setRegexRationale] = useState("");
   const [regexRationaleModalVisible, setRegexRationaleModalVisible] = useState(false);
   const [regexError, setRegexError] = useState<string | null>(null);
+
+  // State for OCSF categorization
+  const [ocsfVersion, setOcsfVersion] = useState<SelectProps.Option>(ocsfVersionOptions[0]);
+  const [ocsfCategory, setOcsfCategory] = useState<SelectProps.Option>(ocsfCategoryOptions[0]);
+  const [isRecommendingCategory, setIsRecommendingCategory] = useState(false);
+  const [categoryGuidance, setCategoryGuidance] = useState("");
+  const [categoryGuidanceTemp, setCategoryGuidanceTemp] = useState("");
+  const [categoryGuidanceModalVisible, setCategoryGuidanceModalVisible] = useState(false);
+  const [categoryRationale, setCategoryRationale] = useState("");
+  const [categoryRationaleModalVisible, setCategoryRationaleModalVisible] = useState(false);
 
   // Style for log content with proper typing
   const codeBlockStyle: CSSProperties = {
@@ -168,6 +190,47 @@ const OcsfPlaygroundPage = () => {
       }
     } finally {
       setIsRecommending(false); // Stop visual spinner
+    }
+  };
+
+  // Handle Get OCSF Category Recommendation
+  const handleGetCategoryRecommendation = async () => {
+    // Make sure a log entry is selected
+    if (selectedLogIds.length !== 1) {
+      alert("Please select exactly one log entry to get a category recommendation.");
+      return;
+    }
+
+    const selectedLog = logs[parseInt(selectedLogIds[0])];
+    setIsRecommendingCategory(true); // Start visual spinner
+
+    try {
+      // Call the API to get category recommendation
+      const payload: TransformerCategorizeV110Request = {
+        input_entry: selectedLog,
+        user_guidance: categoryGuidance
+      };
+      const response = await apiClient.transformerCategorizeV110Create(payload);
+
+      // Update state with response data
+      const recommendedCategory = ocsfCategoryOptions.find(
+        option => option.value === response.data.ocsf_category
+      ) || ocsfCategoryOptions[0];
+      
+      setOcsfCategory(recommendedCategory);
+      setCategoryRationale(response.data.rationale);
+
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        const serverErrorMessage = error.response.data.error || "An unknown error occurred.";
+        console.error("Server error:", serverErrorMessage);
+        alert(`Failed to get category recommendation. Error:\n\n${serverErrorMessage}`);
+      } else {
+        console.error("Unexpected error:", error);
+        alert("An unexpected error occurred. Please try again later.");
+      }
+    } finally {
+      setIsRecommendingCategory(false); // Stop visual spinner
     }
   };
 
@@ -319,11 +382,16 @@ const OcsfPlaygroundPage = () => {
                   </Button>
 
                   {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation for the Regex */}
-                  <Button iconAlign="left" iconName="gen-ai" onClick={() => {
-                    setRegexGuidanceModalVisible(true);
-                    setRegexGuidanceTemp(regexGuidance);
-                  }}>
-                    Set User Guidance
+                  <Button 
+                    iconAlign="left" 
+                    iconName="gen-ai" 
+                    onClick={() => {
+                      setRegexGuidanceModalVisible(true);
+                      setRegexGuidanceTemp(regexGuidance);
+                    }}
+                    disabled={isRecommending}
+                  >
+                    {isRecommending ? <Spinner/> : "Set User Guidance"}
                   </Button>
                   
                   {/* Button to view the rationale for the generated regex */}
@@ -331,9 +399,9 @@ const OcsfPlaygroundPage = () => {
                     iconAlign="left" 
                     iconName="status-info" 
                     onClick={() => setRegexRationaleModalVisible(true)}
-                    disabled={!regexRationale}
+                    disabled={!regexRationale || isRecommending}
                   >
-                    View Rationale
+                    {isRecommending ? <Spinner/> : "View Rationale"}
                   </Button>
                 </SpaceBetween>
                 
@@ -400,6 +468,126 @@ const OcsfPlaygroundPage = () => {
                     <p>No log entries matched your pattern.</p>
                   </Box>
                 )}
+              </SpaceBetween>
+            </Box>
+          </div>
+
+          {/* OCSF Categorization Section */}
+          <div style={{ 
+            border: '1px solid #d5dbdb', 
+            padding: '10px',
+            borderRadius: '3px'
+          }}>
+            <Box>
+              <Header variant="h3">OCSF Categorization</Header>
+              <SpaceBetween size="m">
+                {/* Version and Category Selection */}
+                <SpaceBetween direction="horizontal" size="xs">
+                  <FormField
+                    label="OCSF Version"
+                  >
+                    <Select
+                      selectedOption={ocsfVersion}
+                      onChange={({ detail }) => setOcsfVersion(detail.selectedOption)}
+                      options={ocsfVersionOptions}
+                      placeholder="Select an OCSF version"
+                    />
+                  </FormField>
+                  <FormField
+                    label="OCSF Category"
+                  >
+                    <Select
+                      selectedOption={ocsfCategory}
+                      onChange={({ detail }) => setOcsfCategory(detail.selectedOption)}
+                      options={ocsfCategoryOptions}
+                      placeholder="Select an OCSF category"
+                    />
+                  </FormField>
+                </SpaceBetween>
+                
+                {/* GenAI buttons for OCSF categorization */}
+                <SpaceBetween direction="horizontal" size="xs">
+                  {/* Button to get a GenAI recommendation for the Category */}
+                  <Button onClick={handleGetCategoryRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
+                    {isRecommendingCategory ? <Spinner/> : "Get GenAI Recommendation"}
+                  </Button>
+
+                  {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation */}
+                  <Button 
+                    iconAlign="left" 
+                    iconName="gen-ai" 
+                    onClick={() => {
+                      setCategoryGuidanceModalVisible(true);
+                      setCategoryGuidanceTemp(categoryGuidance);
+                    }}
+                    disabled={isRecommendingCategory}
+                  >
+                    {isRecommendingCategory ? <Spinner/> : "Set User Guidance"}
+                  </Button>
+                  
+                  {/* Button to view the rationale for the generated category */}
+                  <Button 
+                    iconAlign="left" 
+                    iconName="status-info" 
+                    onClick={() => setCategoryRationaleModalVisible(true)}
+                    disabled={!categoryRationale || isRecommendingCategory}
+                  >
+                    {isRecommendingCategory ? <Spinner/> : "View Rationale"}
+                  </Button>
+                </SpaceBetween>
+                
+                {/* Modal for setting category guidance */}
+                <Modal
+                  onDismiss={() => setCategoryGuidanceModalVisible(false)}
+                  visible={categoryGuidanceModalVisible}
+                  footer={
+                    <Box float="right">
+                      <SpaceBetween direction="horizontal" size="xs">
+                        <Button variant="link" onClick={() => {
+                          setCategoryGuidanceModalVisible(false);
+                        }}>
+                          Cancel
+                        </Button>
+                        <Button variant="primary" onClick={() => {
+                          setCategoryGuidanceModalVisible(false);
+                          setCategoryGuidance(categoryGuidanceTemp);
+                        }}>
+                          Set
+                        </Button>
+                      </SpaceBetween>
+                    </Box>
+                  }
+                  header="GenAI User Guidance (OCSF Category)"
+                >
+                  <FormField
+                    label="If you have guidance for the LLM when categorizing, set it here:"
+                  >
+                    <Textarea
+                      value={categoryGuidanceTemp}
+                      onChange={({ detail }) => setCategoryGuidanceTemp(detail.value)}
+                      placeholder="Instead of the default behavior, I want you to do X instead..."
+                      rows={25}
+                    />
+                  </FormField>
+                </Modal>
+                
+                {/* Modal for displaying category rationale */}
+                <Modal
+                  onDismiss={() => setCategoryRationaleModalVisible(false)}
+                  visible={categoryRationaleModalVisible}
+                  footer={
+                    <Box float="right">
+                      <Button variant="primary" onClick={() => setCategoryRationaleModalVisible(false)}>
+                        Close
+                      </Button>
+                    </Box>
+                  }
+                  header="OCSF Category Recommendation Rationale"
+                >
+                  <Box>
+                    <p style={{ whiteSpace: 'pre-wrap' }}>{categoryRationale}</p>
+                  </Box>
+                </Modal>
               </SpaceBetween>
             </Box>
           </div>

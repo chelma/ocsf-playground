@@ -26,7 +26,8 @@ Additionally, you must ALWAYS follow these output_guidelines for output you prod
     schema.  The category should be the most specific one that accurately describes the entry.
 - When choosing an OCSF category, you MUST ONLY use the categories provided in the ocsf_knowledge section.  Do not
     consider any other categories, make new ones, or attempt to modify existing categories.
-- When specifying the category, provide a string containing ONLY the full name of the category.
+- When providing your rationale, be thorough in your explanation.  Clearly outline the possible alternative categories
+    you considered and why you chose the one you did.  Thoroughness is more important than brevity.
 - If the user provided any user_guidance, ensure that your selection process adheres to it and that your rationale
     explains how the guidance was followed.  Specifically call out what the user's guidance was in the rationale.
 </output_guidelines>

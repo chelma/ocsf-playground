@@ -210,84 +210,84 @@ components:
   schemas:
     OcsfCategoryEnum:
       enum:
-      - File System Activity
-      - Kernel Extension Activity
-      - Kernel Activity
-      - Memory Activity
-      - Module Activity
-      - Scheduled Job Activity
-      - Process Activity
-      - Account Change
-      - Authentication
-      - Authorize Session
-      - Entity Management
-      - User Access Management
-      - Group Management
-      - Network Activity
-      - HTTP Activity
-      - DNS Activity
-      - DHCP Activity
-      - RDP Activity
-      - SMB Activity
-      - SSH Activity
-      - FTP Activity
-      - Email Activity
-      - Network File Activity
-      - Email File Activity
-      - Email URL Activity
-      - NTP Activity
-      - Device Inventory Info
-      - Device Config State
-      - User Inventory Info
-      - Operating System Patch State
-      - Device Config State Change
-      - Web Resources Activity
-      - Application Lifecycle
-      - API Activity
-      - Web Resource Access Activity
-      - Datastore Activity
-      - File Hosting Activity
-      - Scan Activity
+      - File System Activity (1001)
+      - Kernel Extension Activity (1002)
+      - Kernel Activity (1003)
+      - Memory Activity (1004)
+      - Module Activity (1005)
+      - Scheduled Job Activity (1006)
+      - Process Activity (1007)
+      - Account Change (3001)
+      - Authentication (3002)
+      - Authorize Session (3003)
+      - Entity Management (3004)
+      - User Access Management (3005)
+      - Group Management (3006)
+      - Network Activity (4001)
+      - HTTP Activity (4002)
+      - DNS Activity (4003)
+      - DHCP Activity (4004)
+      - RDP Activity (4005)
+      - SMB Activity (4006)
+      - SSH Activity (4007)
+      - FTP Activity (4008)
+      - Email Activity (4009)
+      - Network File Activity (4010)
+      - Email File Activity (4011)
+      - Email URL Activity (4012)
+      - NTP Activity (4013)
+      - Device Inventory Info (5001)
+      - Device Config State (5002)
+      - User Inventory Info (5003)
+      - Operating System Patch State (5004)
+      - Device Config State Change (5019)
+      - Web Resources Activity (6001)
+      - Application Lifecycle (6002)
+      - API Activity (6003)
+      - Web Resource Access Activity (6004)
+      - Datastore Activity (6005)
+      - File Hosting Activity (6006)
+      - Scan Activity (6007)
       type: string
       description: |-
-        * `File System Activity` - FILE_SYSTEM_ACTIVITY
-        * `Kernel Extension Activity` - KERNEL_EXTENSION_ACTIVITY
-        * `Kernel Activity` - KERNEL_ACTIVITY
-        * `Memory Activity` - MEMORY_ACTIVITY
-        * `Module Activity` - MODULE_ACTIVITY
-        * `Scheduled Job Activity` - SCHEDULED_JOB_ACTIVITY
-        * `Process Activity` - PROCESS_ACTIVITY
-        * `Account Change` - ACCOUNT_CHANGE
-        * `Authentication` - AUTHENTICATION
-        * `Authorize Session` - AUTHORIZE_SESSION
-        * `Entity Management` - ENTITY_MANAGEMENT
-        * `User Access Management` - USER_ACCESS_MANAGEMENT
-        * `Group Management` - GROUP_MANAGEMENT
-        * `Network Activity` - NETWORK_ACTIVITY
-        * `HTTP Activity` - HTTP_ACTIVITY
-        * `DNS Activity` - DNS_ACTIVITY
-        * `DHCP Activity` - DHCP_ACTIVITY
-        * `RDP Activity` - RDP_ACTIVITY
-        * `SMB Activity` - SMB_ACTIVITY
-        * `SSH Activity` - SSH_ACTIVITY
-        * `FTP Activity` - FTP_ACTIVITY
-        * `Email Activity` - EMAIL_ACTIVITY
-        * `Network File Activity` - NETWORK_FILE_ACTIVITY
-        * `Email File Activity` - EMAIL_FILE_ACTIVITY
-        * `Email URL Activity` - EMAIL_URL_ACTIVITY
-        * `NTP Activity` - NTP_ACTIVITY
-        * `Device Inventory Info` - DEVICE_INVENTORY_INFO
-        * `Device Config State` - DEVICE_CONFIG_STATE
-        * `User Inventory Info` - USER_INVENTORY_INFO
-        * `Operating System Patch State` - OPERATING_SYSTEM_PATCH_STATE
-        * `Device Config State Change` - DEVICE_CONFIG_STATE_CHANGE
-        * `Web Resources Activity` - WEB_RESOURCES_ACTIVITY
-        * `Application Lifecycle` - APPLICATION_LIFECYCLE
-        * `API Activity` - API_ACTIVITY
-        * `Web Resource Access Activity` - WEB_RESOURCE_ACCESS_ACTIVITY
-        * `Datastore Activity` - DATASTORE_ACTIVITY
-        * `File Hosting Activity` - FILE_HOSTING_ACTIVITY
-        * `Scan Activity` - SCAN_ACTIVITY
+        * `File System Activity (1001)` - FILE_SYSTEM_ACTIVITY_1001
+        * `Kernel Extension Activity (1002)` - KERNEL_EXTENSION_ACTIVITY_1002
+        * `Kernel Activity (1003)` - KERNEL_ACTIVITY_1003
+        * `Memory Activity (1004)` - MEMORY_ACTIVITY_1004
+        * `Module Activity (1005)` - MODULE_ACTIVITY_1005
+        * `Scheduled Job Activity (1006)` - SCHEDULED_JOB_ACTIVITY_1006
+        * `Process Activity (1007)` - PROCESS_ACTIVITY_1007
+        * `Account Change (3001)` - ACCOUNT_CHANGE_3001
+        * `Authentication (3002)` - AUTHENTICATION_3002
+        * `Authorize Session (3003)` - AUTHORIZE_SESSION_3003
+        * `Entity Management (3004)` - ENTITY_MANAGEMENT_3004
+        * `User Access Management (3005)` - USER_ACCESS_MANAGEMENT_3005
+        * `Group Management (3006)` - GROUP_MANAGEMENT_3006
+        * `Network Activity (4001)` - NETWORK_ACTIVITY_4001
+        * `HTTP Activity (4002)` - HTTP_ACTIVITY_4002
+        * `DNS Activity (4003)` - DNS_ACTIVITY_4003
+        * `DHCP Activity (4004)` - DHCP_ACTIVITY_4004
+        * `RDP Activity (4005)` - RDP_ACTIVITY_4005
+        * `SMB Activity (4006)` - SMB_ACTIVITY_4006
+        * `SSH Activity (4007)` - SSH_ACTIVITY_4007
+        * `FTP Activity (4008)` - FTP_ACTIVITY_4008
+        * `Email Activity (4009)` - EMAIL_ACTIVITY_4009
+        * `Network File Activity (4010)` - NETWORK_FILE_ACTIVITY_4010
+        * `Email File Activity (4011)` - EMAIL_FILE_ACTIVITY_4011
+        * `Email URL Activity (4012)` - EMAIL_URL_ACTIVITY_4012
+        * `NTP Activity (4013)` - NTP_ACTIVITY_4013
+        * `Device Inventory Info (5001)` - DEVICE_INVENTORY_INFO_5001
+        * `Device Config State (5002)` - DEVICE_CONFIG_STATE_5002
+        * `User Inventory Info (5003)` - USER_INVENTORY_INFO_5003
+        * `Operating System Patch State (5004)` - OPERATING_SYSTEM_PATCH_STATE_5004
+        * `Device Config State Change (5019)` - DEVICE_CONFIG_STATE_CHANGE_5019
+        * `Web Resources Activity (6001)` - WEB_RESOURCES_ACTIVITY_6001
+        * `Application Lifecycle (6002)` - APPLICATION_LIFECYCLE_6002
+        * `API Activity (6003)` - API_ACTIVITY_6003
+        * `Web Resource Access Activity (6004)` - WEB_RESOURCE_ACCESS_ACTIVITY_6004
+        * `Datastore Activity (6005)` - DATASTORE_ACTIVITY_6005
+        * `File Hosting Activity (6006)` - FILE_HOSTING_ACTIVITY_6006
+        * `Scan Activity (6007)` - SCAN_ACTIVITY_6007
     OcsfVersionEnum:
       enum:
       - 1.1.0
