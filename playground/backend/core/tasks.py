@@ -7,7 +7,7 @@ from langchain_core.messages import BaseMessage
 from backend.core.inference import InferenceRequest
 
 
-logger = logging.getLogger("core")
+logger = logging.getLogger("backend")
 
 @dataclass
 class PlaygroundTask(ABC):

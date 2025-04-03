@@ -13,7 +13,7 @@ from backend.core.tasks import PlaygroundTask
 from backend.core.inference import perform_inference
 
 
-logger = logging.getLogger("core")
+logger = logging.getLogger("backend")
 
 # Define a boto Config to use w/ our LLM that's more resilient to long waits and frequent throttling
 DEFULT_BOTO_CONFIG = Config(

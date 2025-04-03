@@ -1,3 +1,5 @@
+import json
+
 OCSF_GUIDANCE = """
 
 """
@@ -7,8 +9,7 @@ OCSF_GUIDANCE = """
 # 
 # See: https://schema.ocsf.io/1.1.0/
 # See: https://chatgpt.com/share/67ed81bd-4c64-8001-8824-6084c99a76fe
-OCSF_KNOWLEDGE = """
-[
+OCSF_CATEGORIES = [
     {
         "category_name": "File System Activity",
         "category_id": "1001",
@@ -200,4 +201,9 @@ OCSF_KNOWLEDGE = """
         "category_details": "The Scan Activity category covers events related to the execution of scan jobs, including their start, completion, cancellation, and results. It also captures issues such as duration violations, pause violations, errors, and user-driven actions like pausing, resuming, restarting, or delaying scans. The event includes metadata such as the number of items scanned and the number of detections resolved."
     }
 ]
-"""
+
+OCSF_KNOWLEDGE = """
+<ocsf_categories>
+{ocsf_categories}
+</ocsf_categories>
+""".format(ocsf_categories=json.dumps(OCSF_CATEGORIES, indent=4))

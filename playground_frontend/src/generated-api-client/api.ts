@@ -24,6 +24,115 @@ import type { RequestArgs } from './base';
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
 /**
+ * * `File System Activity` - FILE_SYSTEM_ACTIVITY * `Kernel Extension Activity` - KERNEL_EXTENSION_ACTIVITY * `Kernel Activity` - KERNEL_ACTIVITY * `Memory Activity` - MEMORY_ACTIVITY * `Module Activity` - MODULE_ACTIVITY * `Scheduled Job Activity` - SCHEDULED_JOB_ACTIVITY * `Process Activity` - PROCESS_ACTIVITY * `Account Change` - ACCOUNT_CHANGE * `Authentication` - AUTHENTICATION * `Authorize Session` - AUTHORIZE_SESSION * `Entity Management` - ENTITY_MANAGEMENT * `User Access Management` - USER_ACCESS_MANAGEMENT * `Group Management` - GROUP_MANAGEMENT * `Network Activity` - NETWORK_ACTIVITY * `HTTP Activity` - HTTP_ACTIVITY * `DNS Activity` - DNS_ACTIVITY * `DHCP Activity` - DHCP_ACTIVITY * `RDP Activity` - RDP_ACTIVITY * `SMB Activity` - SMB_ACTIVITY * `SSH Activity` - SSH_ACTIVITY * `FTP Activity` - FTP_ACTIVITY * `Email Activity` - EMAIL_ACTIVITY * `Network File Activity` - NETWORK_FILE_ACTIVITY * `Email File Activity` - EMAIL_FILE_ACTIVITY * `Email URL Activity` - EMAIL_URL_ACTIVITY * `NTP Activity` - NTP_ACTIVITY * `Device Inventory Info` - DEVICE_INVENTORY_INFO * `Device Config State` - DEVICE_CONFIG_STATE * `User Inventory Info` - USER_INVENTORY_INFO * `Operating System Patch State` - OPERATING_SYSTEM_PATCH_STATE * `Device Config State Change` - DEVICE_CONFIG_STATE_CHANGE * `Web Resources Activity` - WEB_RESOURCES_ACTIVITY * `Application Lifecycle` - APPLICATION_LIFECYCLE * `API Activity` - API_ACTIVITY * `Web Resource Access Activity` - WEB_RESOURCE_ACCESS_ACTIVITY * `Datastore Activity` - DATASTORE_ACTIVITY * `File Hosting Activity` - FILE_HOSTING_ACTIVITY * `Scan Activity` - SCAN_ACTIVITY
+ * @export
+ * @enum {string}
+ */
+
+export const OcsfCategoryEnum = {
+    FileSystemActivity: 'File System Activity',
+    KernelExtensionActivity: 'Kernel Extension Activity',
+    KernelActivity: 'Kernel Activity',
+    MemoryActivity: 'Memory Activity',
+    ModuleActivity: 'Module Activity',
+    ScheduledJobActivity: 'Scheduled Job Activity',
+    ProcessActivity: 'Process Activity',
+    AccountChange: 'Account Change',
+    Authentication: 'Authentication',
+    AuthorizeSession: 'Authorize Session',
+    EntityManagement: 'Entity Management',
+    UserAccessManagement: 'User Access Management',
+    GroupManagement: 'Group Management',
+    NetworkActivity: 'Network Activity',
+    HttpActivity: 'HTTP Activity',
+    DnsActivity: 'DNS Activity',
+    DhcpActivity: 'DHCP Activity',
+    RdpActivity: 'RDP Activity',
+    SmbActivity: 'SMB Activity',
+    SshActivity: 'SSH Activity',
+    FtpActivity: 'FTP Activity',
+    EmailActivity: 'Email Activity',
+    NetworkFileActivity: 'Network File Activity',
+    EmailFileActivity: 'Email File Activity',
+    EmailUrlActivity: 'Email URL Activity',
+    NtpActivity: 'NTP Activity',
+    DeviceInventoryInfo: 'Device Inventory Info',
+    DeviceConfigState: 'Device Config State',
+    UserInventoryInfo: 'User Inventory Info',
+    OperatingSystemPatchState: 'Operating System Patch State',
+    DeviceConfigStateChange: 'Device Config State Change',
+    WebResourcesActivity: 'Web Resources Activity',
+    ApplicationLifecycle: 'Application Lifecycle',
+    ApiActivity: 'API Activity',
+    WebResourceAccessActivity: 'Web Resource Access Activity',
+    DatastoreActivity: 'Datastore Activity',
+    FileHostingActivity: 'File Hosting Activity',
+    ScanActivity: 'Scan Activity'
+} as const;
+
+export type OcsfCategoryEnum = typeof OcsfCategoryEnum[keyof typeof OcsfCategoryEnum];
+
+
+/**
+ * * `1.1.0` - V1_1_0
+ * @export
+ * @enum {string}
+ */
+
+export const OcsfVersionEnum = {
+    _110: '1.1.0'
+} as const;
+
+export type OcsfVersionEnum = typeof OcsfVersionEnum[keyof typeof OcsfVersionEnum];
+
+
+/**
+ * 
+ * @export
+ * @interface TransformerCategorizeV110Request
+ */
+export interface TransformerCategorizeV110Request {
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerCategorizeV110Request
+     */
+    'input_entry': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerCategorizeV110Request
+     */
+    'user_guidance'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface TransformerCategorizeV110Response
+ */
+export interface TransformerCategorizeV110Response {
+    /**
+     * 
+     * @type {OcsfCategoryEnum}
+     * @memberof TransformerCategorizeV110Response
+     */
+    'ocsf_category': OcsfCategoryEnum;
+    /**
+     * 
+     * @type {OcsfVersionEnum}
+     * @memberof TransformerCategorizeV110Response
+     */
+    'ocsf_version': OcsfVersionEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerCategorizeV110Response
+     */
+    'rationale': string;
+}
+
+
+/**
  * 
  * @export
  * @interface TransformerHeuristicCreateRequest
@@ -308,6 +417,47 @@ export const TransformerApiAxiosParamCreator = function (configuration?: Configu
     return {
         /**
          * 
+         * @param {TransformerCategorizeV110Request} transformerCategorizeV110Request 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        transformerCategorizeV110Create: async (transformerCategorizeV110Request: TransformerCategorizeV110Request, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'transformerCategorizeV110Request' is not null or undefined
+            assertParamExists('transformerCategorizeV110Create', 'transformerCategorizeV110Request', transformerCategorizeV110Request)
+            const localVarPath = `/transformer/categorize/v1_1_0/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication cookieAuth required
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(transformerCategorizeV110Request, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -359,6 +509,18 @@ export const TransformerApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {TransformerCategorizeV110Request} transformerCategorizeV110Request 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async transformerCategorizeV110Create(transformerCategorizeV110Request: TransformerCategorizeV110Request, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TransformerCategorizeV110Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.transformerCategorizeV110Create(transformerCategorizeV110Request, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TransformerApi.transformerCategorizeV110Create']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -381,6 +543,15 @@ export const TransformerApiFactory = function (configuration?: Configuration, ba
     return {
         /**
          * 
+         * @param {TransformerCategorizeV110Request} transformerCategorizeV110Request 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        transformerCategorizeV110Create(transformerCategorizeV110Request: TransformerCategorizeV110Request, options?: RawAxiosRequestConfig): AxiosPromise<TransformerCategorizeV110Response> {
+            return localVarFp.transformerCategorizeV110Create(transformerCategorizeV110Request, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -398,6 +569,17 @@ export const TransformerApiFactory = function (configuration?: Configuration, ba
  * @extends {BaseAPI}
  */
 export class TransformerApi extends BaseAPI {
+    /**
+     * 
+     * @param {TransformerCategorizeV110Request} transformerCategorizeV110Request 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TransformerApi
+     */
+    public transformerCategorizeV110Create(transformerCategorizeV110Request: TransformerCategorizeV110Request, options?: RawAxiosRequestConfig) {
+        return TransformerApiFp(this.configuration).transformerCategorizeV110Create(transformerCategorizeV110Request, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 

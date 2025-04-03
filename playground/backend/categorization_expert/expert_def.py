@@ -10,7 +10,7 @@ from backend.categorization_expert.task_def import CategorizationTask
 from backend.core.experts import DEFULT_BOTO_CONFIG, Expert, invoke_expert
 
 
-logger = logging.getLogger("categorization_expert")
+logger = logging.getLogger("backend")
 
 
 def get_categorization_expert(ocsf_version: OcsfVersion) -> Expert:
@@ -32,7 +32,7 @@ def get_categorization_expert(ocsf_version: OcsfVersion) -> Expert:
     return Expert(
         llm=llm_w_tools,
         system_prompt_factory=get_system_prompt_factory(
-            regex_flavor=ocsf_version
+            ocsf_version=ocsf_version
         ),
         tools=tool_bundle
     )
@@ -40,6 +40,6 @@ def get_categorization_expert(ocsf_version: OcsfVersion) -> Expert:
 def invoke_categorization_expert(expert: Expert, task: CategorizationTask) -> CategorizationTask:
     logger.info(f"Invoking the Categorization Expert for task_id: {task.task_id}")
     invoke_expert(expert, task)
-    logger.info(f"Regex created for task_id: {task.task_id}")
+    logger.info(f"Categorization performed for task_id: {task.task_id}")
 
     return task

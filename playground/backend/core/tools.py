@@ -5,7 +5,7 @@ from typing import List
 from langchain_core.tools import StructuredTool
 
 
-logger = logging.getLogger("core")
+logger = logging.getLogger("backend")
 
 
 @dataclass

@@ -3,7 +3,7 @@ import requests
 import logging
 from typing import Optional, Dict, Any
 
-logger = logging.getLogger("core")
+logger = logging.getLogger("backend")
 
 @dataclass
 class ConnectionDetails:

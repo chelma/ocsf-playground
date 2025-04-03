@@ -5,7 +5,7 @@ from typing import Any, Dict
 from backend.core.tasks import PlaygroundTask
 
 
-logger = logging.getLogger("regex_expert")
+logger = logging.getLogger("backend")
 
 @dataclass
 class Regex:

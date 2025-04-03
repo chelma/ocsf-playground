@@ -9,7 +9,7 @@ from backend.regex_expert.parameters import RegexFlavor
 from backend.core.tools import ToolBundle
 
 
-logger = logging.getLogger("regex_expert")
+logger = logging.getLogger("backend")
 
 """
 This module contains the LLM tools for each modality, and functionality to pull the correct set of tools

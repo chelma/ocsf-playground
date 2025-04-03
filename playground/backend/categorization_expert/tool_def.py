@@ -9,23 +9,23 @@ from backend.categorization_expert.parameters import OcsfVersion
 from backend.core.tools import ToolBundle
 
 
-logger = logging.getLogger("categorization_expert")
+logger = logging.getLogger("backend")
 
 def get_tool_bundle(ocsf_version: OcsfVersion) -> ToolBundle:
     # Use the same tool for all versions
     return ToolBundle(
-        task_tool=select_ocsf_category,
+        task_tool=select_ocsf_category_tool,
     )
 
 class SelectOcsfCategory(BaseModel):
     """Select an OCSF category for specific data entry."""
-    value: str = Field(description="A string value containing the OCSF Category name and NOTHING ELSE.")
+    value: str = Field(description="A string value containing the full OCSF Category name and NOTHING ELSE.")
     rationale: str = Field(description="A thorough explanation of why this particular OCSF category is the best pick available for the data entry.")
 
 def select_ocsf_category(value: str, rationale: str) -> OcsfCategory:
     return OcsfCategory(value=value, rationale=rationale)
 
-make_javascript_regex_tool = StructuredTool.from_function(
+select_ocsf_category_tool = StructuredTool.from_function(
     func=select_ocsf_category,
     name="SelectOcsfCategory",
     args_schema=SelectOcsfCategory

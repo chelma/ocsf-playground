@@ -150,6 +150,34 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /transformer/categorize/v1_1_0/:
+    post:
+      operationId: transformer_categorize_v1_1_0_create
+      tags:
+      - transformer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransformerCategorizeV1_1_0Request'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransformerCategorizeV1_1_0Request'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransformerCategorizeV1_1_0Request'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformerCategorizeV1_1_0Response'
+          description: ''
   /transformer/heuristic/create/:
     post:
       operationId: transformer_heuristic_create_create
@@ -180,6 +208,113 @@ paths:
           description: ''
 components:
   schemas:
+    OcsfCategoryEnum:
+      enum:
+      - File System Activity
+      - Kernel Extension Activity
+      - Kernel Activity
+      - Memory Activity
+      - Module Activity
+      - Scheduled Job Activity
+      - Process Activity
+      - Account Change
+      - Authentication
+      - Authorize Session
+      - Entity Management
+      - User Access Management
+      - Group Management
+      - Network Activity
+      - HTTP Activity
+      - DNS Activity
+      - DHCP Activity
+      - RDP Activity
+      - SMB Activity
+      - SSH Activity
+      - FTP Activity
+      - Email Activity
+      - Network File Activity
+      - Email File Activity
+      - Email URL Activity
+      - NTP Activity
+      - Device Inventory Info
+      - Device Config State
+      - User Inventory Info
+      - Operating System Patch State
+      - Device Config State Change
+      - Web Resources Activity
+      - Application Lifecycle
+      - API Activity
+      - Web Resource Access Activity
+      - Datastore Activity
+      - File Hosting Activity
+      - Scan Activity
+      type: string
+      description: |-
+        * `File System Activity` - FILE_SYSTEM_ACTIVITY
+        * `Kernel Extension Activity` - KERNEL_EXTENSION_ACTIVITY
+        * `Kernel Activity` - KERNEL_ACTIVITY
+        * `Memory Activity` - MEMORY_ACTIVITY
+        * `Module Activity` - MODULE_ACTIVITY
+        * `Scheduled Job Activity` - SCHEDULED_JOB_ACTIVITY
+        * `Process Activity` - PROCESS_ACTIVITY
+        * `Account Change` - ACCOUNT_CHANGE
+        * `Authentication` - AUTHENTICATION
+        * `Authorize Session` - AUTHORIZE_SESSION
+        * `Entity Management` - ENTITY_MANAGEMENT
+        * `User Access Management` - USER_ACCESS_MANAGEMENT
+        * `Group Management` - GROUP_MANAGEMENT
+        * `Network Activity` - NETWORK_ACTIVITY
+        * `HTTP Activity` - HTTP_ACTIVITY
+        * `DNS Activity` - DNS_ACTIVITY
+        * `DHCP Activity` - DHCP_ACTIVITY
+        * `RDP Activity` - RDP_ACTIVITY
+        * `SMB Activity` - SMB_ACTIVITY
+        * `SSH Activity` - SSH_ACTIVITY
+        * `FTP Activity` - FTP_ACTIVITY
+        * `Email Activity` - EMAIL_ACTIVITY
+        * `Network File Activity` - NETWORK_FILE_ACTIVITY
+        * `Email File Activity` - EMAIL_FILE_ACTIVITY
+        * `Email URL Activity` - EMAIL_URL_ACTIVITY
+        * `NTP Activity` - NTP_ACTIVITY
+        * `Device Inventory Info` - DEVICE_INVENTORY_INFO
+        * `Device Config State` - DEVICE_CONFIG_STATE
+        * `User Inventory Info` - USER_INVENTORY_INFO
+        * `Operating System Patch State` - OPERATING_SYSTEM_PATCH_STATE
+        * `Device Config State Change` - DEVICE_CONFIG_STATE_CHANGE
+        * `Web Resources Activity` - WEB_RESOURCES_ACTIVITY
+        * `Application Lifecycle` - APPLICATION_LIFECYCLE
+        * `API Activity` - API_ACTIVITY
+        * `Web Resource Access Activity` - WEB_RESOURCE_ACCESS_ACTIVITY
+        * `Datastore Activity` - DATASTORE_ACTIVITY
+        * `File Hosting Activity` - FILE_HOSTING_ACTIVITY
+        * `Scan Activity` - SCAN_ACTIVITY
+    OcsfVersionEnum:
+      enum:
+      - 1.1.0
+      type: string
+      description: '* `1.1.0` - V1_1_0'
+    TransformerCategorizeV1_1_0Request:
+      type: object
+      properties:
+        input_entry:
+          type: string
+        user_guidance:
+          type: string
+      required:
+      - input_entry
+    TransformerCategorizeV1_1_0Response:
+      type: object
+      properties:
+        ocsf_category:
+          $ref: '#/components/schemas/OcsfCategoryEnum'
+        ocsf_version:
+          $ref: '#/components/schemas/OcsfVersionEnum'
+        rationale:
+          type: string
+      required:
+      - ocsf_category
+      - ocsf_version
+      - rationale
     TransformerHeuristicCreateRequest:
       type: object
       properties:

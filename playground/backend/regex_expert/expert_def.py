@@ -11,7 +11,7 @@ from backend.regex_expert.task_def import RegexTask
 from backend.core.experts import DEFULT_BOTO_CONFIG, Expert, invoke_expert
 
 
-logger = logging.getLogger("regex_expert")
+logger = logging.getLogger("backend")
 
 
 def get_regex_expert(regex_flavor: RegexFlavor) -> Expert:
