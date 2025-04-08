@@ -95,14 +95,35 @@ class OcsfV1_1_0TransformValidator(TransformValidatorBase):
         category_schemas = CATEGORY_SCHEMAS_V1_1_0
         shape_schemas = SHAPE_SCHEMAS_V1_1_0
 
-        report.append_entry("THIS IS A PLACEHOLDER, PLEASE IMPLEMENT")
+        report.append_entry(f"Validating the transform output against the OCSF Schema for version {ocsf_version.value} and category {category_name}...", logger.info)
+
+        # Pull the category schema
+        used_category_schema = next((schema for schema in category_schemas if schema["name"] == category_name), None)
+        if not used_category_schema:
+            report.append_entry(f"Category schema for category {category_name} not found", logger.error)
+            raise ValueError(f"Category schema for category {category_name} not found")
 
         # Confirm that all top level keys in the output are present in the category schema; log any that aren't in the
         # report
+        category_fields = [field["name"] for field in used_category_schema["fields"]]
+        for key in output.keys():
+            if key not in category_fields:
+                report.append_entry(f"Top level field '{key}' present in transform output but not found in category schema", logger.warning)
+            else:
+                report.append_entry(f"Top level field '{key}' present in transform output is in the category schema", logger.debug)
+
+        # TODO: Confirm that all top level keys in the output have expected types; log any that don't in the report
 
         # Confirm that all keys marked as required in the category schema are present in the output; log any that
         # aren't in the report
+        required_category_fields = [field["name"] for field in used_category_schema["fields"] if field.get("requirement") == "Required"]
+        for key in required_category_fields:
+            if key not in output.keys():
+                report.append_entry(f"Top level field '{key}' marked as required in category schema but not present in transform output", logger.warning)
+            else:
+                report.append_entry(f"Top level field '{key}' marked as required in category schema is present in transform output", logger.debug)
 
-        # Recursively, for each nested shape in the output, confirm and log in the report deviance on the following:
+        # TODO: Recursively, for each nested shape in the output, confirm and log in the report deviance on the following:
         # * All keys in the shape are present in the shape schema
+        # * All keys in the shape have expected types
         # * All keys marked as required in the shape schema are present in the output

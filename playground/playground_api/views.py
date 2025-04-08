@@ -1,3 +1,4 @@
+import json
 import logging
 import uuid
 
@@ -17,8 +18,9 @@ from backend.regex_expert.task_def import RegexTask
 from backend.regex_expert.parameters import RegexFlavor
 
 from backend.transformation_expert.expert_def import get_transformation_expert, invoke_transformation_expert
-from backend.transformation_expert.task_def import PythonTransformTask, TransformTask
 from backend.transformation_expert.parameters import TransformLanguage
+from backend.transformation_expert.task_def import PythonTransformTask, TransformTask
+from backend.transformation_expert.validation import OcsfV1_1_0TransformValidator, ValidationReport
 
 from .serializers import (TransformerHeuristicCreateRequestSerializer, TransformerHeuristicCreateResponseSerializer,
                           TransformerCategorizeV1_1_0RequestSerializer, TransformerCategorizeV1_1_0ResponseSerializer,
@@ -175,9 +177,16 @@ class TransformerLogicV1_1_0CreateView(APIView):
 
         # Perform the task
         try:
+            # Create the transform
             result = self._create(task_id, requestSerializer)
-            logger.info(f"Transform creation successful")
+            logger.info(f"Transform creation completed")
             logger.debug(f"Transform value:\n{result.transform.to_json()}")
+
+            # Validate the transform
+            report = self._validate(result)
+            logger.info(f"Transform validation completed")
+            logger.debug(f"Validation outcome:\n{report.passed}")
+            logger.debug(f"Validation report entries:\n{report.report_entries}")
         except self.UnsupportedTransformLanguageError as e:
             logger.error(f"{str(e)}")
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -190,12 +199,12 @@ class TransformerLogicV1_1_0CreateView(APIView):
         response_serializer = TransformerLogicV1_1_0CreateResponseSerializer(data={
             "transform_language":  requestSerializer.validated_data["transform_language"].value,
             "transform_logic":  result.transform.to_file_format(),
-            "transform_output":  "PLACEHOLDER VALUE",
+            "transform_output":  json.dumps(report.output, indent=4),
             "ocsf_version": OcsfVersion.V1_1_0.value,
             "ocsf_category":  requestSerializer.validated_data["ocsf_category"].value,
             "input_entry":  requestSerializer.validated_data["input_entry"],
-            "validation_report": ["PLACEHOLDER VALUE"],
-            "validation_outcome": "PLACEHOLDER VALUE"
+            "validation_report": report.report_entries,
+            "validation_outcome": "PASSED" if report.passed else "FAILED"
         })
 
         if not response_serializer.is_valid():
@@ -234,3 +243,12 @@ class TransformerLogicV1_1_0CreateView(APIView):
             result = invoke_transformation_expert(expert, task)
 
             return result
+    
+    def _validate(self, transform_taks: TransformTask) -> ValidationReport:
+        # Create the validator
+        validator = OcsfV1_1_0TransformValidator(transform_task=transform_taks)
+
+        # Validate the transform
+        report = validator.validate()
+
+        return report

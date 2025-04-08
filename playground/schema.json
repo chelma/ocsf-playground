@@ -206,6 +206,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/TransformerHeuristicCreateResponse'
           description: ''
+  /transformer/logic/v1_1_0/create/:
+    post:
+      operationId: transformer_logic_v1_1_0_create_create
+      tags:
+      - transformer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransformerLogicV1_1_0CreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransformerLogicV1_1_0CreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransformerLogicV1_1_0CreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformerLogicV1_1_0CreateResponse'
+          description: ''
 components:
   schemas:
     OcsfCategoryEnum:
@@ -293,6 +321,11 @@ components:
       - 1.1.0
       type: string
       description: '* `1.1.0` - V1_1_0'
+    TransformLanguageEnum:
+      enum:
+      - Python
+      type: string
+      description: '* `Python` - PYTHON'
     TransformerCategorizeV1_1_0Request:
       type: object
       properties:
@@ -336,6 +369,51 @@ components:
       required:
       - new_heuristic
       - rationale
+    TransformerLogicV1_1_0CreateRequest:
+      type: object
+      properties:
+        transform_language:
+          $ref: '#/components/schemas/TransformLanguageEnum'
+        ocsf_category:
+          $ref: '#/components/schemas/OcsfCategoryEnum'
+        input_entry:
+          type: string
+        user_guidance:
+          type: string
+      required:
+      - input_entry
+      - ocsf_category
+      - transform_language
+    TransformerLogicV1_1_0CreateResponse:
+      type: object
+      properties:
+        transform_language:
+          $ref: '#/components/schemas/TransformLanguageEnum'
+        transform_logic:
+          type: string
+        transform_output:
+          type: string
+        ocsf_version:
+          $ref: '#/components/schemas/OcsfVersionEnum'
+        ocsf_category:
+          $ref: '#/components/schemas/OcsfCategoryEnum'
+        input_entry:
+          type: string
+        validation_report:
+          type: array
+          items:
+            type: string
+        validation_outcome:
+          type: string
+      required:
+      - input_entry
+      - ocsf_category
+      - ocsf_version
+      - transform_language
+      - transform_logic
+      - transform_output
+      - validation_outcome
+      - validation_report
   securitySchemes:
     basicAuth:
       type: http

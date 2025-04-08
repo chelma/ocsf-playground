@@ -22,19 +22,6 @@ import {
 import { Configuration, TransformerApi, TransformerHeuristicCreateRequest, OcsfCategoryEnum, OcsfVersionEnum,
   TransformerCategorizeV110Request } from '../generated-api-client';
 
-/*
-A simple web page that allows users to import log entries and generate transformers to map them to OCSF.  Each
-transformer is composed of: (1) a targeting heuristic, such as a regex, that identifies specific entries in the log
-stream, (2) a OCSR category to normalize entries to, and (3) transformation logic which maps entries of
-that type into an OCSF-compliant JSON blob.
-
-Current features:
-- The ability to import raw log entries and display them.
-- The ability to write and test regexes as a targeting heuristic.
-
-Planned features:
-- A button to receive a GenAI recommendation for a transformer.
-*/
 
 const OcsfPlaygroundPage = () => {
   // Select options for dropdowns using enumerated types
