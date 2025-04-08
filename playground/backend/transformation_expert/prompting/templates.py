@@ -27,6 +27,9 @@ Additionally, you must ALWAYS follow these output_guidelines for output you prod
 <output_guidelines>
 - You transformation logic will be expressed as Python code.
 - Your code MUST NEVER INCLUDE any network calls or I/O operations.
+- DO NOT use any libraries that are not part of the Python standard library.
+- DO NOT use the `re` module or any other regex libraries.
+- DO NOT provide an example for how to execute the code you produced
 - All code must be Python 3.10+ compatible.
 - Ensure any code you provide can be executed with all required imports and variables defined.
 - Structure your code to start with the required imports, then a detailed description of the transformation logic,

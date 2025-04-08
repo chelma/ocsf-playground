@@ -106,22 +106,27 @@ class OcsfV1_1_0TransformValidator(TransformValidatorBase):
         # Confirm that all top level keys in the output are present in the category schema; log any that aren't in the
         # report
         category_fields = [field["name"] for field in used_category_schema["fields"]]
+        only_expected_keys_present = True
         for key in output.keys():
             if key not in category_fields:
                 report.append_entry(f"Top level field '{key}' present in transform output but not found in category schema", logger.warning)
-            else:
-                report.append_entry(f"Top level field '{key}' present in transform output is in the category schema", logger.debug)
+                only_expected_keys_present = False
+        if only_expected_keys_present:
+            report.append_entry("All top level fields present in transform output are found in the category schema", logger.debug)
 
         # TODO: Confirm that all top level keys in the output have expected types; log any that don't in the report
 
         # Confirm that all keys marked as required in the category schema are present in the output; log any that
         # aren't in the report
         required_category_fields = [field["name"] for field in used_category_schema["fields"] if field.get("requirement") == "Required"]
+        all_required_keys_present = True
         for key in required_category_fields:
             if key not in output.keys():
                 report.append_entry(f"Top level field '{key}' marked as required in category schema but not present in transform output", logger.warning)
-            else:
-                report.append_entry(f"Top level field '{key}' marked as required in category schema is present in transform output", logger.debug)
+                all_required_keys_present = False
+
+        if all_required_keys_present:
+            report.append_entry("All required top level fields present in category schema are found in transform output", logger.debug)
 
         # TODO: Recursively, for each nested shape in the output, confirm and log in the report deviance on the following:
         # * All keys in the shape are present in the shape schema

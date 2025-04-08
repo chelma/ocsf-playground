@@ -5,6 +5,7 @@ import "@cloudscape-design/global-styles/index.css";
 import {
   Box,
   Button,
+  CodeEditor,
   Container,
   FormField,
   Grid,
@@ -20,7 +21,7 @@ import {
 } from "@cloudscape-design/components";
 
 import { Configuration, TransformerApi, TransformerHeuristicCreateRequest, OcsfCategoryEnum, OcsfVersionEnum,
-  TransformerCategorizeV110Request } from '../generated-api-client';
+  TransformerCategorizeV110Request, TransformLanguageEnum, TransformerLogicV110CreateRequest } from '../generated-api-client';
 
 
 const OcsfPlaygroundPage = () => {
@@ -30,6 +31,10 @@ const OcsfPlaygroundPage = () => {
     value,
   }));
   const ocsfVersionOptions: SelectProps.Options = Object.values(OcsfVersionEnum).map((value) => ({
+    label: value,
+    value,
+  }));
+  const transformLanguageOptions: SelectProps.Options = Object.values(TransformLanguageEnum).map((value) => ({
     label: value,
     value,
   }));
@@ -61,6 +66,19 @@ const OcsfPlaygroundPage = () => {
   const [categoryGuidanceModalVisible, setCategoryGuidanceModalVisible] = useState(false);
   const [categoryRationale, setCategoryRationale] = useState("");
   const [categoryRationaleModalVisible, setCategoryRationaleModalVisible] = useState(false);
+
+  // State for Transform Logic
+  const [transformLanguage, setTransformLanguage] = useState<SelectProps.Option>(
+    transformLanguageOptions.find(option => option.value === TransformLanguageEnum.Python) || transformLanguageOptions[0]
+  );
+  const [transformLogic, setTransformLogic] = useState<string>('# Write your transformation logic here\n\ndef transform(input_entry):\n    """Transform the input entry into OCSF format"""\n    # Your transformation code here\n    return {}');
+  const [transformOutput, setTransformOutput] = useState<string>('');
+  const [transformGuidance, setTransformGuidance] = useState("");
+  const [transformGuidanceTemp, setTransformGuidanceTemp] = useState("");
+  const [transformGuidanceModalVisible, setTransformGuidanceModalVisible] = useState(false);
+  const [isGeneratingTransform, setIsGeneratingTransform] = useState(false);
+  const [validationReport, setValidationReport] = useState<string[]>([]);
+  const [validationOutcome, setValidationOutcome] = useState<string>("");
 
   // Style for log content with proper typing
   const codeBlockStyle: CSSProperties = {
@@ -218,6 +236,48 @@ const OcsfPlaygroundPage = () => {
       }
     } finally {
       setIsRecommendingCategory(false); // Stop visual spinner
+    }
+  };
+
+  // Handle Get Transform Logic Recommendation
+  const handleGetTransformRecommendation = async () => {
+    // Make sure one log entry is selected
+    if (selectedLogIds.length !== 1) {
+      alert("Please select exactly one log entry to get a transform logic recommendation.");
+      return;
+    }
+
+    const selectedLog = logs[parseInt(selectedLogIds[0])];
+    setIsGeneratingTransform(true); // Start visual spinner
+
+    try {
+      // Call the API to get transform logic recommendation
+      const payload: TransformerLogicV110CreateRequest = {
+        transform_language: transformLanguage.value as TransformLanguageEnum,
+        ocsf_category: ocsfCategory.value as OcsfCategoryEnum,
+        input_entry: selectedLog,
+        user_guidance: transformGuidance
+      };
+      
+      const response = await apiClient.transformerLogicV110CreateCreate(payload);
+
+      // Update state with response data
+      setTransformLogic(response.data.transform_logic);
+      setTransformOutput(response.data.transform_output);
+      setValidationReport(response.data.validation_report);
+      setValidationOutcome(response.data.validation_outcome);
+
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        const serverErrorMessage = error.response.data.error || "An unknown error occurred.";
+        console.error("Server error:", serverErrorMessage);
+        alert(`Failed to get transform logic recommendation. Error:\n\n${serverErrorMessage}`);
+      } else {
+        console.error("Unexpected error:", error);
+        alert("An unexpected error occurred. Please try again later.");
+      }
+    } finally {
+      setIsGeneratingTransform(false); // Stop visual spinner
     }
   };
 
@@ -469,59 +529,63 @@ const OcsfPlaygroundPage = () => {
               <Header variant="h3">OCSF Categorization</Header>
               <SpaceBetween size="m">
                 {/* Version and Category Selection */}
-                <SpaceBetween direction="horizontal" size="xs">
-                  <FormField
-                    label="OCSF Version"
-                  >
-                    <Select
-                      selectedOption={ocsfVersion}
-                      onChange={({ detail }) => setOcsfVersion(detail.selectedOption)}
-                      options={ocsfVersionOptions}
-                      placeholder="Select an OCSF version"
-                    />
-                  </FormField>
-                  <FormField
-                    label="OCSF Category"
-                  >
-                    <Select
-                      selectedOption={ocsfCategory}
-                      onChange={({ detail }) => setOcsfCategory(detail.selectedOption)}
-                      options={ocsfCategoryOptions}
-                      placeholder="Select an OCSF category"
-                    />
-                  </FormField>
-                </SpaceBetween>
+                <div key="ocsf-version-category-selection">
+                  <SpaceBetween direction="horizontal" size="xs">
+                    <FormField
+                      label="OCSF Version"
+                    >
+                      <Select
+                        selectedOption={ocsfVersion}
+                        onChange={({ detail }) => setOcsfVersion(detail.selectedOption)}
+                        options={ocsfVersionOptions}
+                        placeholder="Select an OCSF version"
+                      />
+                    </FormField>
+                    <FormField
+                      label="OCSF Category"
+                    >
+                      <Select
+                        selectedOption={ocsfCategory}
+                        onChange={({ detail }) => setOcsfCategory(detail.selectedOption)}
+                        options={ocsfCategoryOptions}
+                        placeholder="Select an OCSF category"
+                      />
+                    </FormField>
+                  </SpaceBetween>
+                </div>
                 
                 {/* GenAI buttons for OCSF categorization */}
-                <SpaceBetween direction="horizontal" size="xs">
-                  {/* Button to get a GenAI recommendation for the Category */}
-                  <Button onClick={handleGetCategoryRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
-                    {isRecommendingCategory ? <Spinner/> : "Get GenAI Recommendation"}
-                  </Button>
+                <div key="ocsf-genai-buttons">
+                  <SpaceBetween direction="horizontal" size="xs">
+                    {/* Button to get a GenAI recommendation for the Category */}
+                    <Button onClick={handleGetCategoryRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
+                      {isRecommendingCategory ? <Spinner/> : "Get GenAI Recommendation"}
+                    </Button>
 
-                  {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation */}
-                  <Button 
-                    iconAlign="left" 
-                    iconName="gen-ai" 
-                    onClick={() => {
-                      setCategoryGuidanceModalVisible(true);
-                      setCategoryGuidanceTemp(categoryGuidance);
-                    }}
-                    disabled={isRecommendingCategory}
-                  >
-                    {isRecommendingCategory ? <Spinner/> : "Set User Guidance"}
-                  </Button>
-                  
-                  {/* Button to view the rationale for the generated category */}
-                  <Button 
-                    iconAlign="left" 
-                    iconName="status-info" 
-                    onClick={() => setCategoryRationaleModalVisible(true)}
-                    disabled={!categoryRationale || isRecommendingCategory}
-                  >
-                    {isRecommendingCategory ? <Spinner/> : "View Rationale"}
-                  </Button>
-                </SpaceBetween>
+                    {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation */}
+                    <Button 
+                      iconAlign="left" 
+                      iconName="gen-ai" 
+                      onClick={() => {
+                        setCategoryGuidanceModalVisible(true);
+                        setCategoryGuidanceTemp(categoryGuidance);
+                      }}
+                      disabled={isRecommendingCategory}
+                    >
+                      {isRecommendingCategory ? <Spinner/> : "Set User Guidance"}
+                    </Button>
+                    
+                    {/* Button to view the rationale for the generated category */}
+                    <Button 
+                      iconAlign="left" 
+                      iconName="status-info" 
+                      onClick={() => setCategoryRationaleModalVisible(true)}
+                      disabled={!categoryRationale || isRecommendingCategory}
+                    >
+                      {isRecommendingCategory ? <Spinner/> : "View Rationale"}
+                    </Button>
+                  </SpaceBetween>
+                </div>
                 
                 {/* Modal for setting category guidance */}
                 <Modal
@@ -577,6 +641,149 @@ const OcsfPlaygroundPage = () => {
                 </Modal>
               </SpaceBetween>
             </Box>
+          </div>
+
+          {/* Transformation Logic Section */}
+          <div style={{ 
+            border: '1px solid #d5dbdb', 
+            padding: '10px',
+            borderRadius: '3px'
+          }}>
+            <Box>
+              <Header variant="h3">Transformation Logic</Header>
+              <SpaceBetween size="m">
+                {/* Transform Language Selection */}
+                <div key="transform-language-selection">
+                  <FormField
+                    label="Transform Language"
+                  >
+                    <div style={{ width: 'fit-content' }}>
+                      <Select
+                        selectedOption={transformLanguage}
+                        onChange={({ detail }) => setTransformLanguage(detail.selectedOption)}
+                        options={transformLanguageOptions}
+                        placeholder="Select a transform language"
+                        expandToViewport
+                      />
+                    </div>
+                  </FormField>
+                </div>
+                
+                {/* GenAI buttons for Transformation Logic */}
+                <div key="transform-genai-buttons">
+                  <SpaceBetween direction="horizontal" size="xs">
+                    {/* Button to get a GenAI recommendation for the Transform Logic */}
+                    <Button onClick={handleGetTransformRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
+                      {isGeneratingTransform ? <Spinner/> : "Get GenAI Recommendation"}
+                    </Button>
+
+                    {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation */}
+                    <Button 
+                      iconAlign="left" 
+                      iconName="gen-ai" 
+                      onClick={() => {
+                        setTransformGuidanceModalVisible(true);
+                        setTransformGuidanceTemp(transformGuidance);
+                      }}
+                      disabled={isGeneratingTransform}
+                    >
+                      {isGeneratingTransform ? <Spinner/> : "Set User Guidance"}
+                    </Button>
+                  </SpaceBetween>
+                </div>
+                
+                {/* Transformation Code Editor */}
+                <div key="transform-code-editor">
+                  <FormField
+                    label="Transformation Code"
+                    description="Write code to transform log entries into OCSF format"
+                  >
+                    <Textarea
+                      value={transformLogic}
+                      onChange={({ detail }) => setTransformLogic(detail.value)}
+                      placeholder={
+                        transformLanguage.value === TransformLanguageEnum.Python 
+                        ? "# Write your transformation logic here\n\ndef transform(input_entry):\n    \"\"\"Transform the input entry into OCSF format\"\"\"\n    # Your transformation code here\n    return {}" 
+                        : "// Write your transformation logic here\n\nfunction transform(inputEntry) {\n    // Transform the input entry into OCSF format\n    // Your transformation code here\n    return {};\n}"
+                      }
+                      rows={20}
+                      spellcheck={false}
+                    />
+                  </FormField>
+                </div>
+                
+                {/* Display transformation output and validation results when available */}
+                <div key="transform-output" style={{ display: transformOutput ? 'block' : 'none' }}>
+                  <FormField
+                    label="Transformation Output"
+                    description="The result of applying the transformation to the selected log entry"
+                  >
+                    <Textarea
+                      value={transformOutput}
+                      readOnly
+                      rows={10}
+                    />
+                  </FormField>
+                </div>
+                
+                <div key="transform-validation-report" style={{ display: validationReport.length > 0 ? 'block' : 'none' }}>
+                  <FormField
+                    label={`Validation Report: ${validationOutcome}`}
+                    description="The results of validating the transformed output against the OCSF schema"
+                  >
+                    <div style={{ 
+                      maxHeight: '200px', 
+                      overflowY: 'auto', 
+                      padding: '10px',
+                      backgroundColor: validationOutcome === 'PASSED' ? '#f2fcf3' : '#fff0f0',
+                      borderRadius: '4px',
+                      border: `1px solid ${validationOutcome === 'PASSED' ? '#d5e8d8' : '#ffd7d7'}`
+                    }}>
+                      {validationReport.map((entry, index) => (
+                        <div key={`validation-entry-${index}`} style={codeBlockStyle}>
+                          {entry}
+                        </div>
+                      ))}
+                    </div>
+                  </FormField>
+                </div>
+              </SpaceBetween>
+            </Box>
+            
+            {/* Modal for setting transform guidance */}
+            <Modal
+              onDismiss={() => setTransformGuidanceModalVisible(false)}
+              visible={transformGuidanceModalVisible}
+              footer={
+                <Box float="right">
+                  <SpaceBetween direction="horizontal" size="xs">
+                    <Button variant="link" onClick={() => {
+                      setTransformGuidanceModalVisible(false);
+                    }}>
+                      Cancel
+                    </Button>
+                    <Button variant="primary" onClick={() => {
+                      setTransformGuidanceModalVisible(false);
+                      setTransformGuidance(transformGuidanceTemp);
+                    }}>
+                      Set
+                    </Button>
+                  </SpaceBetween>
+                </Box>
+              }
+              header="GenAI User Guidance (Transform Logic)"
+            >
+              <FormField
+                label="If you have guidance for the LLM when generating transform logic, set it here:"
+              >
+                <Textarea
+                  value={transformGuidanceTemp}
+                  onChange={({ detail }) => setTransformGuidanceTemp(detail.value)}
+                  placeholder="Instead of the default behavior, I want you to do X instead..."
+                  rows={25}
+                />
+              </FormField>
+            </Modal>
           </div>
         </SpaceBetween>
       </Container>
