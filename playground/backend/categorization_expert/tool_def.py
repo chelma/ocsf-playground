@@ -4,7 +4,7 @@ from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
 from backend.categorization_expert.task_def import OcsfCategory
-from backend.categorization_expert.parameters import OcsfVersion
+from backend.core.ocsf.ocsf_versions import OcsfVersion
 
 from backend.core.tools import ToolBundle
 

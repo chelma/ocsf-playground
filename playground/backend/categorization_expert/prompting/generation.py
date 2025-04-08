@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict
 
 from langchain_core.messages import SystemMessage
 
-from backend.categorization_expert.parameters import OcsfVersion
+from backend.core.ocsf.ocsf_versions import OcsfVersion
 from backend.categorization_expert.prompting.knowledge import get_ocsf_guidance, get_ocsf_knowledge
 from backend.categorization_expert.prompting.templates import categorization_prompt_template
 

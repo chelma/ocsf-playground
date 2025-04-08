@@ -26,14 +26,19 @@ curl -X POST "http://127.0.0.1:8000/transformer/heuristic/create/" -H "Content-T
 {
     "input_entry": "Thu Mar 12 2025 07:40:57 mailsv1 sshd[4351]: Failed password for invalid user guest from 86.212.199.60 port 3771 ssh2"
 }'
-{"new_heuristic":"^[A-Z][a-z]{2} [A-Z][a-z]{2} \\d{2} \\d{4} \\d{2}:\\d{2}:\\d{2} \\w+ sshd\\[\\d+\\]: Failed password for invalid user \\w+ from \\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3} port \\d+ ssh2$","rationale":"This regex is designed to match SSH failed login attempts for invalid users, as shown in the input entry. Here's a breakdown of the regex and its rationale:\n\n1. ^[A-Z][a-z]{2} [A-Z][a-z]{2} \\d{2} \\d{4} \\d{2}:\\d{2}:\\d{2}: Matches the timestamp at the beginning of the line. It assumes a consistent format of \"Day Month DD YYYY HH:MM:SS\".\n\n2. \\w+: Matches the hostname (mailsv1 in the example).\n\n3. sshd\\[\\d+\\]: Matches \"sshd\" followed by a process ID in square brackets.\n\n4. Failed password for invalid user \\w+: Matches the specific error message, allowing for any username.\n\n5. from \\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}: Matches an IPv4 address.\n\n6. port \\d+ ssh2$: Matches the port number and \"ssh2\" at the end of the line.\n\nThis regex is specific enough to match similar SSH failed login attempts for invalid users while excluding other types of log entries. It balances specificity and flexibility by allowing for different usernames, IP addresses, and port numbers.\n\nThe regex adheres to JavaScript RegExp specifications and doesn't use any prohibited features like lookaheads, lookbehinds, backreferences, or recursion. It's designed to be efficient and straightforward, matching the structure of the log entry without over-complicating the pattern.\n\nNo specific user guidance was provided, so the regex was created based on the general guidelines and the input entry's structure."}
-
 
 curl -X POST "http://127.0.0.1:8000/transformer/categorize/v1_1_0/" -H "Content-Type: application/json" -d '
 {
     "input_entry": "Thu Mar 12 2025 07:40:57 mailsv1 sshd[4351]: Failed password for invalid user guest from 86.212.199.60 port 3771 ssh2"
 }'
-{"ocsf_category":"Authentication","ocsf_version":"1.1.0","rationale":"The input entry \"Thu Mar 12 2025 07:40:57 mailsv1 sshd[4351]: Failed password for invalid user guest from 86.212.199.60 port 3771 ssh2\" clearly represents an authentication event. Specifically, it's a failed login attempt via SSH. This aligns with the Authentication category (ID: 3002) which covers \"events related to authentication session activities such as user logon and logoff attempts.\" The entry includes details about a failed password attempt, an invalid user, and the source IP and port, which are typical elements of an authentication log. Additionally, the mention of \"ssh2\" indicates that this is an SSH-related authentication event, which is explicitly mentioned in the category description."}
+
+
+curl -X POST "http://127.0.0.1:8000/transformer/logic/v1_1_0/create/" -H "Content-Type: application/json" -d '
+{
+    "input_entry": "Thu Mar 12 2025 07:40:57 mailsv1 sshd[4351]: Failed password for invalid user guest from 86.212.199.60 port 3771 ssh2",
+    "transform_language": "Python",
+    "ocsf_category": "Authentication (3002)"
+}'
 ```
 
 #### Frontend
