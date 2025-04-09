@@ -132,3 +132,7 @@ class OcsfV1_1_0TransformValidator(TransformValidatorBase):
         # * All keys in the shape are present in the shape schema
         # * All keys in the shape have expected types
         # * All keys marked as required in the shape schema are present in the output
+
+        if not only_expected_keys_present or not all_required_keys_present:
+            report.append_entry("Transform output does not conform to the OCSF schema", logger.error)
+            raise ValueError("Transform output does not conform to the OCSF schema")

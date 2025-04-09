@@ -21,7 +21,7 @@ import {
 } from "@cloudscape-design/components";
 
 import { Configuration, TransformerApi, TransformerHeuristicCreateRequest, OcsfCategoryEnum, OcsfVersionEnum,
-  TransformerCategorizeV110Request, TransformLanguageEnum, TransformerLogicV110CreateRequest } from '../generated-api-client';
+  TransformerCategorizeV110Request, TransformLanguageEnum, TransformerLogicV110CreateRequest, TransformerLogicV110TestRequest } from '../generated-api-client';
 
 
 const OcsfPlaygroundPage = () => {
@@ -279,6 +279,55 @@ const OcsfPlaygroundPage = () => {
     } finally {
       setIsGeneratingTransform(false); // Stop visual spinner
     }
+  };
+
+  // Add a new API client function for testing transformation logic
+  const handleTestTransformLogic = async () => {
+    // Make sure one log entry is selected
+    if (selectedLogIds.length !== 1) {
+      alert("Please select exactly one log entry to test the transformation logic.");
+      return;
+    }
+
+    const selectedLog = logs[parseInt(selectedLogIds[0])];
+    setIsGeneratingTransform(true); // Start visual spinner
+
+    try {
+      // Call the API to test transform logic
+      const payload: TransformerLogicV110TestRequest = {
+        transform_language: transformLanguage.value as TransformLanguageEnum,
+        transform_logic: transformLogic,
+        ocsf_category: ocsfCategory.value as OcsfCategoryEnum,
+        input_entry: selectedLog,
+      };
+      
+      const response = await apiClient.transformerLogicV110TestCreate(payload);
+
+      // Update state with response data
+      setTransformOutput(response.data.transform_output);
+      setValidationReport(response.data.validation_report);
+      setValidationOutcome(response.data.validation_outcome);
+
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        const serverErrorMessage = error.response.data.error || "An unknown error occurred.";
+        console.error("Server error:", serverErrorMessage);
+        alert(`Failed to test transform logic. Error:\n\n${serverErrorMessage}`);
+      } else {
+        console.error("Unexpected error:", error);
+        alert("An unexpected error occurred. Please try again later.");
+      }
+    } finally {
+      setIsGeneratingTransform(false); // Stop visual spinner
+    }
+  };
+
+  // Function to clear transformation logic and results
+  const handleClearTransform = () => {
+    setTransformLogic('# Write your transformation logic here\n\ndef transform(input_entry):\n    """Transform the input entry into OCSF format"""\n    # Your transformation code here\n    return {}');
+    setTransformOutput('');
+    setValidationReport([]);
+    setValidationOutcome('N/A');
   };
 
   return (
@@ -671,28 +720,36 @@ const OcsfPlaygroundPage = () => {
                   </FormField>
                 </div>
                 
-                {/* GenAI buttons for Transformation Logic */}
-                <div key="transform-genai-buttons">
-                  <SpaceBetween direction="horizontal" size="xs">
-                    {/* Button to get a GenAI recommendation for the Transform Logic */}
-                    <Button onClick={handleGetTransformRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
-                      {isGeneratingTransform ? <Spinner/> : "Get GenAI Recommendation"}
-                    </Button>
+                {/* Buttons for testing, clearing, and getting GenAI recommendations */}
+                <SpaceBetween direction="horizontal" size="xs">
+                  {/* Button to test the transform logic against the selected log entry */}
+                  <Button onClick={handleTestTransformLogic}>
+                    {isGeneratingTransform ? <Spinner/> : "Test Logic"}
+                  </Button>
 
-                    {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation */}
-                    <Button 
-                      iconAlign="left" 
-                      iconName="gen-ai" 
-                      onClick={() => {
-                        setTransformGuidanceModalVisible(true);
-                        setTransformGuidanceTemp(transformGuidance);
-                      }}
-                      disabled={isGeneratingTransform}
-                    >
-                      {isGeneratingTransform ? <Spinner/> : "Set User Guidance"}
-                    </Button>
-                  </SpaceBetween>
-                </div>
+                  {/* Button to clear transform logic and results */}
+                  <Button onClick={handleClearTransform}>
+                  {isGeneratingTransform ? <Spinner/> : "Clear"}
+                  </Button>
+
+                  {/* Button to get a GenAI recommendation for the Transform Logic */}
+                  <Button onClick={handleGetTransformRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
+                    {isGeneratingTransform ? <Spinner/> : "Get GenAI Recommendation"}
+                  </Button>
+
+                  {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation */}
+                  <Button 
+                    iconAlign="left" 
+                    iconName="gen-ai" 
+                    onClick={() => {
+                      setTransformGuidanceModalVisible(true);
+                      setTransformGuidanceTemp(transformGuidance);
+                    }}
+                    disabled={isGeneratingTransform}
+                  >
+                    {isGeneratingTransform ? <Spinner/> : "Set User Guidance"}
+                  </Button>
+                </SpaceBetween>
                 
                 {/* Transformation Code Editor */}
                 <div key="transform-code-editor">

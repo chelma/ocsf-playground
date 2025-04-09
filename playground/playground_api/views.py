@@ -20,11 +20,14 @@ from backend.regex_expert.parameters import RegexFlavor
 from backend.transformation_expert.expert_def import get_transformation_expert, invoke_transformation_expert
 from backend.transformation_expert.parameters import TransformLanguage
 from backend.transformation_expert.task_def import PythonTransformTask, TransformTask
+from backend.transformation_expert.transforms import TransformPython
 from backend.transformation_expert.validation import OcsfV1_1_0TransformValidator, ValidationReport
 
 from .serializers import (TransformerHeuristicCreateRequestSerializer, TransformerHeuristicCreateResponseSerializer,
                           TransformerCategorizeV1_1_0RequestSerializer, TransformerCategorizeV1_1_0ResponseSerializer,
-                          TransformerLogicV1_1_0CreateRequestSerializer, TransformerLogicV1_1_0CreateResponseSerializer)
+                          TransformerLogicV1_1_0CreateRequestSerializer, TransformerLogicV1_1_0CreateResponseSerializer,
+                          TransformerLogicV1_1_0TestRequestSerializer, TransformerLogicV1_1_0TestResponseSerializer
+                          )
 
 
 logger = logging.getLogger("playground_api")
@@ -155,9 +158,11 @@ class TransformerCategorizeV1_1_0View(APIView):
 
             return result
     
+
+class UnsupportedTransformLanguageError(Exception):
+    pass
+    
 class TransformerLogicV1_1_0CreateView(APIView):
-    class UnsupportedTransformLanguageError(Exception):
-        pass
 
     @csrf_exempt
     @extend_schema(
@@ -187,7 +192,7 @@ class TransformerLogicV1_1_0CreateView(APIView):
             logger.info(f"Transform validation completed")
             logger.debug(f"Validation outcome:\n{report.passed}")
             logger.debug(f"Validation report entries:\n{report.report_entries}")
-        except self.UnsupportedTransformLanguageError as e:
+        except UnsupportedTransformLanguageError as e:
             logger.error(f"{str(e)}")
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -208,7 +213,7 @@ class TransformerLogicV1_1_0CreateView(APIView):
         })
 
         if not response_serializer.is_valid():
-            logger.error(f"Invalid categorization response: {response_serializer.errors}")
+            logger.error(f"Invalid transform creation response: {response_serializer.errors}")
             return Response(response_serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response(response_serializer.data, status=status.HTTP_200_OK)
@@ -238,7 +243,7 @@ class TransformerLogicV1_1_0CreateView(APIView):
                     transform=None
                 )
             else:
-                raise self.UnsupportedTransformLanguageError(f"Unsupported transform language: {request.validated_data['transform_language']}")
+                raise UnsupportedTransformLanguageError(f"Unsupported transform language: {request.validated_data['transform_language']}")
 
             result = invoke_transformation_expert(expert, task)
 
@@ -247,6 +252,81 @@ class TransformerLogicV1_1_0CreateView(APIView):
     def _validate(self, transform_taks: TransformTask) -> ValidationReport:
         # Create the validator
         validator = OcsfV1_1_0TransformValidator(transform_task=transform_taks)
+
+        # Validate the transform
+        report = validator.validate()
+
+        return report
+    
+class TransformerLogicV1_1_0TestView(APIView):
+    @csrf_exempt
+    @extend_schema(
+        request=TransformerLogicV1_1_0TestRequestSerializer,
+        responses=TransformerLogicV1_1_0TestResponseSerializer
+    )
+    def post(self, request):
+        logger.info(f"Received transform testing request: {request.data}")
+
+        # Validate incoming data
+        requestSerializer = TransformerLogicV1_1_0TestRequestSerializer(data=request.data)
+        if not requestSerializer.is_valid():
+            logger.error(f"Invalid transform testing request: {requestSerializer.errors}")
+            return Response(requestSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        task_id = str(uuid.uuid4())
+
+        # Perform the task
+        try:
+            # Validate the transform
+            report = self._validate(task_id, requestSerializer)
+            logger.info(f"Transform validation completed")
+            logger.debug(f"Validation outcome:\n{report.passed}")
+            logger.debug(f"Validation report entries:\n{report.report_entries}")
+        except UnsupportedTransformLanguageError as e:
+            logger.error(f"{str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Transform testing failed: {str(e)}")
+            logger.exception(e)
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Serialize and return the response
+        response_serializer = TransformerLogicV1_1_0TestResponseSerializer(data={
+            "transform_language":  requestSerializer.validated_data["transform_language"].value,
+            "transform_logic":  requestSerializer.validated_data["transform_logic"],
+            "transform_output":  json.dumps(report.output, indent=4),
+            "ocsf_version": OcsfVersion.V1_1_0.value,
+            "ocsf_category":  requestSerializer.validated_data["ocsf_category"].value,
+            "input_entry":  requestSerializer.validated_data["input_entry"],
+            "validation_report": report.report_entries,
+            "validation_outcome": "PASSED" if report.passed else "FAILED"
+        })
+
+        if not response_serializer.is_valid():
+            logger.error(f"Invalid transform testing response: {response_serializer.errors}")
+            return Response(response_serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+    
+    def _validate(self, task_id: str, request: TransformerLogicV1_1_0TestRequestSerializer) -> ValidationReport:
+        # Create the task object to validate
+        if request.validated_data["transform_language"] == TransformLanguage.PYTHON:
+            task = PythonTransformTask(
+                task_id=task_id,
+                input=request.validated_data["input_entry"],
+                context=[],
+                category_name=request.validated_data["ocsf_category"].get_category_name(),
+                transform=TransformPython(
+                    imports="", # Just put everything in the `code` section
+                    description="", # Just put everything in the `code` section
+                    code=request.validated_data["transform_logic"], # Will contain all three sections
+                )
+            )
+        else:
+            raise UnsupportedTransformLanguageError(f"Unsupported transform language: {request.validated_data['transform_language']}")
+
+        # Create the validator
+        validator = OcsfV1_1_0TransformValidator(transform_task=task)
 
         # Validate the transform
         report = validator.validate()

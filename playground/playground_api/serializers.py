@@ -66,3 +66,19 @@ class TransformerLogicV1_1_0CreateResponseSerializer(serializers.Serializer):
     input_entry = serializers.CharField()
     validation_report = serializers.ListField(child=serializers.CharField())
     validation_outcome = serializers.CharField()
+
+class TransformerLogicV1_1_0TestRequestSerializer(serializers.Serializer):
+    transform_language = EnumChoiceField(enum=TransformLanguage)
+    transform_logic = serializers.CharField()
+    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    input_entry = serializers.CharField()
+
+class TransformerLogicV1_1_0TestResponseSerializer(serializers.Serializer):
+    transform_language = EnumChoiceField(enum=TransformLanguage)
+    transform_logic = serializers.CharField()
+    transform_output = serializers.CharField()
+    ocsf_version = EnumChoiceField(enum=OcsfVersion)
+    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    input_entry = serializers.CharField()
+    validation_report = serializers.ListField(child=serializers.CharField())
+    validation_outcome = serializers.CharField()
