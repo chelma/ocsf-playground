@@ -1,5 +1,6 @@
 "use client";
 
+// Update imports
 import React, { useState, CSSProperties, useEffect } from "react";
 import "@cloudscape-design/global-styles/index.css";
 import {
@@ -17,9 +18,11 @@ import {
   Input,
   Spinner,
   Select,
-  SelectProps
+  SelectProps,
+  CodeEditorProps
 } from "@cloudscape-design/components";
 
+import { aceLoader } from './aceLoader';
 import { Configuration, TransformerApi, TransformerHeuristicCreateRequest, OcsfCategoryEnum, OcsfVersionEnum,
   TransformerCategorizeV110Request, TransformLanguageEnum, TransformerLogicV110CreateRequest, TransformerLogicV110TestRequest } from '../generated-api-client';
 
@@ -79,6 +82,29 @@ const OcsfPlaygroundPage = () => {
   const [isGeneratingTransform, setIsGeneratingTransform] = useState(false);
   const [validationReport, setValidationReport] = useState<string[]>([]);
   const [validationOutcome, setValidationOutcome] = useState<string>("");
+  // Add editor preferences state
+  const [transformEditorPreferences, setTransformEditorPreferences] = useState<CodeEditorProps.Preferences>({
+    theme: 'dawn',
+    wrapLines: false,
+  });
+
+  // Add state for Ace instance
+  const [ace, setAce] = useState<any>(null);
+  const [aceLoading, setAceLoading] = useState(true);
+
+  // Load Ace editor when component mounts
+  useEffect(() => {
+    aceLoader()
+      .then(aceInstance => {
+        setAce(aceInstance);
+      })
+      .catch(error => {
+        console.error("Failed to load Ace editor:", error);
+      })
+      .finally(() => {
+        setAceLoading(false);
+      });
+  }, []);
 
   // Style for log content with proper typing
   const codeBlockStyle: CSSProperties = {
@@ -754,20 +780,36 @@ const OcsfPlaygroundPage = () => {
                 {/* Transformation Code Editor */}
                 <div key="transform-code-editor">
                   <FormField
-                    label="Transformation Code"
-                    description="Write code to transform log entries into OCSF format"
+                    label="Transform Code"
                     stretch={true}  // Make the form field stretch to full width
                   >
-                    <Textarea
+                    <CodeEditor
+                      ace={ace}
+                      language={transformLanguage.value === TransformLanguageEnum.Python ? "python" : "javascript"}
                       value={transformLogic}
                       onChange={({ detail }) => setTransformLogic(detail.value)}
-                      placeholder={
-                        transformLanguage.value === TransformLanguageEnum.Python 
-                        ? "# Write your transformation logic here\n\ndef transform(input_entry):\n    \"\"\"Transform the input entry into OCSF format\"\"\"\n    # Your transformation code here\n    return {}" 
-                        : "// Write your transformation logic here\n\nfunction transform(inputEntry) {\n    // Transform the input entry into OCSF format\n    // Your transformation code here\n    return {};\n}"
-                      }
-                      rows={20}
-                      spellcheck={false}
+                      preferences={transformEditorPreferences}
+                      onPreferencesChange={({ detail }) => setTransformEditorPreferences(detail)}
+                      loading={aceLoading || isGeneratingTransform}
+                      i18nStrings={{
+                        loadingState: 'Loading code editor',
+                        errorState: 'There was an error loading the code editor.',
+                        errorStateRecovery: 'Retry',
+                        editorGroupAriaLabel: 'Code editor',
+                        statusBarGroupAriaLabel: 'Status bar',
+                        cursorPosition: (row, column) => `Ln ${row}, Col ${column}`,
+                        errorsTab: 'Errors',
+                        warningsTab: 'Warnings',
+                        preferencesButtonAriaLabel: 'Preferences',
+                        paneCloseButtonAriaLabel: 'Close',
+                        preferencesModalHeader: 'Preferences',
+                        preferencesModalCancel: 'Cancel',
+                        preferencesModalConfirm: 'Confirm',
+                        preferencesModalWrapLines: 'Wrap lines',
+                        preferencesModalTheme: 'Theme',
+                        preferencesModalLightThemes: 'Light themes',
+                        preferencesModalDarkThemes: 'Dark themes'
+                      }}
                     />
                   </FormField>
                 </div>
