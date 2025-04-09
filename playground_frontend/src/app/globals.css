@@ -19,3 +19,55 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Split panes styling - improved */
+.split-wrapper {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
+
+.split {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.gutter {
+  background-color: transparent; /* Make the gutter background transparent */
+  position: relative;
+  flex-shrink: 0;
+  width: 4px !important;
+}
+
+.gutter.gutter-horizontal {
+  cursor: col-resize;
+  height: 100%;
+  margin: 0;
+  z-index: 10;
+  /* Replace image with CSS for the line */
+  background-image: none;
+}
+
+/* Add a vertical line in the middle of the gutter */
+.gutter.gutter-horizontal::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 5px; /* Thicker pipe */
+  background-color: #4da1ff; /* Light blue color */
+  transform: translateX(-50%);
+}
+
+/* Hover effect for better visual feedback - only affect the pipe */
+.gutter.gutter-horizontal:hover::after {
+  background-color: #1a88ff; /* Darker blue on hover */
+  width: 12px; /* Slightly wider on hover */
+}
+
+/* Make sure modal dialogs appear above the split panes */
+[data-awsui-modal-container="true"] {
+  z-index: 1000;
+}

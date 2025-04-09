@@ -28,7 +28,7 @@ Additionally, you must ALWAYS follow these output_guidelines for output you prod
 - You transformation logic will be expressed as Python code.
 - Your code MUST NEVER INCLUDE any network calls or I/O operations.
 - DO NOT use any libraries that are not part of the Python standard library.
-- DO NOT provide an example for how to execute the code you produced
+- DO NOT include a commented-out example of how to use the transform code you produced
 - All code MUST be Python 3.10+ compatible.
 - All indents MUST be 4 spaces.
 - Where it makes sense, you are encouraged to use the `re` module for targeting/extracting portions of the data from

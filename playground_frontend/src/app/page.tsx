@@ -3,13 +3,14 @@
 // Update imports
 import React, { useState, CSSProperties, useEffect } from "react";
 import "@cloudscape-design/global-styles/index.css";
+import 'ace-builds/css/ace.css';
+import Split from 'react-split';
 import {
   Box,
   Button,
   CodeEditor,
   Container,
   FormField,
-  Grid,
   Modal,
   SpaceBetween,
   Table,
@@ -26,6 +27,30 @@ import { aceLoader } from './aceLoader';
 import { Configuration, TransformerApi, TransformerHeuristicCreateRequest, OcsfCategoryEnum, OcsfVersionEnum,
   TransformerCategorizeV110Request, TransformLanguageEnum, TransformerLogicV110CreateRequest, TransformerLogicV110TestRequest } from '../generated-api-client';
 
+// Update the Split component styles to ensure it works properly
+const splitStyles: CSSProperties = {
+  display: 'flex',
+  width: '100%',
+  height: 'calc(100vh - 40px)',
+  overflow: 'hidden'
+};
+
+const paneStyles: CSSProperties = {
+  overflow: 'auto',
+  padding: '0 10px',
+  width: '100%',  // Ensure panes expand to fill available space
+  height: '100%'
+};
+
+// Replace the gutterStyle function with this version
+const getGutterStyle = (dimension: "width" | "height", gutterSize: number, index: number) => {
+  return {
+    backgroundColor: '#eee',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: '50%',
+    cursor: dimension === 'width' ? 'col-resize' : 'row-resize',
+  } as const;
+};
 
 const OcsfPlaygroundPage = () => {
   // Select options for dropdowns using enumerated types
@@ -357,286 +382,416 @@ const OcsfPlaygroundPage = () => {
   };
 
   return (
-    <Grid
-      gridDefinition={[
-        { colspan: 4 }, // Left column - 1/3 of page width
-        { colspan: 4 }, // Middle column - 1/3 of page width
-        { colspan: 4 }, // Right column - 1/3 of page width
-      ]}
+    <Split
+      className="split"
+      style={splitStyles}
+      gutterStyle={getGutterStyle as any}
+      sizes={[25, 50, 25]} // Initial width percentages for each pane
+      minSize={200} // Minimum size in pixels
+      gutterSize={10}  // Make gutters easier to grab
+      snapOffset={30}  // Snap when close to default position
+      dragInterval={1}  // Smoother dragging
+      direction="horizontal"  // Explicitly set direction
     >
-      {/* Left column - Log entries list */}
-      <Container>
-        <SpaceBetween size="m">
-          <Header variant="h1">Log Entries</Header>
+      {/* Left panel - Log entries list */}
+      <div style={paneStyles}>
+        <Container>
+          <SpaceBetween size="m">
+            <Header variant="h1">Log Entries</Header>
 
-          <Button onClick={() => setImportDialogVisible(true)}>
-            Import Logs
-          </Button>
+            <Button onClick={() => setImportDialogVisible(true)}>
+              Import Logs
+            </Button>
 
-          {logs.length > 0 ? (
-            <Box>
-              <p>{logs.length} log entries available</p>
-              <div 
-                style={{ 
-                  maxHeight: "1200px",  
-                  overflowY: "auto" as const,   
-                  padding: "10px"       
-                }}
-              >
-                <Table
-                  items={logs.map((log, index) => ({
-                    id: index.toString(),
-                    content: log
-                  }))}
-                  selectedItems={selectedLogIds.map(id => ({ 
-                    id, 
-                    content: logs[parseInt(id)] 
-                  }))}
-                  onSelectionChange={({ detail }) => {
-                    const selectedIds = detail.selectedItems.map(item => item.id);
-                    setSelectedLogIds(selectedIds);
+            {logs.length > 0 ? (
+              <Box>
+                <p>{logs.length} log entries available</p>
+                <div 
+                  style={{ 
+                    maxHeight: "1150px",  
+                    overflowY: "auto" as const,   
+                    padding: "10px"       
                   }}
-                  columnDefinitions={[
-                    {
-                      id: "index",
-                      header: "ID",
-                      cell: item => parseInt(item.id) + 1,
-                      width: 50,
-                    },
-                    {
-                      id: "content",
-                      header: "Log Content",
-                      cell: item => (
-                        <div style={codeBlockStyle}>
-                          {item.content}
-                        </div>
-                      ),
-                    }
-                  ]}
-                  trackBy="id"
-                  selectionType="multi"
-                  variant="container"
-                  
-                  // Instead of selectableRows, use onRowClick
-                  onRowClick={({ detail }) => handleRowClick(detail.item)}
-                  
-                  ariaLabels={{
-                    selectionGroupLabel: "Log entries selection",
-                    allItemsSelectionLabel: ({ selectedItems }) =>
-                      `${selectedItems.length} ${
-                        selectedItems.length === 1 ? "item" : "items"
-                      } selected`,
-                    itemSelectionLabel: ({ selectedItems }, item) => {
-                      const isSelected = selectedItems.some(
-                        selectedItem => selectedItem.id === item.id
-                      );
-                      return `${isSelected ? "Deselect" : "Select"} log entry ${
-                        parseInt(item.id) + 1
-                      }`;
-                    }
-                  }}
-                  
-                  empty={
-                    <Box textAlign="center" color="inherit">
-                      <b>No logs</b>
-                      <Box padding={{ bottom: "s" }} variant="p" color="inherit">
-                        No log entries to display
-                      </Box>
-                    </Box>
-                  }
-                />
-              </div>
-            </Box>
-          ) : (
-            <Box>
-              <p>No logs imported. Click "Import Logs" to get started.</p>
-            </Box>
-          )}
-        </SpaceBetween>
-      </Container>
-
-      {/* Middle column - OCSF Playground Tools */}
-      <Container>
-        <SpaceBetween size="m">
-          <Header variant="h1">OCSF Tools</Header>
-          
-          {/* Regex Testing Section */}
-          <div style={{ 
-            border: '1px solid #d5dbdb', 
-            padding: '10px',
-            borderRadius: '3px'
-          }}>
-            <Box>
-              <Header variant="h3">Regex Pattern Testing</Header>
-              <SpaceBetween size="m">
-                {/* Field to create and edit the regex */}
-                <FormField
-                  label="Log Pattern Matcher"
-                  description="Enter a regular expression to match log entries."
-                  errorText={regexError}
-                  stretch={true}  // Make the form field stretch to full width
                 >
-                  <Input
-                    value={regexPattern}
-                    onChange={({ detail }) => setRegexPattern(detail.value)}
-                    placeholder="Enter regex pattern (e.g., .*error.*)"
-                    type="text"
-                  />
-                </FormField>
-                
-                {/* Buttons in a horizontal row for pattern testing */}
-                <SpaceBetween direction="horizontal" size="xs">
-                  {/* Button to test the regex by highlighting the log entries it applies to */}
-                  <Button onClick={testRegexPattern}>
-                    Test Pattern
-                  </Button>
-
-                  {/* Button to clear selections and input */}
-                  <Button onClick={handleClear}>
-                    Clear
-                  </Button>
-                </SpaceBetween>
-                
-                {/* GenAI buttons in a separate row */}
-                <SpaceBetween direction="horizontal" size="xs">
-                  {/* Button to get a GenAI recommendation for the Regex */}
-                  <Button onClick={handleGetRegexRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
-                    {isRecommending ? <Spinner/> : "Get GenAI Recommendation"}
-                  </Button>
-
-                  {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation for the Regex */}
-                  <Button 
-                    iconAlign="left" 
-                    iconName="gen-ai" 
-                    onClick={() => {
-                      setRegexGuidanceModalVisible(true);
-                      setRegexGuidanceTemp(regexGuidance);
+                  <Table
+                    items={logs.map((log, index) => ({
+                      id: index.toString(),
+                      content: log
+                    }))}
+                    selectedItems={selectedLogIds.map(id => ({ 
+                      id, 
+                      content: logs[parseInt(id)] 
+                    }))}
+                    onSelectionChange={({ detail }) => {
+                      const selectedIds = detail.selectedItems.map(item => item.id);
+                      setSelectedLogIds(selectedIds);
                     }}
-                    disabled={isRecommending}
-                  >
-                    {isRecommending ? <Spinner/> : "Set User Guidance"}
-                  </Button>
-                  
-                  {/* Button to view the rationale for the generated regex */}
-                  <Button 
-                    iconAlign="left" 
-                    iconName="status-info" 
-                    onClick={() => setRegexRationaleModalVisible(true)}
-                    disabled={!regexRationale || isRecommending}
-                  >
-                    {isRecommending ? <Spinner/> : "View Rationale"}
-                  </Button>
-                </SpaceBetween>
-                
-                <Modal
-                  onDismiss={() => setRegexGuidanceModalVisible(false)}
-                  visible={regexGuidanceModalVisible}
-                  footer={
-                    <Box float="right">
-                      <SpaceBetween direction="horizontal" size="xs">
-                        <Button variant="link" onClick={() => {
-                          setRegexGuidanceModalVisible(false);
-                        }}>
-                          Cancel
-                        </Button>
-                        <Button variant="primary" onClick={() => {
-                          setRegexGuidanceModalVisible(false);
-                          setRegexGuidance(regexGuidanceTemp);
-                        }}>
-                          Set
-                        </Button>
-                      </SpaceBetween>
-                    </Box>
-                  }
-                  header="GenAI User Guidance (Regex)"
-                >
+                    columnDefinitions={[
+                      {
+                        id: "index",
+                        header: "ID",
+                        cell: item => parseInt(item.id) + 1,
+                        width: 50,
+                      },
+                      {
+                        id: "content",
+                        header: "Log Content",
+                        cell: item => (
+                          <div style={codeBlockStyle}>
+                            {item.content}
+                          </div>
+                        ),
+                      }
+                    ]}
+                    trackBy="id"
+                    selectionType="multi"
+                    variant="container"
+                    
+                    // Instead of selectableRows, use onRowClick
+                    onRowClick={({ detail }) => handleRowClick(detail.item)}
+                    
+                    ariaLabels={{
+                      selectionGroupLabel: "Log entries selection",
+                      allItemsSelectionLabel: ({ selectedItems }) =>
+                        `${selectedItems.length} ${
+                          selectedItems.length === 1 ? "item" : "items"
+                        } selected`,
+                      itemSelectionLabel: ({ selectedItems }, item) => {
+                        const isSelected = selectedItems.some(
+                          selectedItem => selectedItem.id === item.id
+                        );
+                        return `${isSelected ? "Deselect" : "Select"} log entry ${
+                          parseInt(item.id) + 1
+                        }`;
+                      }
+                    }}
+                    
+                    empty={
+                      <Box textAlign="center" color="inherit">
+                        <b>No logs</b>
+                        <Box padding={{ bottom: "s" }} variant="p" color="inherit">
+                          No log entries to display
+                        </Box>
+                      </Box>
+                    }
+                  />
+                </div>
+              </Box>
+            ) : (
+              <Box>
+                <p>No logs imported. Click "Import Logs" to get started.</p>
+              </Box>
+            )}
+          </SpaceBetween>
+        </Container>
+      </div>
+
+      {/* Middle panel - OCSF Playground Tools */}
+      <div style={paneStyles}>
+        <Container>
+          <SpaceBetween size="m">
+            <Header variant="h1">OCSF Tools</Header>
+            {/* Regex Testing Section */}
+            <div style={{ 
+              border: '1px solid #d5dbdb', 
+              padding: '10px',
+              borderRadius: '3px'
+            }}>
+              <Box>
+                <Header variant="h3">Regex Pattern Testing</Header>
+                <SpaceBetween size="m">
+                  {/* Field to create and edit the regex */}
                   <FormField
-                    label="If you have guidance for the LLM when generating your regex, set it here:"
+                    label="Log Pattern Matcher"
+                    description="Enter a regular expression to match log entries."
+                    errorText={regexError}
                     stretch={true}  // Make the form field stretch to full width
                   >
-                    <Textarea
-                      value={regexGuidanceTemp}
-                      onChange={({ detail }) => setRegexGuidanceTemp(detail.value)}
-                      placeholder="Instead of the default behavior, I want you to do X instead..."
-                      rows={25}
+                    <Input
+                      value={regexPattern}
+                      onChange={({ detail }) => setRegexPattern(detail.value)}
+                      placeholder="Enter regex pattern (e.g., .*error.*)"
+                      type="text"
                     />
                   </FormField>
-                </Modal>
-                
-                {/* Modal for displaying regex rationale */}
-                <Modal
-                  onDismiss={() => setRegexRationaleModalVisible(false)}
-                  visible={regexRationaleModalVisible}
-                  footer={
-                    <Box float="right">
-                      <Button variant="primary" onClick={() => setRegexRationaleModalVisible(false)}>
-                        Close
-                      </Button>
-                    </Box>
-                  }
-                  header="Regex Generation Rationale"
-                >
-                  <Box>
-                    <p style={{ whiteSpace: 'pre-wrap' }}>{regexRationale}</p>
-                  </Box>
-                </Modal>
-                
-                {selectedLogIds.length > 0 && (
-                  <Box>
-                    <p>{selectedLogIds.length} log entries matched your pattern.</p>
-                  </Box>
-                )}
-                
-                {selectedLogIds.length === 0 && logs.length > 0 && (
-                  <Box>
-                    <p>No log entries matched your pattern.</p>
-                  </Box>
-                )}
-              </SpaceBetween>
-            </Box>
-          </div>
+                  
+                  {/* Buttons in a horizontal row for pattern testing */}
+                  <SpaceBetween direction="horizontal" size="xs">
+                    {/* Button to test the regex by highlighting the log entries it applies to */}
+                    <Button onClick={testRegexPattern}>
+                      Test Pattern
+                    </Button>
 
-          {/* OCSF Categorization Section */}
-          <div style={{ 
-            border: '1px solid #d5dbdb', 
-            padding: '10px',
-            borderRadius: '3px'
-          }}>
-            <Box>
-              <Header variant="h3">OCSF Categorization</Header>
-              <SpaceBetween size="m">
-                {/* Version and Category Selection */}
-                <div key="ocsf-version-category-selection">
-                  <SpaceBetween direction="horizontal" size="xs">
-                    <FormField
-                      label="OCSF Version"
-                    >
-                      <Select
-                        selectedOption={ocsfVersion}
-                        onChange={({ detail }) => setOcsfVersion(detail.selectedOption)}
-                        options={ocsfVersionOptions}
-                        placeholder="Select an OCSF version"
-                      />
-                    </FormField>
-                    <FormField
-                      label="OCSF Category"
-                    >
-                      <Select
-                        selectedOption={ocsfCategory}
-                        onChange={({ detail }) => setOcsfCategory(detail.selectedOption)}
-                        options={ocsfCategoryOptions}
-                        placeholder="Select an OCSF category"
-                      />
-                    </FormField>
+                    {/* Button to clear selections and input */}
+                    <Button onClick={handleClear}>
+                      Clear
+                    </Button>
                   </SpaceBetween>
-                </div>
-                
-                {/* GenAI buttons for OCSF categorization */}
-                <div key="ocsf-genai-buttons">
+                  
+                  {/* GenAI buttons in a separate row */}
                   <SpaceBetween direction="horizontal" size="xs">
-                    {/* Button to get a GenAI recommendation for the Category */}
-                    <Button onClick={handleGetCategoryRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
-                      {isRecommendingCategory ? <Spinner/> : "Get GenAI Recommendation"}
+                    {/* Button to get a GenAI recommendation for the Regex */}
+                    <Button onClick={handleGetRegexRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
+                      {isRecommending ? <Spinner/> : "Get GenAI Recommendation"}
+                    </Button>
+
+                    {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation for the Regex */}
+                    <Button 
+                      iconAlign="left" 
+                      iconName="gen-ai" 
+                      onClick={() => {
+                        setRegexGuidanceModalVisible(true);
+                        setRegexGuidanceTemp(regexGuidance);
+                      }}
+                      disabled={isRecommending}
+                    >
+                      {isRecommending ? <Spinner/> : "Set User Guidance"}
+                    </Button>
+                    
+                    {/* Button to view the rationale for the generated regex */}
+                    <Button 
+                      iconAlign="left" 
+                      iconName="status-info" 
+                      onClick={() => setRegexRationaleModalVisible(true)}
+                      disabled={!regexRationale || isRecommending}
+                    >
+                      {isRecommending ? <Spinner/> : "View Rationale"}
+                    </Button>
+                  </SpaceBetween>
+                  
+                  <Modal
+                    onDismiss={() => setRegexGuidanceModalVisible(false)}
+                    visible={regexGuidanceModalVisible}
+                    footer={
+                      <Box float="right">
+                        <SpaceBetween direction="horizontal" size="xs">
+                          <Button variant="link" onClick={() => {
+                            setRegexGuidanceModalVisible(false);
+                          }}>
+                            Cancel
+                          </Button>
+                          <Button variant="primary" onClick={() => {
+                            setRegexGuidanceModalVisible(false);
+                            setRegexGuidance(regexGuidanceTemp);
+                          }}>
+                            Set
+                          </Button>
+                        </SpaceBetween>
+                      </Box>
+                    }
+                    header="GenAI User Guidance (Regex)"
+                  >
+                    <FormField
+                      label="If you have guidance for the LLM when generating your regex, set it here:"
+                      stretch={true}  // Make the form field stretch to full width
+                    >
+                      <Textarea
+                        value={regexGuidanceTemp}
+                        onChange={({ detail }) => setRegexGuidanceTemp(detail.value)}
+                        placeholder="Instead of the default behavior, I want you to do X instead..."
+                        rows={25}
+                      />
+                    </FormField>
+                  </Modal>
+                  
+                  {/* Modal for displaying regex rationale */}
+                  <Modal
+                    onDismiss={() => setRegexRationaleModalVisible(false)}
+                    visible={regexRationaleModalVisible}
+                    footer={
+                      <Box float="right">
+                        <Button variant="primary" onClick={() => setRegexRationaleModalVisible(false)}>
+                          Close
+                        </Button>
+                      </Box>
+                    }
+                    header="Regex Generation Rationale"
+                  >
+                    <Box>
+                      <p style={{ whiteSpace: 'pre-wrap' }}>{regexRationale}</p>
+                    </Box>
+                  </Modal>
+                  
+                  {selectedLogIds.length > 0 && (
+                    <Box>
+                      <p>{selectedLogIds.length} log entries matched your pattern.</p>
+                    </Box>
+                  )}
+                  
+                  {selectedLogIds.length === 0 && logs.length > 0 && (
+                    <Box>
+                      <p>No log entries matched your pattern.</p>
+                    </Box>
+                  )}
+                </SpaceBetween>
+              </Box>
+            </div>
+
+            {/* OCSF Categorization Section */}
+            <div style={{ 
+              border: '1px solid #d5dbdb', 
+              padding: '10px',
+              borderRadius: '3px'
+            }}>
+              <Box>
+                <Header variant="h3">OCSF Categorization</Header>
+                <SpaceBetween size="m">
+                  {/* Version and Category Selection */}
+                  <div key="ocsf-version-category-selection">
+                    <SpaceBetween direction="horizontal" size="xs">
+                      <FormField
+                        label="OCSF Version"
+                      >
+                        <Select
+                          selectedOption={ocsfVersion}
+                          onChange={({ detail }) => setOcsfVersion(detail.selectedOption)}
+                          options={ocsfVersionOptions}
+                          placeholder="Select an OCSF version"
+                        />
+                      </FormField>
+                      <FormField
+                        label="OCSF Category"
+                      >
+                        <Select
+                          selectedOption={ocsfCategory}
+                          onChange={({ detail }) => setOcsfCategory(detail.selectedOption)}
+                          options={ocsfCategoryOptions}
+                          placeholder="Select an OCSF category"
+                        />
+                      </FormField>
+                    </SpaceBetween>
+                  </div>
+                  
+                  {/* GenAI buttons for OCSF categorization */}
+                  <div key="ocsf-genai-buttons">
+                    <SpaceBetween direction="horizontal" size="xs">
+                      {/* Button to get a GenAI recommendation for the Category */}
+                      <Button onClick={handleGetCategoryRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
+                        {isRecommendingCategory ? <Spinner/> : "Get GenAI Recommendation"}
+                      </Button>
+
+                      {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation */}
+                      <Button 
+                        iconAlign="left" 
+                        iconName="gen-ai" 
+                        onClick={() => {
+                          setCategoryGuidanceModalVisible(true);
+                          setCategoryGuidanceTemp(categoryGuidance);
+                        }}
+                        disabled={isRecommendingCategory}
+                      >
+                        {isRecommendingCategory ? <Spinner/> : "Set User Guidance"}
+                      </Button>
+                      
+                      {/* Button to view the rationale for the generated category */}
+                      <Button 
+                        iconAlign="left" 
+                        iconName="status-info" 
+                        onClick={() => setCategoryRationaleModalVisible(true)}
+                        disabled={!categoryRationale || isRecommendingCategory}
+                      >
+                        {isRecommendingCategory ? <Spinner/> : "View Rationale"}
+                      </Button>
+                    </SpaceBetween>
+                  </div>
+                  
+                  {/* Modal for setting category guidance */}
+                  <Modal
+                    onDismiss={() => setCategoryGuidanceModalVisible(false)}
+                    visible={categoryGuidanceModalVisible}
+                    footer={
+                      <Box float="right">
+                        <SpaceBetween direction="horizontal" size="xs">
+                          <Button variant="link" onClick={() => {
+                            setCategoryGuidanceModalVisible(false);
+                          }}>
+                            Cancel
+                          </Button>
+                          <Button variant="primary" onClick={() => {
+                            setCategoryGuidanceModalVisible(false);
+                            setCategoryGuidance(categoryGuidanceTemp);
+                          }}>
+                            Set
+                          </Button>
+                        </SpaceBetween>
+                      </Box>
+                    }
+                    header="GenAI User Guidance (OCSF Category)"
+                  >
+                    <FormField
+                      label="If you have guidance for the LLM when categorizing, set it here:"
+                    >
+                      <Textarea
+                        value={categoryGuidanceTemp}
+                        onChange={({ detail }) => setCategoryGuidanceTemp(detail.value)}
+                        placeholder="Instead of the default behavior, I want you to do X instead..."
+                        rows={25}
+                      />
+                    </FormField>
+                  </Modal>
+                  
+                  {/* Modal for displaying category rationale */}
+                  <Modal
+                    onDismiss={() => setCategoryRationaleModalVisible(false)}
+                    visible={categoryRationaleModalVisible}
+                    footer={
+                      <Box float="right">
+                        <Button variant="primary" onClick={() => setCategoryRationaleModalVisible(false)}>
+                          Close
+                        </Button>
+                      </Box>
+                    }
+                    header="OCSF Category Recommendation Rationale"
+                  >
+                    <Box>
+                      <p style={{ whiteSpace: 'pre-wrap' }}>{categoryRationale}</p>
+                    </Box>
+                  </Modal>
+                </SpaceBetween>
+              </Box>
+            </div>
+
+            {/* Transformation Logic Section */}
+            <div style={{ 
+              border: '1px solid #d5dbdb', 
+              padding: '10px',
+              borderRadius: '3px'
+            }}>
+              <Box>
+                <Header variant="h3">Transformation Logic</Header>
+                <SpaceBetween size="m">
+                  {/* Transform Language Selection */}
+                  <div key="transform-language-selection">
+                    <FormField
+                      label="Transform Language"
+                    >
+                      <div style={{ width: 'fit-content' }}>
+                        <Select
+                          selectedOption={transformLanguage}
+                          onChange={({ detail }) => setTransformLanguage(detail.selectedOption)}
+                          options={transformLanguageOptions}
+                          placeholder="Select a transform language"
+                          expandToViewport
+                        />
+                      </div>
+                    </FormField>
+                  </div>
+                  
+                  {/* Buttons for testing, clearing, and getting GenAI recommendations */}
+                  <SpaceBetween direction="horizontal" size="xs">
+                    {/* Button to test the transform logic against the selected log entry */}
+                    <Button onClick={handleTestTransformLogic}>
+                      {isGeneratingTransform ? <Spinner/> : "Test Logic"}
+                    </Button>
+
+                    {/* Button to clear transform logic and results */}
+                    <Button onClick={handleClearTransform}>
+                    {isGeneratingTransform ? <Spinner/> : "Clear"}
+                    </Button>
+
+                    {/* Button to get a GenAI recommendation for the Transform Logic */}
+                    <Button onClick={handleGetTransformRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
+                      {isGeneratingTransform ? <Spinner/> : "Get GenAI Recommendation"}
                     </Button>
 
                     {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation */}
@@ -644,290 +799,169 @@ const OcsfPlaygroundPage = () => {
                       iconAlign="left" 
                       iconName="gen-ai" 
                       onClick={() => {
-                        setCategoryGuidanceModalVisible(true);
-                        setCategoryGuidanceTemp(categoryGuidance);
+                        setTransformGuidanceModalVisible(true);
+                        setTransformGuidanceTemp(transformGuidance);
                       }}
-                      disabled={isRecommendingCategory}
+                      disabled={isGeneratingTransform}
                     >
-                      {isRecommendingCategory ? <Spinner/> : "Set User Guidance"}
-                    </Button>
-                    
-                    {/* Button to view the rationale for the generated category */}
-                    <Button 
-                      iconAlign="left" 
-                      iconName="status-info" 
-                      onClick={() => setCategoryRationaleModalVisible(true)}
-                      disabled={!categoryRationale || isRecommendingCategory}
-                    >
-                      {isRecommendingCategory ? <Spinner/> : "View Rationale"}
+                      {isGeneratingTransform ? <Spinner/> : "Set User Guidance"}
                     </Button>
                   </SpaceBetween>
-                </div>
-                
-                {/* Modal for setting category guidance */}
-                <Modal
-                  onDismiss={() => setCategoryGuidanceModalVisible(false)}
-                  visible={categoryGuidanceModalVisible}
-                  footer={
-                    <Box float="right">
-                      <SpaceBetween direction="horizontal" size="xs">
-                        <Button variant="link" onClick={() => {
-                          setCategoryGuidanceModalVisible(false);
-                        }}>
-                          Cancel
-                        </Button>
-                        <Button variant="primary" onClick={() => {
-                          setCategoryGuidanceModalVisible(false);
-                          setCategoryGuidance(categoryGuidanceTemp);
-                        }}>
-                          Set
-                        </Button>
-                      </SpaceBetween>
-                    </Box>
-                  }
-                  header="GenAI User Guidance (OCSF Category)"
-                >
-                  <FormField
-                    label="If you have guidance for the LLM when categorizing, set it here:"
-                  >
-                    <Textarea
-                      value={categoryGuidanceTemp}
-                      onChange={({ detail }) => setCategoryGuidanceTemp(detail.value)}
-                      placeholder="Instead of the default behavior, I want you to do X instead..."
-                      rows={25}
-                    />
-                  </FormField>
-                </Modal>
-                
-                {/* Modal for displaying category rationale */}
-                <Modal
-                  onDismiss={() => setCategoryRationaleModalVisible(false)}
-                  visible={categoryRationaleModalVisible}
-                  footer={
-                    <Box float="right">
-                      <Button variant="primary" onClick={() => setCategoryRationaleModalVisible(false)}>
-                        Close
-                      </Button>
-                    </Box>
-                  }
-                  header="OCSF Category Recommendation Rationale"
-                >
-                  <Box>
-                    <p style={{ whiteSpace: 'pre-wrap' }}>{categoryRationale}</p>
-                  </Box>
-                </Modal>
-              </SpaceBetween>
-            </Box>
-          </div>
-
-          {/* Transformation Logic Section */}
-          <div style={{ 
-            border: '1px solid #d5dbdb', 
-            padding: '10px',
-            borderRadius: '3px'
-          }}>
-            <Box>
-              <Header variant="h3">Transformation Logic</Header>
-              <SpaceBetween size="m">
-                {/* Transform Language Selection */}
-                <div key="transform-language-selection">
-                  <FormField
-                    label="Transform Language"
-                  >
-                    <div style={{ width: 'fit-content' }}>
-                      <Select
-                        selectedOption={transformLanguage}
-                        onChange={({ detail }) => setTransformLanguage(detail.selectedOption)}
-                        options={transformLanguageOptions}
-                        placeholder="Select a transform language"
-                        expandToViewport
+                  
+                  {/* Transformation Code Editor */}
+                  <div key="transform-code-editor">
+                    <FormField
+                      label="Transform Code"
+                      stretch={true}  // Make the form field stretch to full width
+                    >
+                      <CodeEditor
+                        ace={ace}
+                        language={transformLanguage.value === TransformLanguageEnum.Python ? "python" : "javascript"}
+                        value={transformLogic}
+                        onChange={({ detail }) => setTransformLogic(detail.value)}
+                        preferences={transformEditorPreferences}
+                        onPreferencesChange={({ detail }) => setTransformEditorPreferences(detail)}
+                        loading={aceLoading || isGeneratingTransform}
+                        i18nStrings={{
+                          loadingState: 'Loading code editor',
+                          errorState: 'There was an error loading the code editor.',
+                          errorStateRecovery: 'Retry',
+                          editorGroupAriaLabel: 'Code editor',
+                          statusBarGroupAriaLabel: 'Status bar',
+                          cursorPosition: (row, column) => `Ln ${row}, Col ${column}`,
+                          errorsTab: 'Errors',
+                          warningsTab: 'Warnings',
+                          preferencesButtonAriaLabel: 'Preferences',
+                          paneCloseButtonAriaLabel: 'Close',
+                          preferencesModalHeader: 'Preferences',
+                          preferencesModalCancel: 'Cancel',
+                          preferencesModalConfirm: 'Confirm',
+                          preferencesModalWrapLines: 'Wrap lines',
+                          preferencesModalTheme: 'Theme',
+                          preferencesModalLightThemes: 'Light themes',
+                          preferencesModalDarkThemes: 'Dark themes'
+                        }}
                       />
-                    </div>
-                  </FormField>
-                </div>
-                
-                {/* Buttons for testing, clearing, and getting GenAI recommendations */}
-                <SpaceBetween direction="horizontal" size="xs">
-                  {/* Button to test the transform logic against the selected log entry */}
-                  <Button onClick={handleTestTransformLogic}>
-                    {isGeneratingTransform ? <Spinner/> : "Test Logic"}
-                  </Button>
-
-                  {/* Button to clear transform logic and results */}
-                  <Button onClick={handleClearTransform}>
-                  {isGeneratingTransform ? <Spinner/> : "Clear"}
-                  </Button>
-
-                  {/* Button to get a GenAI recommendation for the Transform Logic */}
-                  <Button onClick={handleGetTransformRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
-                    {isGeneratingTransform ? <Spinner/> : "Get GenAI Recommendation"}
-                  </Button>
-
-                  {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation */}
-                  <Button 
-                    iconAlign="left" 
-                    iconName="gen-ai" 
-                    onClick={() => {
-                      setTransformGuidanceModalVisible(true);
-                      setTransformGuidanceTemp(transformGuidance);
-                    }}
-                    disabled={isGeneratingTransform}
-                  >
-                    {isGeneratingTransform ? <Spinner/> : "Set User Guidance"}
-                  </Button>
+                    </FormField>
+                  </div>
                 </SpaceBetween>
-                
-                {/* Transformation Code Editor */}
-                <div key="transform-code-editor">
-                  <FormField
-                    label="Transform Code"
-                    stretch={true}  // Make the form field stretch to full width
-                  >
-                    <CodeEditor
-                      ace={ace}
-                      language={transformLanguage.value === TransformLanguageEnum.Python ? "python" : "javascript"}
-                      value={transformLogic}
-                      onChange={({ detail }) => setTransformLogic(detail.value)}
-                      preferences={transformEditorPreferences}
-                      onPreferencesChange={({ detail }) => setTransformEditorPreferences(detail)}
-                      loading={aceLoading || isGeneratingTransform}
-                      i18nStrings={{
-                        loadingState: 'Loading code editor',
-                        errorState: 'There was an error loading the code editor.',
-                        errorStateRecovery: 'Retry',
-                        editorGroupAriaLabel: 'Code editor',
-                        statusBarGroupAriaLabel: 'Status bar',
-                        cursorPosition: (row, column) => `Ln ${row}, Col ${column}`,
-                        errorsTab: 'Errors',
-                        warningsTab: 'Warnings',
-                        preferencesButtonAriaLabel: 'Preferences',
-                        paneCloseButtonAriaLabel: 'Close',
-                        preferencesModalHeader: 'Preferences',
-                        preferencesModalCancel: 'Cancel',
-                        preferencesModalConfirm: 'Confirm',
-                        preferencesModalWrapLines: 'Wrap lines',
-                        preferencesModalTheme: 'Theme',
-                        preferencesModalLightThemes: 'Light themes',
-                        preferencesModalDarkThemes: 'Dark themes'
-                      }}
-                    />
-                  </FormField>
-                </div>
-              </SpaceBetween>
-            </Box>
-            
-            {/* Modal for setting transform guidance */}
-            <Modal
-              onDismiss={() => setTransformGuidanceModalVisible(false)}
-              visible={transformGuidanceModalVisible}
-              footer={
-                <Box float="right">
-                  <SpaceBetween direction="horizontal" size="xs">
-                    <Button variant="link" onClick={() => {
-                      setTransformGuidanceModalVisible(false);
-                    }}>
-                      Cancel
-                    </Button>
-                    <Button variant="primary" onClick={() => {
-                      setTransformGuidanceModalVisible(false);
-                      setTransformGuidance(transformGuidanceTemp);
-                    }}>
-                      Set
-                    </Button>
-                  </SpaceBetween>
-                </Box>
-              }
-              header="GenAI User Guidance (Transform Logic)"
-            >
-              <FormField
-                label="If you have guidance for the LLM when generating transform logic, set it here:"
+              </Box>
+              
+              {/* Modal for setting transform guidance */}
+              <Modal
+                onDismiss={() => setTransformGuidanceModalVisible(false)}
+                visible={transformGuidanceModalVisible}
+                footer={
+                  <Box float="right">
+                    <SpaceBetween direction="horizontal" size="xs">
+                      <Button variant="link" onClick={() => {
+                        setTransformGuidanceModalVisible(false);
+                      }}>
+                        Cancel
+                      </Button>
+                      <Button variant="primary" onClick={() => {
+                        setTransformGuidanceModalVisible(false);
+                        setTransformGuidance(transformGuidanceTemp);
+                      }}>
+                        Set
+                      </Button>
+                    </SpaceBetween>
+                  </Box>
+                }
+                header="GenAI User Guidance (Transform Logic)"
               >
-                <Textarea
-                  value={transformGuidanceTemp}
-                  onChange={({ detail }) => setTransformGuidanceTemp(detail.value)}
-                  placeholder="Instead of the default behavior, I want you to do X instead..."
-                  rows={25}
-                />
-              </FormField>
-            </Modal>
-          </div>
-        </SpaceBetween>
-      </Container>
-
-      {/* Right column - Transformation Output */}
-      <Container>
-        <SpaceBetween size="m">
-          <Header variant="h1">Transformation Results</Header>
-
-          {/* Transformation Output */}
-          <div style={{ 
-            border: '1px solid #d5dbdb', 
-            padding: '10px',
-            borderRadius: '3px'
-          }}>
-            <Box>
-              <Header variant="h3">Transformation Output</Header>
-              <SpaceBetween size="m">
                 <FormField
-                  label="JSON Result"
-                  description="The result of applying the transformation to the selected log entry"
-                  stretch={true}  // Make the form field stretch to full width
+                  label="If you have guidance for the LLM when generating transform logic, set it here:"
                 >
                   <Textarea
-                    value={transformOutput}
-                    readOnly
-                    rows={20}
-                    placeholder="Transformation output will appear here after you click 'Get GenAI Recommendation'"
+                    value={transformGuidanceTemp}
+                    onChange={({ detail }) => setTransformGuidanceTemp(detail.value)}
+                    placeholder="Instead of the default behavior, I want you to do X instead..."
+                    rows={25}
                   />
                 </FormField>
-              </SpaceBetween>
-            </Box>
-          </div>
+              </Modal>
+            </div>
+          </SpaceBetween>
+        </Container>
+      </div>
 
-          {/* Validation Report */}
-          <div style={{ 
-            border: '1px solid #d5dbdb', 
-            padding: '10px',
-            borderRadius: '3px'
-          }}>
-            <Box>
-              <Header variant="h3">Validation Report</Header>
-              <SpaceBetween size="m">
-                <FormField
-                  label={validationOutcome ? `Status: ${validationOutcome}` : "Status: Not Available"}
-                  description="The results of validating the transformed output against the OCSF schema"
-                  stretch={true}  // Make the form field stretch to full width
-                >
-                  <div style={{ 
-                    width: '100%',  // Ensure the div takes full width
-                    minHeight: '100px',
-                    maxHeight: '400px', 
-                    overflowY: 'auto', 
-                    padding: '10px',
-                    backgroundColor: validationOutcome === 'PASSED' ? '#f2fcf3' : 
-                                    validationOutcome === 'FAILED' ? '#fff0f0' : '#f5f5f5',
-                    borderRadius: '4px',
-                    border: `1px solid ${
-                      validationOutcome === 'PASSED' ? '#d5e8d8' : 
-                      validationOutcome === 'FAILED' ? '#ffd7d7' : '#e0e0e0'
-                    }`
-                  }}>
-                    {validationReport.length > 0 ? (
-                      validationReport.map((entry, index) => (
-                        <div key={`validation-entry-${index}`} style={codeBlockStyle}>
-                          {entry}
-                        </div>
-                      ))
-                    ) : (
-                      <p>Validation report will appear here after transformation</p>
-                    )}
-                  </div>
-                </FormField>
-              </SpaceBetween>
-            </Box>
-          </div>
-        </SpaceBetween>
-      </Container>
+      {/* Right panel - Transformation Output */}
+      <div style={paneStyles}>
+        <Container>
+          <SpaceBetween size="m">
+            <Header variant="h1">Transformation Results</Header>
+
+            {/* Transformation Output */}
+            <div style={{ 
+              border: '1px solid #d5dbdb', 
+              padding: '10px',
+              borderRadius: '3px'
+            }}>
+              <Box>
+                <Header variant="h3">Transformation Output</Header>
+                <SpaceBetween size="m">
+                  <FormField
+                    label="JSON Result"
+                    description="The result of applying the transformation to the selected log entry"
+                    stretch={true}  // Make the form field stretch to full width
+                  >
+                    <Textarea
+                      value={transformOutput}
+                      readOnly
+                      rows={20}
+                      placeholder="Transformation output will appear here after you click 'Get GenAI Recommendation'"
+                    />
+                  </FormField>
+                </SpaceBetween>
+              </Box>
+            </div>
+
+            {/* Validation Report */}
+            <div style={{ 
+              border: '1px solid #d5dbdb', 
+              padding: '10px',
+              borderRadius: '3px'
+            }}>
+              <Box>
+                <Header variant="h3">Validation Report</Header>
+                <SpaceBetween size="m">
+                  <FormField
+                    label={validationOutcome ? `Status: ${validationOutcome}` : "Status: Not Available"}
+                    description="The results of validating the transformed output against the OCSF schema"
+                    stretch={true}  // Make the form field stretch to full width
+                  >
+                    <div style={{ 
+                      width: '100%',  // Ensure the div takes full width
+                      minHeight: '100px',
+                      maxHeight: '400px', 
+                      overflowY: 'auto', 
+                      padding: '10px',
+                      backgroundColor: validationOutcome === 'PASSED' ? '#f2fcf3' : 
+                                      validationOutcome === 'FAILED' ? '#fff0f0' : '#f5f5f5',
+                      borderRadius: '4px',
+                      border: `1px solid ${
+                        validationOutcome === 'PASSED' ? '#d5e8d8' : 
+                        validationOutcome === 'FAILED' ? '#ffd7d7' : '#e0e0e0'
+                      }`
+                    }}>
+                      {validationReport.length > 0 ? (
+                        validationReport.map((entry, index) => (
+                          <div key={`validation-entry-${index}`} style={codeBlockStyle}>
+                            {entry}
+                          </div>
+                        ))
+                      ) : (
+                        <p>Validation report will appear here after transformation</p>
+                      )}
+                    </div>
+                  </FormField>
+                </SpaceBetween>
+              </Box>
+            </div>
+          </SpaceBetween>
+        </Container>
+      </div>
 
       {/* Import Dialog */}
       <Modal
@@ -962,7 +996,7 @@ const OcsfPlaygroundPage = () => {
           />
         </FormField>
       </Modal>
-    </Grid>
+    </Split>
   );
 };
 
