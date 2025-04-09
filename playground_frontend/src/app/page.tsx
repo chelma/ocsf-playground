@@ -285,7 +285,8 @@ const OcsfPlaygroundPage = () => {
     <Grid
       gridDefinition={[
         { colspan: 4 }, // Left column - 1/3 of page width
-        { colspan: 8 }, // Right column - 2/3 of page width
+        { colspan: 4 }, // Middle column - 1/3 of page width
+        { colspan: 4 }, // Right column - 1/3 of page width
       ]}
     >
       {/* Left column - Log entries list */}
@@ -379,10 +380,10 @@ const OcsfPlaygroundPage = () => {
         </SpaceBetween>
       </Container>
 
-      {/* Right column - OCSF Playground */}
+      {/* Middle column - OCSF Playground Tools */}
       <Container>
         <SpaceBetween size="m">
-          <Header variant="h1">OCSF Playground</Header>
+          <Header variant="h1">OCSF Tools</Header>
           
           {/* Regex Testing Section */}
           <div style={{ 
@@ -393,12 +394,12 @@ const OcsfPlaygroundPage = () => {
             <Box>
               <Header variant="h3">Regex Pattern Testing</Header>
               <SpaceBetween size="m">
-
                 {/* Field to create and edit the regex */}
                 <FormField
                   label="Log Pattern Matcher"
                   description="Enter a regular expression to match log entries."
                   errorText={regexError}
+                  stretch={true}  // Make the form field stretch to full width
                 >
                   <Input
                     value={regexPattern}
@@ -476,6 +477,7 @@ const OcsfPlaygroundPage = () => {
                 >
                   <FormField
                     label="If you have guidance for the LLM when generating your regex, set it here:"
+                    stretch={true}  // Make the form field stretch to full width
                   >
                     <Textarea
                       value={regexGuidanceTemp}
@@ -697,6 +699,7 @@ const OcsfPlaygroundPage = () => {
                   <FormField
                     label="Transformation Code"
                     description="Write code to transform log entries into OCSF format"
+                    stretch={true}  // Make the form field stretch to full width
                   >
                     <Textarea
                       value={transformLogic}
@@ -709,42 +712,6 @@ const OcsfPlaygroundPage = () => {
                       rows={20}
                       spellcheck={false}
                     />
-                  </FormField>
-                </div>
-                
-                {/* Display transformation output and validation results when available */}
-                <div key="transform-output" style={{ display: transformOutput ? 'block' : 'none' }}>
-                  <FormField
-                    label="Transformation Output"
-                    description="The result of applying the transformation to the selected log entry"
-                  >
-                    <Textarea
-                      value={transformOutput}
-                      readOnly
-                      rows={10}
-                    />
-                  </FormField>
-                </div>
-                
-                <div key="transform-validation-report" style={{ display: validationReport.length > 0 ? 'block' : 'none' }}>
-                  <FormField
-                    label={`Validation Report: ${validationOutcome}`}
-                    description="The results of validating the transformed output against the OCSF schema"
-                  >
-                    <div style={{ 
-                      maxHeight: '200px', 
-                      overflowY: 'auto', 
-                      padding: '10px',
-                      backgroundColor: validationOutcome === 'PASSED' ? '#f2fcf3' : '#fff0f0',
-                      borderRadius: '4px',
-                      border: `1px solid ${validationOutcome === 'PASSED' ? '#d5e8d8' : '#ffd7d7'}`
-                    }}>
-                      {validationReport.map((entry, index) => (
-                        <div key={`validation-entry-${index}`} style={codeBlockStyle}>
-                          {entry}
-                        </div>
-                      ))}
-                    </div>
                   </FormField>
                 </div>
               </SpaceBetween>
@@ -784,6 +751,81 @@ const OcsfPlaygroundPage = () => {
                 />
               </FormField>
             </Modal>
+          </div>
+        </SpaceBetween>
+      </Container>
+
+      {/* Right column - Transformation Output */}
+      <Container>
+        <SpaceBetween size="m">
+          <Header variant="h1">Transformation Results</Header>
+
+          {/* Transformation Output */}
+          <div style={{ 
+            border: '1px solid #d5dbdb', 
+            padding: '10px',
+            borderRadius: '3px'
+          }}>
+            <Box>
+              <Header variant="h3">Transformation Output</Header>
+              <SpaceBetween size="m">
+                <FormField
+                  label="JSON Result"
+                  description="The result of applying the transformation to the selected log entry"
+                  stretch={true}  // Make the form field stretch to full width
+                >
+                  <Textarea
+                    value={transformOutput}
+                    readOnly
+                    rows={20}
+                    placeholder="Transformation output will appear here after you click 'Get GenAI Recommendation'"
+                  />
+                </FormField>
+              </SpaceBetween>
+            </Box>
+          </div>
+
+          {/* Validation Report */}
+          <div style={{ 
+            border: '1px solid #d5dbdb', 
+            padding: '10px',
+            borderRadius: '3px'
+          }}>
+            <Box>
+              <Header variant="h3">Validation Report</Header>
+              <SpaceBetween size="m">
+                <FormField
+                  label={validationOutcome ? `Status: ${validationOutcome}` : "Status: Not Available"}
+                  description="The results of validating the transformed output against the OCSF schema"
+                  stretch={true}  // Make the form field stretch to full width
+                >
+                  <div style={{ 
+                    width: '100%',  // Ensure the div takes full width
+                    minHeight: '100px',
+                    maxHeight: '400px', 
+                    overflowY: 'auto', 
+                    padding: '10px',
+                    backgroundColor: validationOutcome === 'PASSED' ? '#f2fcf3' : 
+                                    validationOutcome === 'FAILED' ? '#fff0f0' : '#f5f5f5',
+                    borderRadius: '4px',
+                    border: `1px solid ${
+                      validationOutcome === 'PASSED' ? '#d5e8d8' : 
+                      validationOutcome === 'FAILED' ? '#ffd7d7' : '#e0e0e0'
+                    }`
+                  }}>
+                    {validationReport.length > 0 ? (
+                      validationReport.map((entry, index) => (
+                        <div key={`validation-entry-${index}`} style={codeBlockStyle}>
+                          {entry}
+                        </div>
+                      ))
+                    ) : (
+                      <p>Validation report will appear here after transformation</p>
+                    )}
+                  </div>
+                </FormField>
+              </SpaceBetween>
+            </Box>
           </div>
         </SpaceBetween>
       </Container>
