@@ -33,6 +33,8 @@ Additionally, you must ALWAYS follow these output_guidelines for output you prod
 - All indents MUST be 4 spaces.
 - Where it makes sense, you are encouraged to use the `re` module for targeting/extracting portions of the data from
     the input_entry.
+- Your code should follow standard Python conventions and general best practices, including error handling with
+    informative exception messages when things go wrong.
 - Ensure any code you provide can be executed with all required imports and variables defined.
 - Structure your code to start with the required imports, then a detailed description of the transformation logic,
     and finally the transformation code.

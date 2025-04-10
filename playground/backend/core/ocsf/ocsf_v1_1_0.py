@@ -260,12 +260,6 @@ OCSF_CATEGORY_SCHEMAS = [
                 "requirement": "Required"
             },
             {
-                "name": "dst_endpoint",
-                "data_type": "Network Endpoint",
-                "description": "The destination network endpoint to which the authentication was targeted.",
-                "requirement": "Recommended"
-            },
-            {
                 "name": "logon_type_id",
                 "data_type": "Integer",
                 "description": "The normalized logon type identifier.",
@@ -360,10 +354,266 @@ OCSF_CATEGORY_SCHEMAS = [
                 "requirement": "Required"
             }
         ]
+    },
+    {
+        "name": "HTTP Activity",
+        "fields": [
+            {
+                "name": "activity_id",
+                "data_type": "Integer",
+                "description": "The normalized identifier of the activity that triggered the event. Possible values: 0 (Unknown), 1 (Connect), 2 (Delete), 3 (Get), 4 (Head), 5 (Options), 6 (Post), 7 (Put), 8 (Trace), 99 (Other).",
+                "enum_values": {
+                    "0": "Unknown",
+                    "1": "Connect",
+                    "2": "Delete",
+                    "3": "Get",
+                    "4": "Head",
+                    "5": "Options",
+                    "6": "Post",
+                    "7": "Put",
+                    "8": "Trace",
+                    "99": "Other"
+                },
+                "requirement": "Required"
+            },
+            {
+                "name": "category_uid",
+                "data_type": "Integer",
+                "description": "The category unique identifier of the event. For Network Activity events, the value is 4.",
+                "enum_values": {
+                    "4": "Network Activity"
+                },
+                "requirement": "Required"
+            },
+            {
+                "name": "class_name",
+                "data_type": "String",
+                "description": "The event class name, as defined by the class_uid value for HTTP Activity events.",
+                "requirement": "Optional"
+            },
+            {
+                "name": "class_uid",
+                "data_type": "Integer",
+                "description": "The unique identifier of a class. A Class describes the attributes available in an event. For HTTP Activity, the value is 4002.",
+                "enum_values": {
+                    "4002": "HTTP Activity"
+                },
+                "requirement": "Required"
+            },
+            {
+                "name": "http_request",
+                "data_type": "HTTP Request",
+                "description": "The HTTP Request object documenting attributes of a request made to a web server.",
+                "requirement": "Required"
+            },
+            {
+                "name": "http_response",
+                "data_type": "HTTP Response",
+                "description": "The HTTP Response from a web server to a requester.",
+                "requirement": "Required"
+            },
+            {
+                "name": "message",
+                "data_type": "String",
+                "description": "The description of the event/finding, as defined by the source.",
+                "requirement": "Recommended"
+            },
+            {
+                "name": "raw_data",
+                "data_type": "String",
+                "description": "The raw event/finding data as received from the source.",
+                "requirement": "Optional"
+            },
+            {
+                "name": "severity_id",
+                "data_type": "Integer",
+                "description": "The normalized identifier of the event/finding severity. Possible values: 0 (Unknown), 1 (Informational), 2 (Low), 3 (Medium), 4 (High), 5 (Critical), 6 (Fatal), 99 (Other).",
+                "enum_values": {
+                    "0": "Unknown",
+                    "1": "Informational",
+                    "2": "Low",
+                    "3": "Medium",
+                    "4": "High",
+                    "5": "Critical",
+                    "6": "Fatal",
+                    "99": "Other"
+                },
+                "requirement": "Required"
+            },
+            {
+                "name": "src_endpoint",
+                "data_type": "Network Endpoint",
+                "description": "The initiator (client) of the network connection.",
+                "requirement": "Required"
+            },
+            {
+                "name": "status_code",
+                "data_type": "String",
+                "description": "The event status code as reported by the event source.",
+                "requirement": "Optional"
+            },
+            {
+                "name": "status_detail",
+                "data_type": "String",
+                "description": "The status details containing additional information about the event/finding outcome.",
+                "requirement": "Optional"
+            },
+            {
+                "name": "status_id",
+                "data_type": "Integer",
+                "description": "The normalized identifier of the event status. Possible values: 0 (Unknown), 1 (Success), 2 (Failure), 99 (Other).",
+                "enum_values": {
+                    "0": "Unknown",
+                    "1": "Success",
+                    "2": "Failure",
+                    "99": "Other"
+                },
+                "requirement": "Recommended"
+            },
+            {
+                "name": "time",
+                "data_type": "Timestamp",
+                "description": "The normalized event occurrence time or the finding creation time.",
+                "requirement": "Required"
+            },
+            {
+                "name": "timezone_offset",
+                "data_type": "Integer",
+                "description": "The number of minutes that the reported event time is ahead or behind UTC, in the range -1080 to +1080.",
+                "requirement": "Recommended"
+            },
+            {
+                "name": "type_uid",
+                "data_type": "Long",
+                "description": "The event/finding type ID. It identifies the event's semantics and structure. Calculated as: class_uid * 100 + activity_id.",
+                "enum_values": {
+                    "400200": "HTTP Activity: Unknown",
+                    "400201": "HTTP Activity: Connect",
+                    "400202": "HTTP Activity: Delete",
+                    "400203": "HTTP Activity: Get",
+                    "400204": "HTTP Activity: Head",
+                    "400205": "HTTP Activity: Options",
+                    "400206": "HTTP Activity: Post",
+                    "400207": "HTTP Activity: Put",
+                    "400208": "HTTP Activity: Trace",
+                    "400299": "HTTP Activity: Other"
+                },
+                "requirement": "Required"
+            }
+        ]
     }
 ]
 
 OCSF_SHAPE_SCHEMAS = [
+    {
+        "name": "HTTP Header",
+        "fields": [
+            {
+                "name": "name",
+                "data_type": "String",
+                "description": "The name of the header.",
+                "requirement": "Required"
+            },
+            {
+                "name": "value",
+                "data_type": "String",
+                "description": "The value of the header.",
+                "requirement": "Required"
+            }
+        ]
+    },
+    {
+        "name": "HTTP Request",
+        "fields": [
+            {
+                "name": "http_headers",
+                "data_type": "HTTP Header Array",
+                "description": "Additional HTTP headers of an HTTP request or response.",
+                "requirement": "Recommended"
+            },
+            {
+                "name": "http_method",
+                "data_type": "String",
+                "description": "The HTTP request method indicates the desired action to be performed for a given resource.",
+                "enum_values": {
+                    "CONNECT": "Connect",
+                    "DELETE": "Delete",
+                    "GET": "Get",
+                    "HEAD": "Head",
+                    "OPTIONS": "Options",
+                    "POST": "Post",
+                    "PUT": "Put",
+                    "TRACE": "Trace"
+                },
+                "requirement": "Optional"
+            },
+            {
+                "name": "length",
+                "data_type": "Integer",
+                "description": "The HTTP request length, in number of bytes.",
+                "requirement": "Optional"
+            },
+            {
+                "name": "uid",
+                "data_type": "String",
+                "description": "The unique identifier of the http request.",
+                "requirement": "Optional"
+            },
+            {
+                "name": "url",
+                "data_type": "Uniform Resource Locator",
+                "description": "The URL object that pertains to the request.",
+                "requirement": "Recommended"
+            },
+            {
+                "name": "user_agent",
+                "data_type": "String",
+                "description": "The request header that identifies the operating system and web browser.",
+                "requirement": "Recommended"
+            },
+            {
+                "name": "version",
+                "data_type": "String",
+                "description": "The Hypertext Transfer Protocol (HTTP) version.",
+                "requirement": "Recommended"
+            }
+        ]
+    },
+    {
+        "name": "HTTP Response",
+        "fields": [
+            {
+                "name": "code",
+                "data_type": "Integer",
+                "description": "The HTTP status code returned from the web server to the client. For example, 200.",
+                "requirement": "Required"
+            },
+            {
+                "name": "http_headers",
+                "data_type": "HTTP Header Array",
+                "description": "Additional HTTP headers of the response.",
+                "requirement": "Recommended"
+            },
+            {
+                "name": "latency",
+                "data_type": "Integer",
+                "description": "The HTTP response latency measured in milliseconds.",
+                "requirement": "Optional"
+            },
+            {
+                "name": "length",
+                "data_type": "Integer",
+                "description": "The HTTP response length, in number of bytes.",
+                "requirement": "Optional"
+            },
+            {
+                "name": "message",
+                "data_type": "String",
+                "description": "The description of the event/finding, as defined by the source.",
+                "requirement": "Optional"
+            }
+        ]
+    },
     {
         "name": "Network Endpoint",
         "fields": [
@@ -398,18 +648,6 @@ OCSF_SHAPE_SCHEMAS = [
                 "requirement": "Recommended"
             },
             {
-                "name": "mac",
-                "data_type": "MAC Address",
-                "description": "The Media Access Control (MAC) address of the endpoint.",
-                "requirement": "Optional"
-            },
-            {
-                "name": "os",
-                "data_type": "Operating System (OS)",
-                "description": "The endpoint operating system.",
-                "requirement": "Optional"
-            },
-            {
                 "name": "port",
                 "data_type": "Port",
                 "description": "The port used for communication within the network connection.",
@@ -438,6 +676,53 @@ OCSF_SHAPE_SCHEMAS = [
                 "data_type": "String",
                 "description": "The network zone or LAN segment.",
                 "requirement": "Optional"
+            }
+        ]
+    },
+    {
+        "name": "Uniform Resource Locator",
+        "fields": [
+            {
+                "name": "hostname",
+                "data_type": "Hostname",
+                "description": "The URL host as extracted from the URL. For example: www.example.com from www.example.com/download/trouble.",
+                "requirement": "Recommended"
+            },
+            {
+                "name": "path",
+                "data_type": "String",
+                "description": "The URL path as extracted from the URL. For example: /download/trouble from www.example.com/download/trouble.",
+                "requirement": "Recommended"
+            },
+            {
+                "name": "port",
+                "data_type": "Port",
+                "description": "The URL port. For example: 80.",
+                "requirement": "Recommended"
+            },
+            {
+                "name": "query_string",
+                "data_type": "String",
+                "description": "The query portion of the URL. For example: q=bad&sort=date extracted from a URL like http://www.example.com/search?q=bad&sort=date.",
+                "requirement": "Recommended"
+            },
+            {
+                "name": "scheme",
+                "data_type": "String",
+                "description": "The scheme portion of the URL. For example: http, https, ftp, or sftp.",
+                "requirement": "Recommended"
+            },
+            {
+                "name": "subdomain",
+                "data_type": "String",
+                "description": "The subdomain portion of the URL. For example: 'sub' in https://sub.example.com or 'sub2.sub1' in https://sub2.sub1.example.com.",
+                "requirement": "Optional"
+            },
+            {
+                "name": "url_string",
+                "data_type": "URL String",
+                "description": "The URL string. See RFC 1738. For example: http://www.example.com/download/trouble.exe. Note: The URL path should not populate the URL string.",
+                "requirement": "Recommended"
             }
         ]
     },
