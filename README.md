@@ -5,7 +5,7 @@ This package contains the work-in-progress code for the OCSF Normalization Playg
 ### Running the code
 
 #### Backend
-To run the backend code locally, use a Python virtual environment.  You'll need AWS Credentials in your AWS Keyring, permissions to invoke Bedrock, and to have onboarded your account to use Claude 3.5 Sonnet (`anthropic.claude-3-5-sonnet-20240620-v1:0`) in `us-west-2`.
+To run the backend code locally, use a Python virtual environment.  You'll need AWS Credentials in your AWS Keyring, permissions to invoke Bedrock, and to have onboarded your account to use Claude 3.7 Sonnet (`us.anthropic.claude-3-7-sonnet-20250219-v1:0`) in `us-west-2`.
 
 ```bash
 # Start in the repo root

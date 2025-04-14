@@ -21,13 +21,34 @@ def get_transformation_expert(ocsf_version: OcsfVersion, ocsf_category_name: str
     tool_bundle = get_tool_bundle(transform_language)
 
     # Define our Bedrock LLM and attach the tools to it
-    llm = ChatBedrockConverse(
-        model="anthropic.claude-3-5-sonnet-20240620-v1:0", # This is the older version of the model, should be updated
-        temperature=0, # Suitable for straightforward, practical code generation
-        max_tokens=4096, # The maximum number of output tokens for this model
-        region_name="us-west-2", # Somewhat necessary to hardcode, as models are only available in limited regions
-        config=DEFULT_BOTO_CONFIG
-    )
+    # If this is a follow-up transformation request, let's enable the "thinking" mode for extra horsepower
+    if is_followup:
+        llm = ChatBedrockConverse(
+            model="us.anthropic.claude-3-7-sonnet-20250219-v1:0", 
+            temperature=1, # Must be 1 for "thinking" mode
+            max_tokens=16001,
+            region_name="us-west-2", # Models are only available in limited regions
+            additional_model_request_fields={
+                "thinking": {
+                    "type": "enabled",
+                    "budget_tokens": 16000
+                }
+            },
+            config=DEFULT_BOTO_CONFIG
+        )
+    else:
+        llm = ChatBedrockConverse(
+            model="us.anthropic.claude-3-7-sonnet-20250219-v1:0", 
+            temperature=0, # Suitable for straightforward, practical code generation
+            max_tokens=16000,
+            region_name="us-west-2", # Models are only available in limited regions
+            additional_model_request_fields={
+                "thinking": {
+                    "type": "disabled"
+                }
+            },
+            config=DEFULT_BOTO_CONFIG
+        )
     llm_w_tools = llm.bind_tools(tool_bundle.to_list())
 
     return Expert(

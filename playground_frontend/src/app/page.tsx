@@ -100,7 +100,10 @@ const OcsfPlaygroundPage = () => {
   const [transformLanguage, setTransformLanguage] = useState<SelectProps.Option>(
     transformLanguageOptions.find(option => option.value === TransformLanguageEnum.Python) || transformLanguageOptions[0]
   );
-  const [transformLogic, setTransformLogic] = useState<string>('# Write your transformation logic here\n\ndef transform(input_entry):\n    """Transform the input entry into OCSF format"""\n    # Your transformation code here\n    return {}');
+
+  const defaultTransformLogic = '# Write your transformation logic here\n\ndef transform(input_entry):\n    """Transform the input entry into OCSF format"""\n    # Your transformation code here\n    return {}';
+
+  const [transformLogic, setTransformLogic] = useState<string>(defaultTransformLogic);
   const [transformOutput, setTransformOutput] = useState<string>('');
   const [transformGuidance, setTransformGuidance] = useState("");
   const [transformGuidanceTemp, setTransformGuidanceTemp] = useState("");
@@ -303,57 +306,84 @@ const OcsfPlaygroundPage = () => {
     setIsGeneratingTransform(true); // Start visual spinner
 
     try {
-      // Determine if we should use the Create or Iterate API
-      const hasExistingTransform = transformLogic.trim() !== '' && 
-        transformLogic !== '# Write your transformation logic here\n\ndef transform(input_entry):\n    """Transform the input entry into OCSF format"""\n    # Your transformation code here\n    return {}';
-      const hasValidationReport = validationReport.length > 0;
-      const hasOutput = transformOutput.trim() !== '';
+      // Call the API to get a new transform logic recommendation
+      const payload: TransformerLogicV110CreateRequest = {
+        transform_language: transformLanguage.value as TransformLanguageEnum,
+        ocsf_category: ocsfCategory.value as OcsfCategoryEnum,
+        input_entry: selectedLog,
+        user_guidance: transformGuidance
+      };
       
-      // If we have existing transform logic, validation report, and output, use the Iterate API
-      if (hasExistingTransform && (hasValidationReport || hasOutput)) {
-        // Call the API to iterate on transform logic
-        const payload: TransformerLogicV110IterateRequest = {
-          transform_language: transformLanguage.value as TransformLanguageEnum,
-          transform_logic: transformLogic,
-          transform_output: hasOutput ? transformOutput : undefined,
-          ocsf_category: ocsfCategory.value as OcsfCategoryEnum,
-          input_entry: selectedLog,
-          user_guidance: transformGuidance,
-          validation_report: validationReport,
-          validation_outcome: validationOutcome || 'FAILED'
-        };
-        
-        const response = await apiClient.transformerLogicV110IterateCreate(payload);
+      const response = await apiClient.transformerLogicV110CreateCreate(payload);
 
-        // Update state with response data
-        setTransformLogic(response.data.transform_logic);
-        setTransformOutput(response.data.transform_output);
-        setValidationReport(response.data.validation_report);
-        setValidationOutcome(response.data.validation_outcome);
-        
-      } else {
-        // Call the API to get a new transform logic recommendation
-        const payload: TransformerLogicV110CreateRequest = {
-          transform_language: transformLanguage.value as TransformLanguageEnum,
-          ocsf_category: ocsfCategory.value as OcsfCategoryEnum,
-          input_entry: selectedLog,
-          user_guidance: transformGuidance
-        };
-        
-        const response = await apiClient.transformerLogicV110CreateCreate(payload);
-
-        // Update state with response data
-        setTransformLogic(response.data.transform_logic);
-        setTransformOutput(response.data.transform_output);
-        setValidationReport(response.data.validation_report);
-        setValidationOutcome(response.data.validation_outcome);
-      }
-
+      // Update state with response data
+      setTransformLogic(response.data.transform_logic);
+      setTransformOutput(response.data.transform_output);
+      setValidationReport(response.data.validation_report);
+      setValidationOutcome(response.data.validation_outcome);
     } catch (error: any) {
       if (error.response && error.response.data) {
         const serverErrorMessage = error.response.data.error || "An unknown error occurred.";
         console.error("Server error:", serverErrorMessage);
         alert(`Failed to get transform logic recommendation. Error:\n\n${serverErrorMessage}`);
+      } else {
+        console.error("Unexpected error:", error);
+        alert("An unexpected error occurred. Please try again later.");
+      }
+    } finally {
+      setIsGeneratingTransform(false); // Stop visual spinner
+    }
+  };
+
+  // New function for iterate/debug functionality
+  const handleDebugWithGenAI = async () => {
+    // Make sure one log entry is selected
+    if (selectedLogIds.length !== 1) {
+      alert("Please select exactly one log entry to debug the transformation.");
+      return;
+    }
+
+    // Validate that we have existing transform code
+    if (!transformLogic.trim() || 
+        transformLogic === defaultTransformLogic) {
+      alert("Please create a transformation first before debugging.");
+      return;
+    }
+
+    // Validate that we have validation report or output
+    if (validationReport.length === 0 && !transformOutput.trim()) {
+      alert("Please test your transformation first to generate output to debug.");
+      return;
+    }
+
+    const selectedLog = logs[parseInt(selectedLogIds[0])];
+    setIsGeneratingTransform(true); // Start visual spinner
+
+    try {
+      // Call the API to iterate on transform logic
+      const payload: TransformerLogicV110IterateRequest = {
+        transform_language: transformLanguage.value as TransformLanguageEnum,
+        transform_logic: transformLogic,
+        transform_output: transformOutput.trim() !== '' ? transformOutput : undefined,
+        ocsf_category: ocsfCategory.value as OcsfCategoryEnum,
+        input_entry: selectedLog,
+        user_guidance: transformGuidance,
+        validation_report: validationReport,
+        validation_outcome: validationOutcome || 'FAILED'
+      };
+      
+      const response = await apiClient.transformerLogicV110IterateCreate(payload);
+
+      // Update state with response data
+      setTransformLogic(response.data.transform_logic);
+      setTransformOutput(response.data.transform_output);
+      setValidationReport(response.data.validation_report);
+      setValidationOutcome(response.data.validation_outcome);
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        const serverErrorMessage = error.response.data.error || "An unknown error occurred.";
+        console.error("Server error:", serverErrorMessage);
+        alert(`Failed to debug transform logic. Error:\n\n${serverErrorMessage}`);
       } else {
         console.error("Unexpected error:", error);
         alert("An unexpected error occurred. Please try again later.");
@@ -406,7 +436,7 @@ const OcsfPlaygroundPage = () => {
 
   // Function to clear transformation logic and results
   const handleClearTransform = () => {
-    setTransformLogic('# Write your transformation logic here\n\ndef transform(input_entry):\n    """Transform the input entry into OCSF format"""\n    # Your transformation code here\n    return {}');
+    setTransformLogic(defaultTransformLogic);
     setTransformOutput('');
     setValidationReport([]);
     setValidationOutcome('N/A');
@@ -836,6 +866,18 @@ const OcsfPlaygroundPage = () => {
                       disabled={isGeneratingTransform}
                     >
                       {isGeneratingTransform ? <Spinner/> : "Set User Guidance"}
+                    </Button>
+                    
+                    {/* New Button for debugging with GenAI */}
+                    <Button 
+                      iconAlign="left" 
+                      iconName="gen-ai" 
+                      onClick={handleDebugWithGenAI}
+                      disabled={isGeneratingTransform || !transformLogic.trim() || 
+                        (validationReport.length === 0 && !transformOutput.trim())}
+                      variant="normal"
+                    >
+                      {isGeneratingTransform ? <Spinner/> : "Debug with GenAI"}
                     </Button>
                   </SpaceBetween>
                   
