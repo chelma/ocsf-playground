@@ -26,7 +26,8 @@ from backend.transformation_expert.validation import OcsfV1_1_0TransformValidato
 from .serializers import (TransformerHeuristicCreateRequestSerializer, TransformerHeuristicCreateResponseSerializer,
                           TransformerCategorizeV1_1_0RequestSerializer, TransformerCategorizeV1_1_0ResponseSerializer,
                           TransformerLogicV1_1_0CreateRequestSerializer, TransformerLogicV1_1_0CreateResponseSerializer,
-                          TransformerLogicV1_1_0TestRequestSerializer, TransformerLogicV1_1_0TestResponseSerializer
+                          TransformerLogicV1_1_0TestRequestSerializer, TransformerLogicV1_1_0TestResponseSerializer,
+                          TransformerLogicV1_1_0IterateRequestSerializer, TransformerLogicV1_1_0IterateResponseSerializer
                           )
 
 
@@ -222,7 +223,8 @@ class TransformerLogicV1_1_0CreateView(APIView):
             expert = get_transformation_expert(
                 ocsf_version=OcsfVersion.V1_1_0,
                 ocsf_category_name=request.validated_data["ocsf_category"].get_category_name(),
-                transform_language=request.validated_data["transform_language"]
+                transform_language=request.validated_data["transform_language"],
+                is_followup=False
             )
 
             system_message = expert.system_prompt_factory(
@@ -327,6 +329,131 @@ class TransformerLogicV1_1_0TestView(APIView):
 
         # Create the validator
         validator = OcsfV1_1_0TransformValidator(transform_task=task)
+
+        # Validate the transform
+        report = validator.validate()
+
+        return report
+    
+class TransformerLogicV1_1_0IterateView(APIView):
+    @csrf_exempt
+    @extend_schema(
+        request=TransformerLogicV1_1_0IterateRequestSerializer,
+        responses=TransformerLogicV1_1_0IterateResponseSerializer
+    )
+    def post(self, request):
+        logger.info(f"Received transform iteration request: {request.data}")
+
+        # Validate incoming data
+        requestSerializer = TransformerLogicV1_1_0IterateRequestSerializer(data=request.data)
+        if not requestSerializer.is_valid():
+            logger.error(f"Invalid transform iteration request: {requestSerializer.errors}")
+            return Response(requestSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        task_id = str(uuid.uuid4())
+
+        # Perform the task
+        try:
+            # Iterate on the transform
+            result = self._iterate(task_id, requestSerializer)
+            logger.info(f"Transform iteration completed")
+            logger.debug(f"Transform value:\n{result.transform.to_json()}")
+
+            # Validate the transform
+            report = self._validate(result)
+            logger.info(f"Transform validation completed")
+            logger.debug(f"Validation outcome:\n{report.passed}")
+            logger.debug(f"Validation report entries:\n{report.report_entries}")
+        except UnsupportedTransformLanguageError as e:
+            logger.error(f"{str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Transform iteration failed: {str(e)}")
+            logger.exception(e)
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Serialize and return the response
+        response_serializer = TransformerLogicV1_1_0IterateResponseSerializer(data={
+            "transform_language":  requestSerializer.validated_data["transform_language"].value,
+            "transform_logic":  result.transform.to_file_format(),
+            "transform_output":  json.dumps(report.output, indent=4),
+            "ocsf_version": OcsfVersion.V1_1_0.value,
+            "ocsf_category":  requestSerializer.validated_data["ocsf_category"].value,
+            "input_entry":  requestSerializer.validated_data["input_entry"],
+            "validation_report": report.report_entries,
+            "validation_outcome": "PASSED" if report.passed else "FAILED"
+        })
+
+        if not response_serializer.is_valid():
+            logger.error(f"Invalid transform iteration response: {response_serializer.errors}")
+            return Response(response_serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+    
+    def _create_validation_report(self, task_id: str, request: TransformerLogicV1_1_0IterateRequestSerializer) -> ValidationReport:
+        logger.debug(f"Creating validation report for task ID: {task_id}")        
+        # Create the task object to validate
+        if request.validated_data["transform_language"] == TransformLanguage.PYTHON:
+            output = json.loads(request.validated_data["transform_output"]) if request.validated_data["transform_output"] else None
+            report_entries = request.validated_data["validation_report"] if request.validated_data["validation_report"] else []
+
+            report = ValidationReport(
+                input=request.validated_data["input_entry"],
+                transform=TransformPython(
+                    imports="", # Just put everything in the `code` section
+                    description="", # Just put everything in the `code` section
+                    code=request.validated_data["transform_logic"], # Will contain all three sections
+                ),
+                output=output,
+                report_entries=report_entries,
+                passed=request.validated_data["validation_outcome"] == "PASSED"
+            )
+        else:
+            raise UnsupportedTransformLanguageError(f"Unsupported transform language: {request.validated_data['transform_language']}")
+        
+        logger.debug(f"Validation report created: {report.to_json()}")
+
+        return report
+
+    def _iterate(self, task_id: str, request: TransformerLogicV1_1_0IterateRequestSerializer) -> TransformTask:
+            expert = get_transformation_expert(
+                ocsf_version=OcsfVersion.V1_1_0,
+                ocsf_category_name=request.validated_data["ocsf_category"].get_category_name(),
+                transform_language=request.validated_data["transform_language"],
+                is_followup=True
+            )
+
+            # Create the validation report
+            report = self._create_validation_report(task_id, request)
+
+            system_message = expert.system_prompt_factory(
+                input_entry=request.validated_data["input_entry"],
+                user_guidance=request.validated_data["user_guidance"],
+                validation_report=report
+            )
+            turns = [
+                system_message,
+                HumanMessage(content="Please create the transform.")
+            ]
+
+            if request.validated_data["transform_language"] == TransformLanguage.PYTHON:
+                task = PythonTransformTask(
+                    task_id=task_id,
+                    input=request.validated_data["input_entry"],
+                    context=turns,
+                    category_name=request.validated_data["ocsf_category"].get_category_name(),
+                    transform=None
+                )
+            else:
+                raise UnsupportedTransformLanguageError(f"Unsupported transform language: {request.validated_data['transform_language']}")
+
+            result = invoke_transformation_expert(expert, task)
+
+            return result
+    
+    def _validate(self, transform_taks: TransformTask) -> ValidationReport:
+        # Create the validator
+        validator = OcsfV1_1_0TransformValidator(transform_task=transform_taks)
 
         # Validate the transform
         report = validator.validate()

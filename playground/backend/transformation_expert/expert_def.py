@@ -14,7 +14,7 @@ from backend.core.experts import DEFULT_BOTO_CONFIG, Expert, invoke_expert
 logger = logging.getLogger("backend")
 
 
-def get_transformation_expert(ocsf_version: OcsfVersion, ocsf_category_name: str, transform_language: TransformLanguage) -> Expert:
+def get_transformation_expert(ocsf_version: OcsfVersion, ocsf_category_name: str, transform_language: TransformLanguage, is_followup: bool) -> Expert:
     logger.info(f"Building expert for: {ocsf_version} {ocsf_category_name} {transform_language}")
 
     # Get the tool bundle for the given transform language
@@ -34,7 +34,8 @@ def get_transformation_expert(ocsf_version: OcsfVersion, ocsf_category_name: str
         llm=llm_w_tools,
         system_prompt_factory=get_system_prompt_factory(
             ocsf_version=ocsf_version,
-            ocsf_category_name=ocsf_category_name
+            ocsf_category_name=ocsf_category_name,
+            is_followup=is_followup
         ),
         tools=tool_bundle
     )

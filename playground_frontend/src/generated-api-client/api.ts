@@ -282,6 +282,120 @@ export interface TransformerLogicV110CreateResponse {
 /**
  * 
  * @export
+ * @interface TransformerLogicV110IterateRequest
+ */
+export interface TransformerLogicV110IterateRequest {
+    /**
+     * 
+     * @type {TransformLanguageEnum}
+     * @memberof TransformerLogicV110IterateRequest
+     */
+    'transform_language': TransformLanguageEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerLogicV110IterateRequest
+     */
+    'transform_logic': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerLogicV110IterateRequest
+     */
+    'transform_output'?: string;
+    /**
+     * 
+     * @type {OcsfCategoryEnum}
+     * @memberof TransformerLogicV110IterateRequest
+     */
+    'ocsf_category': OcsfCategoryEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerLogicV110IterateRequest
+     */
+    'input_entry': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerLogicV110IterateRequest
+     */
+    'user_guidance'?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof TransformerLogicV110IterateRequest
+     */
+    'validation_report': Array<string>;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerLogicV110IterateRequest
+     */
+    'validation_outcome': string;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface TransformerLogicV110IterateResponse
+ */
+export interface TransformerLogicV110IterateResponse {
+    /**
+     * 
+     * @type {TransformLanguageEnum}
+     * @memberof TransformerLogicV110IterateResponse
+     */
+    'transform_language': TransformLanguageEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerLogicV110IterateResponse
+     */
+    'transform_logic': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerLogicV110IterateResponse
+     */
+    'transform_output': string;
+    /**
+     * 
+     * @type {OcsfVersionEnum}
+     * @memberof TransformerLogicV110IterateResponse
+     */
+    'ocsf_version': OcsfVersionEnum;
+    /**
+     * 
+     * @type {OcsfCategoryEnum}
+     * @memberof TransformerLogicV110IterateResponse
+     */
+    'ocsf_category': OcsfCategoryEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerLogicV110IterateResponse
+     */
+    'input_entry': string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof TransformerLogicV110IterateResponse
+     */
+    'validation_report': Array<string>;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerLogicV110IterateResponse
+     */
+    'validation_outcome': string;
+}
+
+
+/**
+ * 
+ * @export
  * @interface TransformerLogicV110TestRequest
  */
 export interface TransformerLogicV110TestRequest {
@@ -733,6 +847,47 @@ export const TransformerApiAxiosParamCreator = function (configuration?: Configu
         },
         /**
          * 
+         * @param {TransformerLogicV110IterateRequest} transformerLogicV110IterateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        transformerLogicV110IterateCreate: async (transformerLogicV110IterateRequest: TransformerLogicV110IterateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'transformerLogicV110IterateRequest' is not null or undefined
+            assertParamExists('transformerLogicV110IterateCreate', 'transformerLogicV110IterateRequest', transformerLogicV110IterateRequest)
+            const localVarPath = `/transformer/logic/v1_1_0/iterate/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication cookieAuth required
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(transformerLogicV110IterateRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {TransformerLogicV110TestRequest} transformerLogicV110TestRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -820,6 +975,18 @@ export const TransformerApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {TransformerLogicV110IterateRequest} transformerLogicV110IterateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async transformerLogicV110IterateCreate(transformerLogicV110IterateRequest: TransformerLogicV110IterateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TransformerLogicV110IterateResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.transformerLogicV110IterateCreate(transformerLogicV110IterateRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TransformerApi.transformerLogicV110IterateCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {TransformerLogicV110TestRequest} transformerLogicV110TestRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -866,6 +1033,15 @@ export const TransformerApiFactory = function (configuration?: Configuration, ba
          */
         transformerLogicV110CreateCreate(transformerLogicV110CreateRequest: TransformerLogicV110CreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<TransformerLogicV110CreateResponse> {
             return localVarFp.transformerLogicV110CreateCreate(transformerLogicV110CreateRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {TransformerLogicV110IterateRequest} transformerLogicV110IterateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        transformerLogicV110IterateCreate(transformerLogicV110IterateRequest: TransformerLogicV110IterateRequest, options?: RawAxiosRequestConfig): AxiosPromise<TransformerLogicV110IterateResponse> {
+            return localVarFp.transformerLogicV110IterateCreate(transformerLogicV110IterateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -917,6 +1093,17 @@ export class TransformerApi extends BaseAPI {
      */
     public transformerLogicV110CreateCreate(transformerLogicV110CreateRequest: TransformerLogicV110CreateRequest, options?: RawAxiosRequestConfig) {
         return TransformerApiFp(this.configuration).transformerLogicV110CreateCreate(transformerLogicV110CreateRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {TransformerLogicV110IterateRequest} transformerLogicV110IterateRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TransformerApi
+     */
+    public transformerLogicV110IterateCreate(transformerLogicV110IterateRequest: TransformerLogicV110IterateRequest, options?: RawAxiosRequestConfig) {
+        return TransformerApiFp(this.configuration).transformerLogicV110IterateCreate(transformerLogicV110IterateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

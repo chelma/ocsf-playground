@@ -25,7 +25,8 @@ import {
 
 import { aceLoader } from './aceLoader';
 import { Configuration, TransformerApi, TransformerHeuristicCreateRequest, OcsfCategoryEnum, OcsfVersionEnum,
-  TransformerCategorizeV110Request, TransformLanguageEnum, TransformerLogicV110CreateRequest, TransformerLogicV110TestRequest } from '../generated-api-client';
+  TransformerCategorizeV110Request, TransformLanguageEnum, TransformerLogicV110CreateRequest, TransformerLogicV110TestRequest, 
+  TransformerLogicV110IterateRequest } from '../generated-api-client';
 
 // Update the Split component styles to ensure it works properly
 const splitStyles: CSSProperties = {
@@ -302,21 +303,51 @@ const OcsfPlaygroundPage = () => {
     setIsGeneratingTransform(true); // Start visual spinner
 
     try {
-      // Call the API to get transform logic recommendation
-      const payload: TransformerLogicV110CreateRequest = {
-        transform_language: transformLanguage.value as TransformLanguageEnum,
-        ocsf_category: ocsfCategory.value as OcsfCategoryEnum,
-        input_entry: selectedLog,
-        user_guidance: transformGuidance
-      };
+      // Determine if we should use the Create or Iterate API
+      const hasExistingTransform = transformLogic.trim() !== '' && 
+        transformLogic !== '# Write your transformation logic here\n\ndef transform(input_entry):\n    """Transform the input entry into OCSF format"""\n    # Your transformation code here\n    return {}';
+      const hasValidationReport = validationReport.length > 0;
+      const hasOutput = transformOutput.trim() !== '';
       
-      const response = await apiClient.transformerLogicV110CreateCreate(payload);
+      // If we have existing transform logic, validation report, and output, use the Iterate API
+      if (hasExistingTransform && (hasValidationReport || hasOutput)) {
+        // Call the API to iterate on transform logic
+        const payload: TransformerLogicV110IterateRequest = {
+          transform_language: transformLanguage.value as TransformLanguageEnum,
+          transform_logic: transformLogic,
+          transform_output: hasOutput ? transformOutput : undefined,
+          ocsf_category: ocsfCategory.value as OcsfCategoryEnum,
+          input_entry: selectedLog,
+          user_guidance: transformGuidance,
+          validation_report: validationReport,
+          validation_outcome: validationOutcome || 'FAILED'
+        };
+        
+        const response = await apiClient.transformerLogicV110IterateCreate(payload);
 
-      // Update state with response data
-      setTransformLogic(response.data.transform_logic);
-      setTransformOutput(response.data.transform_output);
-      setValidationReport(response.data.validation_report);
-      setValidationOutcome(response.data.validation_outcome);
+        // Update state with response data
+        setTransformLogic(response.data.transform_logic);
+        setTransformOutput(response.data.transform_output);
+        setValidationReport(response.data.validation_report);
+        setValidationOutcome(response.data.validation_outcome);
+        
+      } else {
+        // Call the API to get a new transform logic recommendation
+        const payload: TransformerLogicV110CreateRequest = {
+          transform_language: transformLanguage.value as TransformLanguageEnum,
+          ocsf_category: ocsfCategory.value as OcsfCategoryEnum,
+          input_entry: selectedLog,
+          user_guidance: transformGuidance
+        };
+        
+        const response = await apiClient.transformerLogicV110CreateCreate(payload);
+
+        // Update state with response data
+        setTransformLogic(response.data.transform_logic);
+        setTransformOutput(response.data.transform_output);
+        setValidationReport(response.data.validation_report);
+        setValidationOutcome(response.data.validation_outcome);
+      }
 
     } catch (error: any) {
       if (error.response && error.response.data) {
