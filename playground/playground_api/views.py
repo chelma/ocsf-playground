@@ -11,7 +11,11 @@ from rest_framework import status
 
 from backend.categorization_expert.expert_def import get_categorization_expert, invoke_categorization_expert
 from backend.categorization_expert.task_def import CategorizationTask
+
 from backend.core.ocsf.ocsf_versions import OcsfVersion
+
+from backend.entities_expert.expert_def import get_analysis_expert, invoke_analysis_expert
+from backend.entities_expert.task_def import AnalysisTask
 
 from backend.regex_expert.expert_def import get_regex_expert, invoke_regex_expert
 from backend.regex_expert.task_def import RegexTask
@@ -25,6 +29,7 @@ from backend.transformation_expert.validation import OcsfV1_1_0TransformValidato
 
 from .serializers import (TransformerHeuristicCreateRequestSerializer, TransformerHeuristicCreateResponseSerializer,
                           TransformerCategorizeV1_1_0RequestSerializer, TransformerCategorizeV1_1_0ResponseSerializer,
+                          TransformerEntitiesV1_1_0AnalyzeRequestSerializer, TransformerEntitiesV1_1_0AnalyzeResponseSerializer,
                           TransformerLogicV1_1_0CreateRequestSerializer, TransformerLogicV1_1_0CreateResponseSerializer,
                           TransformerLogicV1_1_0TestRequestSerializer, TransformerLogicV1_1_0TestResponseSerializer,
                           TransformerLogicV1_1_0IterateRequestSerializer, TransformerLogicV1_1_0IterateResponseSerializer
@@ -44,16 +49,16 @@ class TransformerHeuristicCreateView(APIView):
         logger.info(f"Received heuristic creation request: {request.data}")
 
         # Validate incoming data
-        requestSerializer = TransformerHeuristicCreateRequestSerializer(data=request.data)
-        if not requestSerializer.is_valid():
-            logger.error(f"Invalid heuristic creation request: {requestSerializer.errors}")
-            return Response(requestSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        request = TransformerHeuristicCreateRequestSerializer(data=request.data)
+        if not request.is_valid():
+            logger.error(f"Invalid heuristic creation request: {request.errors}")
+            return Response(request.errors, status=status.HTTP_400_BAD_REQUEST)
 
         task_id = str(uuid.uuid4())
 
         # Perform the task
         try:
-            result = self._create_regex(task_id, requestSerializer)
+            result = self._create_regex(task_id, request)
             logger.info(f"Regex creation successful")
             logger.debug(f"Regex value:\n{result.regex.value}")
         except Exception as e:
@@ -62,15 +67,15 @@ class TransformerHeuristicCreateView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Serialize and return the response
-        response_serializer = TransformerHeuristicCreateResponseSerializer(data={
+        response = TransformerHeuristicCreateResponseSerializer(data={
             "new_heuristic": result.regex.value,
             "rationale": result.regex.rationale
         })
-        if not response_serializer.is_valid():
-            logger.error(f"Invalid heuristic creation response: {response_serializer.errors}")
-            return Response(response_serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if not response.is_valid():
+            logger.error(f"Invalid heuristic creation response: {response.errors}")
+            return Response(response.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        return Response(response_serializer.data, status=status.HTTP_200_OK)
+        return Response(response.data, status=status.HTTP_200_OK)
 
     def _create_regex(self, task_id: str, request: TransformerHeuristicCreateRequestSerializer) -> RegexTask:
             expert = get_regex_expert(
@@ -107,16 +112,16 @@ class TransformerCategorizeV1_1_0View(APIView):
         logger.info(f"Received categorization request: {request.data}")
 
         # Validate incoming data
-        requestSerializer = TransformerCategorizeV1_1_0RequestSerializer(data=request.data)
-        if not requestSerializer.is_valid():
-            logger.error(f"Invalid categorization request: {requestSerializer.errors}")
-            return Response(requestSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        request = TransformerCategorizeV1_1_0RequestSerializer(data=request.data)
+        if not request.is_valid():
+            logger.error(f"Invalid categorization request: {request.errors}")
+            return Response(request.errors, status=status.HTTP_400_BAD_REQUEST)
 
         task_id = str(uuid.uuid4())
 
         # Perform the task
         try:
-            result = self._categorize(task_id, requestSerializer)
+            result = self._categorize(task_id, request)
             logger.info(f"Categorization successful")
             logger.debug(f"Category value:\n{result.category.value}")
         except Exception as e:
@@ -125,16 +130,16 @@ class TransformerCategorizeV1_1_0View(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Serialize and return the response
-        response_serializer = TransformerCategorizeV1_1_0ResponseSerializer(data={
+        response = TransformerCategorizeV1_1_0ResponseSerializer(data={
             "ocsf_category":  result.category.value,
             "ocsf_version": OcsfVersion.V1_1_0.value,
             "rationale": result.category.rationale
         })
-        if not response_serializer.is_valid():
-            logger.error(f"Invalid categorization response: {response_serializer.errors}")
-            return Response(response_serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if not response.is_valid():
+            logger.error(f"Invalid categorization response: {response.errors}")
+            return Response(response.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        return Response(response_serializer.data, status=status.HTTP_200_OK)
+        return Response(response.data, status=status.HTTP_200_OK)
 
     def _categorize(self, task_id: str, request: TransformerCategorizeV1_1_0RequestSerializer) -> CategorizationTask:
             expert = get_categorization_expert(OcsfVersion.V1_1_0)
@@ -174,17 +179,17 @@ class TransformerLogicV1_1_0CreateView(APIView):
         logger.info(f"Received transform creation request: {request.data}")
 
         # Validate incoming data
-        requestSerializer = TransformerLogicV1_1_0CreateRequestSerializer(data=request.data)
-        if not requestSerializer.is_valid():
-            logger.error(f"Invalid transform creation request: {requestSerializer.errors}")
-            return Response(requestSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        request = TransformerLogicV1_1_0CreateRequestSerializer(data=request.data)
+        if not request.is_valid():
+            logger.error(f"Invalid transform creation request: {request.errors}")
+            return Response(request.errors, status=status.HTTP_400_BAD_REQUEST)
 
         task_id = str(uuid.uuid4())
 
         # Perform the task
         try:
             # Create the transform
-            result = self._create(task_id, requestSerializer)
+            result = self._create(task_id, request)
             logger.info(f"Transform creation completed")
             logger.debug(f"Transform value:\n{result.transform.to_json()}")
 
@@ -202,22 +207,22 @@ class TransformerLogicV1_1_0CreateView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Serialize and return the response
-        response_serializer = TransformerLogicV1_1_0CreateResponseSerializer(data={
-            "transform_language":  requestSerializer.validated_data["transform_language"].value,
+        response = TransformerLogicV1_1_0CreateResponseSerializer(data={
+            "transform_language":  request.validated_data["transform_language"].value,
             "transform_logic":  result.transform.to_file_format(),
             "transform_output":  json.dumps(report.output, indent=4),
             "ocsf_version": OcsfVersion.V1_1_0.value,
-            "ocsf_category":  requestSerializer.validated_data["ocsf_category"].value,
-            "input_entry":  requestSerializer.validated_data["input_entry"],
+            "ocsf_category":  request.validated_data["ocsf_category"].value,
+            "input_entry":  request.validated_data["input_entry"],
             "validation_report": report.report_entries,
             "validation_outcome": "PASSED" if report.passed else "FAILED"
         })
 
-        if not response_serializer.is_valid():
-            logger.error(f"Invalid transform creation response: {response_serializer.errors}")
-            return Response(response_serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if not response.is_valid():
+            logger.error(f"Invalid transform creation response: {response.errors}")
+            return Response(response.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        return Response(response_serializer.data, status=status.HTTP_200_OK)
+        return Response(response.data, status=status.HTTP_200_OK)
 
     def _create(self, task_id: str, request: TransformerLogicV1_1_0CreateRequestSerializer) -> TransformTask:
             expert = get_transformation_expert(
@@ -270,17 +275,17 @@ class TransformerLogicV1_1_0TestView(APIView):
         logger.info(f"Received transform testing request: {request.data}")
 
         # Validate incoming data
-        requestSerializer = TransformerLogicV1_1_0TestRequestSerializer(data=request.data)
-        if not requestSerializer.is_valid():
-            logger.error(f"Invalid transform testing request: {requestSerializer.errors}")
-            return Response(requestSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        request = TransformerLogicV1_1_0TestRequestSerializer(data=request.data)
+        if not request.is_valid():
+            logger.error(f"Invalid transform testing request: {request.errors}")
+            return Response(request.errors, status=status.HTTP_400_BAD_REQUEST)
 
         task_id = str(uuid.uuid4())
 
         # Perform the task
         try:
             # Validate the transform
-            report = self._validate(task_id, requestSerializer)
+            report = self._validate(task_id, request)
             logger.info(f"Transform validation completed")
             logger.debug(f"Validation outcome:\n{report.passed}")
             logger.debug(f"Validation report entries:\n{report.report_entries}")
@@ -293,22 +298,22 @@ class TransformerLogicV1_1_0TestView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Serialize and return the response
-        response_serializer = TransformerLogicV1_1_0TestResponseSerializer(data={
-            "transform_language":  requestSerializer.validated_data["transform_language"].value,
-            "transform_logic":  requestSerializer.validated_data["transform_logic"],
+        response = TransformerLogicV1_1_0TestResponseSerializer(data={
+            "transform_language":  request.validated_data["transform_language"].value,
+            "transform_logic":  request.validated_data["transform_logic"],
             "transform_output":  json.dumps(report.output, indent=4),
             "ocsf_version": OcsfVersion.V1_1_0.value,
-            "ocsf_category":  requestSerializer.validated_data["ocsf_category"].value,
-            "input_entry":  requestSerializer.validated_data["input_entry"],
+            "ocsf_category":  request.validated_data["ocsf_category"].value,
+            "input_entry":  request.validated_data["input_entry"],
             "validation_report": report.report_entries,
             "validation_outcome": "PASSED" if report.passed else "FAILED"
         })
 
-        if not response_serializer.is_valid():
-            logger.error(f"Invalid transform testing response: {response_serializer.errors}")
-            return Response(response_serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if not response.is_valid():
+            logger.error(f"Invalid transform testing response: {response.errors}")
+            return Response(response.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        return Response(response_serializer.data, status=status.HTTP_200_OK)
+        return Response(response.data, status=status.HTTP_200_OK)
     
     def _validate(self, task_id: str, request: TransformerLogicV1_1_0TestRequestSerializer) -> ValidationReport:
         # Create the task object to validate
@@ -345,17 +350,17 @@ class TransformerLogicV1_1_0IterateView(APIView):
         logger.info(f"Received transform iteration request: {request.data}")
 
         # Validate incoming data
-        requestSerializer = TransformerLogicV1_1_0IterateRequestSerializer(data=request.data)
-        if not requestSerializer.is_valid():
-            logger.error(f"Invalid transform iteration request: {requestSerializer.errors}")
-            return Response(requestSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        request = TransformerLogicV1_1_0IterateRequestSerializer(data=request.data)
+        if not request.is_valid():
+            logger.error(f"Invalid transform iteration request: {request.errors}")
+            return Response(request.errors, status=status.HTTP_400_BAD_REQUEST)
 
         task_id = str(uuid.uuid4())
 
         # Perform the task
         try:
             # Iterate on the transform
-            result = self._iterate(task_id, requestSerializer)
+            result = self._iterate(task_id, request)
             logger.info(f"Transform iteration completed")
             logger.debug(f"Transform value:\n{result.transform.to_json()}")
 
@@ -373,22 +378,22 @@ class TransformerLogicV1_1_0IterateView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Serialize and return the response
-        response_serializer = TransformerLogicV1_1_0IterateResponseSerializer(data={
-            "transform_language":  requestSerializer.validated_data["transform_language"].value,
+        response = TransformerLogicV1_1_0IterateResponseSerializer(data={
+            "transform_language":  request.validated_data["transform_language"].value,
             "transform_logic":  result.transform.to_file_format(),
             "transform_output":  json.dumps(report.output, indent=4),
             "ocsf_version": OcsfVersion.V1_1_0.value,
-            "ocsf_category":  requestSerializer.validated_data["ocsf_category"].value,
-            "input_entry":  requestSerializer.validated_data["input_entry"],
+            "ocsf_category":  request.validated_data["ocsf_category"].value,
+            "input_entry":  request.validated_data["input_entry"],
             "validation_report": report.report_entries,
             "validation_outcome": "PASSED" if report.passed else "FAILED"
         })
 
-        if not response_serializer.is_valid():
-            logger.error(f"Invalid transform iteration response: {response_serializer.errors}")
-            return Response(response_serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if not response.is_valid():
+            logger.error(f"Invalid transform iteration response: {response.errors}")
+            return Response(response.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        return Response(response_serializer.data, status=status.HTTP_200_OK)
+        return Response(response.data, status=status.HTTP_200_OK)
     
     def _create_validation_report(self, task_id: str, request: TransformerLogicV1_1_0IterateRequestSerializer) -> ValidationReport:
         logger.debug(f"Creating validation report for task ID: {task_id}")        
@@ -459,3 +464,69 @@ class TransformerLogicV1_1_0IterateView(APIView):
         report = validator.validate()
 
         return report
+    
+class TransformerEntitiesV1_1_0AnalyzeView(APIView):
+    @csrf_exempt
+    @extend_schema(
+        request=TransformerEntitiesV1_1_0AnalyzeRequestSerializer,
+        responses=TransformerEntitiesV1_1_0AnalyzeResponseSerializer
+    )
+    def post(self, request):
+        logger.info(f"Received analysis request: {request.data}")
+
+        # Validate incoming data
+        request = TransformerEntitiesV1_1_0AnalyzeRequestSerializer(data=request.data)
+        if not request.is_valid():
+            logger.error(f"Invalid analysis request: {request.errors}")
+            return Response(request.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        task_id = str(uuid.uuid4())
+
+        # Perform the task
+        try:
+            result = self._analyze(task_id, request)
+            logger.info(f"Analysis successful")
+            logger.debug(f"Entities value:\n{json.dumps(result.entities_report.to_json(), indent=4)}")
+        except Exception as e:
+            logger.error(f"Analysis failed: {str(e)}")
+            logger.exception(e)
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Serialize and return the response
+        response = TransformerEntitiesV1_1_0AnalyzeResponseSerializer(data={
+            "ocsf_category":  request.validated_data["ocsf_category"].value,
+            "ocsf_version": OcsfVersion.V1_1_0.value,
+            "input_entry": request.validated_data["input_entry"],
+            "data_entry_type": result.entities_report.data_entry_type,
+            "rationale": result.entities_report.rationale,
+            "entities": result.entities_report.to_json()["entities"],
+        })
+        if not response.is_valid():
+            logger.error(f"Invalid analysis response: {response.errors}")
+            return Response(response.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(response.data, status=status.HTTP_200_OK)
+
+    def _analyze(self, task_id: str, request: TransformerEntitiesV1_1_0AnalyzeRequestSerializer) -> AnalysisTask:
+            category_name = request.validated_data["ocsf_category"].get_category_name()
+            
+            expert = get_analysis_expert(OcsfVersion.V1_1_0, category_name)
+
+            system_message = expert.system_prompt_factory(
+                input_entry=request.validated_data["input_entry"]
+            )
+            turns = [
+                system_message,
+                HumanMessage(content="Please analyze the input for entities.")
+            ]
+
+            task = AnalysisTask(
+                task_id=task_id,
+                input=request.validated_data["input_entry"],
+                context=turns,
+                entities_report=None
+            )
+
+            result = invoke_analysis_expert(expert, task)
+
+            return result

@@ -32,6 +32,11 @@ curl -X POST "http://127.0.0.1:8000/transformer/categorize/v1_1_0/" -H "Content-
     "input_entry": "Thu Mar 12 2025 07:40:57 mailsv1 sshd[4351]: Failed password for invalid user guest from 86.212.199.60 port 3771 ssh2"
 }'
 
+curl -X POST "http://127.0.0.1:8000/transformer/entities/v1_1_0/analyze/" -H "Content-Type: application/json" -d '
+{
+    "ocsf_category": "Authentication (3002)",
+    "input_entry": "Thu Mar 12 2025 07:40:57 mailsv1 sshd[4351]: Failed password for invalid user guest from 86.212.199.60 port 3771 ssh2"
+}'
 
 curl -X POST "http://127.0.0.1:8000/transformer/logic/v1_1_0/create/" -H "Content-Type: application/json" -d '
 {

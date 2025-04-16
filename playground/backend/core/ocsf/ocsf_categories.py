@@ -1,7 +1,7 @@
 from enum import Enum
 import re
 
-from backend.core.ocsf.ocsf_v1_1_0 import OCSF_CATEGORIES as OCSF_CATEGORIES_V1_1_0
+from backend.core.ocsf.ocsf_v1_1_0 import OCSF_CATEGORIES as ocsf_categories_V1_1_0
 
 
 # Create a custom Enum class that can extract name and ID
@@ -21,7 +21,7 @@ class OcsfCategoryEnum(Enum):
 category_members = {
     f"{category['category_name']} {category['category_id']}".upper().replace(' ', '_').replace('-', '_'): 
     f"{category['category_name']} ({category['category_id']})"
-    for category in OCSF_CATEGORIES_V1_1_0
+    for category in ocsf_categories_V1_1_0
 }
 
 # Create the enum class with all members at once, using the custom base class

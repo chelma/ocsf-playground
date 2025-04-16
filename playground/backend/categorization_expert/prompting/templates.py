@@ -11,7 +11,7 @@ ocsf_knowledge section below.  You will also provide a clear rationale for the c
 how it matches the input_entry and what considerations you had when choosing it.  You will also be given a set of
 guidelines, oscf_guidance, which you should follow when performing this task.
 
-While working towards the goal of creating the ocsf, will ALWAYS follow the below general guidelines:
+While working towards your goal, will ALWAYS follow the below general guidelines:
 <guidelines>
 - Do not attempt to be friendly in your responses.  Be as direct and succint as possible.
 - Think through the problem carefully.
