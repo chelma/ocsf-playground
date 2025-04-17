@@ -15,14 +15,27 @@ class Entity:
         }
     
 @dataclass
-class EntityReport:
-    data_entry_type: str
-    rationale: str
-    entities: list[Entity]
+class EntityMapping:
+    entity: Entity
+    ocsf_path: str
+    path_rationale: str
 
     def to_json(self) -> dict:
         return {
-            "data_entry_type": self.data_entry_type,
-            "rationale": self.rationale,
-            "entities": [entity.to_json() for entity in self.entities]
+            "entity": self.entity.to_json(),
+            "ocsf_path": self.ocsf_path,
+            "path_rationale": self.path_rationale
+        }
+    
+@dataclass
+class EntityReport:
+    data_type: str
+    type_rationale: str
+    mappings: list[EntityMapping]
+
+    def to_json(self) -> dict:
+        return {
+            "data_type": self.data_type,
+            "type_rationale": self.type_rationale,
+            "mappings": [mapping.to_json() for mapping in self.mappings]
         }

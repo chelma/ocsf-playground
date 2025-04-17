@@ -91,6 +91,64 @@ class EntityField(serializers.Field):
     def to_representation(self, value: Dict[str, Any]) -> Dict[str, Any]:
         # Pass-through representation logic
         return value
+    
+@extend_schema_field({
+    "type": "object",
+    "properties": {
+        "entity": {
+            "type": "object",
+            "properties": {
+                "value": {"type": "string"},
+                "description": {"type": "string"},
+            },
+            "required": ["value", "description"]
+        },
+        "ocsf_path": {"type": "string", "description": "Period-delimited path in OCSF schema (e.g., 'http_request.url.port')"},
+        "path_rationale": {"type": "string", "description": "A precise explanation of why the entity was mapped to the OCSF path"},
+    },
+    "required": ["entity", "ocsf_path"],
+})
+class EntityMappingField(serializers.Field):
+    """Custom serializer field for entity mapping data with OCSF path"""
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.entity_field = EntityField()
+
+    def to_internal_value(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        if not isinstance(data, dict):
+            raise serializers.ValidationError("Must be a JSON object.")
+
+        # Ensure required keys exist
+        required_keys = ['entity', 'ocsf_path']
+        missing_keys = [key for key in required_keys if key not in data]
+        if missing_keys:
+            raise serializers.ValidationError(
+                f"Must contain {', '.join(required_keys)} keys."
+            )
+
+        # Validate entity using the existing EntityField
+        try:
+            entity = self.entity_field.to_internal_value(data['entity'])
+        except serializers.ValidationError as e:
+            raise serializers.ValidationError({"entity": e.detail})
+            
+        # Validate ocsf_path
+        if not isinstance(data['ocsf_path'], str):
+            raise serializers.ValidationError("'ocsf_path' must be a string.")
+        
+        # Validate path_rationale
+        if 'path_rationale' in data and not isinstance(data['path_rationale'], str):
+            raise serializers.ValidationError("'path_rationale' must be a string.")
+            
+        return {
+            'entity': entity,
+            'ocsf_path': data['ocsf_path'],
+            'path_rationale': data.get('path_rationale', None)
+        }
+
+    def to_representation(self, value: Dict[str, Any]) -> Dict[str, Any]:
+        return value
 
 class TransformerEntitiesV1_1_0AnalyzeRequestSerializer(serializers.Serializer):
     ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
@@ -100,9 +158,9 @@ class TransformerEntitiesV1_1_0AnalyzeResponseSerializer(serializers.Serializer)
     ocsf_version = EnumChoiceField(enum=OcsfVersion)
     ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
     input_entry = serializers.CharField()
-    data_entry_type = serializers.CharField()
-    rationale = serializers.CharField()
-    entities = serializers.ListField(child=EntityField())
+    data_type = serializers.CharField()
+    type_rationale = serializers.CharField()
+    mappings = serializers.ListField(child=EntityMappingField())
 
 class TransformerLogicV1_1_0CreateRequestSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)

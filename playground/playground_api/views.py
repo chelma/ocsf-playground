@@ -497,9 +497,9 @@ class TransformerEntitiesV1_1_0AnalyzeView(APIView):
             "ocsf_category":  request.validated_data["ocsf_category"].value,
             "ocsf_version": OcsfVersion.V1_1_0.value,
             "input_entry": request.validated_data["input_entry"],
-            "data_entry_type": result.entities_report.data_entry_type,
-            "rationale": result.entities_report.rationale,
-            "entities": result.entities_report.to_json()["entities"],
+            "data_type": result.entities_report.data_type,
+            "type_rationale": result.entities_report.type_rationale,
+            "mappings": result.entities_report.to_json()["mappings"],
         })
         if not response.is_valid():
             logger.error(f"Invalid analysis response: {response.errors}")
@@ -517,7 +517,7 @@ class TransformerEntitiesV1_1_0AnalyzeView(APIView):
             )
             turns = [
                 system_message,
-                HumanMessage(content="Please analyze the input for entities.")
+                HumanMessage(content="Please analyze the input for entities and create mappings.")
             ]
 
             task = AnalysisTask(
