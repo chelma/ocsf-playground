@@ -1,2 +1,2 @@
 # Surface the underlying behavior of the module without consumers needing to dig through it
-from backend.entities_expert.prompting.generation import get_system_prompt_factory
+from backend.entities_expert.prompting.generation import get_analyze_system_prompt_factory, get_extract_system_prompt_factory

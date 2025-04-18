@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import List
 import uuid
 
 from django.views.decorators.csrf import csrf_exempt
@@ -14,8 +15,10 @@ from backend.categorization_expert.task_def import CategorizationTask
 
 from backend.core.ocsf.ocsf_versions import OcsfVersion
 
-from backend.entities_expert.expert_def import get_analysis_expert, invoke_analysis_expert
-from backend.entities_expert.task_def import AnalysisTask
+from backend.entities_expert.entities import ExtractionPattern, EntityMapping, Entity
+from backend.entities_expert.expert_def import get_analysis_expert, get_extraction_expert, invoke_analysis_expert, invoke_extraction_expert
+from backend.entities_expert.task_def import AnalysisTask, ExtractTask
+from backend.entities_expert.validation import ValidationReportExtraction
 
 from backend.regex_expert.expert_def import get_regex_expert, invoke_regex_expert
 from backend.regex_expert.task_def import RegexTask
@@ -30,6 +33,7 @@ from backend.transformation_expert.validation import OcsfV1_1_0TransformValidato
 from .serializers import (TransformerHeuristicCreateRequestSerializer, TransformerHeuristicCreateResponseSerializer,
                           TransformerCategorizeV1_1_0RequestSerializer, TransformerCategorizeV1_1_0ResponseSerializer,
                           TransformerEntitiesV1_1_0AnalyzeRequestSerializer, TransformerEntitiesV1_1_0AnalyzeResponseSerializer,
+                          TransformerEntitiesV1_1_0ExtractRequestSerializer, TransformerEntitiesV1_1_0ExtractResponseSerializer,
                           TransformerLogicV1_1_0CreateRequestSerializer, TransformerLogicV1_1_0CreateResponseSerializer,
                           TransformerLogicV1_1_0TestRequestSerializer, TransformerLogicV1_1_0TestResponseSerializer,
                           TransformerLogicV1_1_0IterateRequestSerializer, TransformerLogicV1_1_0IterateResponseSerializer
@@ -492,7 +496,7 @@ class TransformerEntitiesV1_1_0AnalyzeView(APIView):
             logger.exception(e)
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Serialize and return the response
+        # Serialize and return the response                
         response = TransformerEntitiesV1_1_0AnalyzeResponseSerializer(data={
             "ocsf_category":  request.validated_data["ocsf_category"].value,
             "ocsf_version": OcsfVersion.V1_1_0.value,
@@ -530,3 +534,118 @@ class TransformerEntitiesV1_1_0AnalyzeView(APIView):
             result = invoke_analysis_expert(expert, task)
 
             return result
+    
+class TransformerEntitiesV1_1_0ExtractView(APIView):
+
+    @csrf_exempt
+    @extend_schema(
+        request=TransformerEntitiesV1_1_0ExtractRequestSerializer,
+        responses=TransformerEntitiesV1_1_0ExtractResponseSerializer
+    )
+    def post(self, request):
+        logger.info(f"Received extraction request: {request.data}")
+
+        # Validate incoming data
+        request = TransformerEntitiesV1_1_0ExtractRequestSerializer(data=request.data)
+        if not request.is_valid():
+            logger.error(f"Invalid extraction request: {request.errors}")
+            return Response(request.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        task_id = str(uuid.uuid4())
+
+        # Perform the task
+        try:
+            # Create the extraction patterns
+            result = self._perform_extraction(task_id, request)
+            logger.info(f"Extraction completed")
+            logger.debug(f"Extraction patterns:\n{json.dumps([pattern.to_json() for pattern in result.patterns], indent=4)}")
+
+            # Validate the patterns
+            patterns = self._validate(request.validated_data["input_entry"], result.patterns)
+            logger.info(f"Extraction pattern validation completed")
+        except UnsupportedTransformLanguageError as e:
+            logger.error(f"{str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Extraction process failed: {str(e)}")
+            logger.exception(e)
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Serialize and return the response
+        response = TransformerEntitiesV1_1_0ExtractResponseSerializer(data={
+            "extraction_language":  request.validated_data["extraction_language"].value,
+            "ocsf_version": OcsfVersion.V1_1_0.value,
+            "ocsf_category":  request.validated_data["ocsf_category"].value,
+            "input_entry":  request.validated_data["input_entry"],
+            "patterns": [pattern.to_json() for pattern in patterns],
+        })
+
+        if not response.is_valid():
+            logger.error(f"Invalid extraction response: {response.errors}")
+            return Response(response.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(response.data, status=status.HTTP_200_OK)
+
+    def _perform_extraction(self, task_id: str, request: TransformerEntitiesV1_1_0ExtractRequestSerializer) -> ExtractTask:
+            # Perform the inference task to create the extraction patterns
+            expert = get_extraction_expert(
+                ocsf_version=OcsfVersion.V1_1_0,
+                ocsf_category_name=request.validated_data["ocsf_category"].get_category_name()
+            )
+
+            system_message = expert.system_prompt_factory(
+                input_entry=request.validated_data["input_entry"],
+                mapping_list=request.validated_data["mappings"]
+            )
+
+            turns = [
+                system_message,
+                HumanMessage(content="Please create the extraction patterns.")
+            ]
+
+            if request.validated_data["extraction_language"] == TransformLanguage.PYTHON:
+                task = ExtractTask(
+                    task_id=task_id,
+                    input=request.validated_data["input_entry"],
+                    context=turns,
+                    patterns=None
+                )
+            else:
+                raise UnsupportedTransformLanguageError(f"Unsupported extraction language: {request.validated_data['extraction_language']}")
+
+            result = invoke_extraction_expert(expert, task)
+
+            # Map the patterns to the mappings.  This is necessary because the patterns were created by the LLM, but
+            # the LLM did not include the original mapping data in its output to save tokens.  We re-join the two using
+            # the mapping ID.
+            try:
+                for pattern in result.patterns:
+                    raw_mapping = next(
+                        (mapping for mapping in request.validated_data["mappings"] if mapping["id"] == pattern.id)
+                    )
+                    pattern.mapping = EntityMapping(
+                        id=raw_mapping["id"],
+                        entity=Entity(
+                            value=raw_mapping["entity"]["value"],
+                            description=raw_mapping["entity"]["description"]
+                        ),
+                        ocsf_path=raw_mapping["ocsf_path"],
+                        path_rationale=raw_mapping["path_rationale"]
+                    )
+            except StopIteration:
+                raise ValueError(f"Mapping ID {pattern.id} not found in the input mappings.")
+
+            return result
+    
+    def _validate(self, input_entry: str, patterns: List[ExtractionPattern]) -> List[ExtractionPattern]:
+        
+        # TODO Dummy values until we implement for real
+        for pattern in patterns:
+            pattern.validation_report = ValidationReportExtraction(
+                input=input_entry,
+                output="This is a dummy output",
+                report_entries=["This is a dummy report entry"],
+                passed=True
+            )
+
+        return patterns

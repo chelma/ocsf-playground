@@ -1,17 +1,18 @@
 import logging
-from typing import Any, Dict, List
+from typing import List
+import uuid
 
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
 from backend.core.ocsf.ocsf_versions import OcsfVersion
 from backend.core.tools import ToolBundle
-from backend.entities_expert.entities import Entity, EntityMapping, EntityReport
+from backend.entities_expert.entities import Entity, EntityMapping, EntityReport, ExtractionPattern
 
 
 logger = logging.getLogger("backend")
 
-def get_tool_bundle(ocsf_version: OcsfVersion) -> ToolBundle:
+def get_analyze_tool_bundle(ocsf_version: OcsfVersion) -> ToolBundle:
     # Use the same tool for all versions
     return ToolBundle(
         task_tool=create_entities_resport_tool,
@@ -42,6 +43,7 @@ def create_entities_report(data_type: str, type_rationale: str, mappings: List[E
         type_rationale=type_rationale,
         mappings=[
             EntityMapping(
+                id=str(uuid.uuid4()),
                 entity=Entity(
                     value=entity_mapping.entity.value,
                     description=entity_mapping.entity.description
@@ -57,4 +59,39 @@ create_entities_resport_tool = StructuredTool.from_function(
     func=create_entities_report,
     name="CreateEntitiesReport",
     args_schema=CreateEntitiesReport
+)
+
+
+def get_extract_tool_bundle(ocsf_version: OcsfVersion) -> ToolBundle:
+    # Use the same tool for all versions
+    return ToolBundle(
+        task_tool=generate_extraction_patterns_tool,
+    )
+
+class PythonExtractionPatternInput(BaseModel):
+    """The Python extraction pattern for a single mapping of the input data entry to a specific OCSF schema path"""
+    id: str = Field(description="The unique identifier for the mapping the pattern is associated with.  It MUST be the EXACT SAME as the mapping's identifier.")
+    imports: str = Field(description="Some executable code that imports all necessary modules for the extraction logic and NOTHING ELSE.")
+    code: str = Field(description="The executable code that performs the extraction.  It MUST be a single function with the signature `def extract(input_entry: str) -> str:`.")
+    
+
+class GenerateExtractionPatterns(BaseModel):
+    """Create a list of extraction patterns based on the input data entry and mappings."""
+    patterns: List[PythonExtractionPatternInput] = Field(
+        description="List of extraction patterns created for input data entry and mappings",
+    )
+
+def generate_extraction_patterns(patterns: List[GenerateExtractionPatterns]) -> List[ExtractionPattern]:
+    return [
+        ExtractionPattern(
+            id=pattern.id,
+            logic=f"{pattern.imports}\n\n{pattern.code}",
+        )
+        for pattern in patterns
+    ]
+
+generate_extraction_patterns_tool = StructuredTool.from_function(
+    func=generate_extraction_patterns,
+    name="GenerateExtractionPatterns",
+    args_schema=GenerateExtractionPatterns
 )

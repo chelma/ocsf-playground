@@ -38,6 +38,32 @@ curl -X POST "http://127.0.0.1:8000/transformer/entities/v1_1_0/analyze/" -H "Co
     "input_entry": "Thu Mar 12 2025 07:40:57 mailsv1 sshd[4351]: Failed password for invalid user guest from 86.212.199.60 port 3771 ssh2"
 }'
 
+curl -X POST "http://127.0.0.1:8000/transformer/entities/v1_1_0/extract/" -H "Content-Type: application/json" -d '
+{
+    "extraction_language": "Python",
+    "ocsf_category": "Authentication (3002)",
+    "input_entry": "Thu Mar 12 2025 07:40:57 mailsv1 sshd[4351]: Failed password for invalid user guest from 86.212.199.60 port 3771 ssh2",
+    "mappings": [{
+            "id": "f388212c-5c4a-4a7c-9655-c30dd3c58242",
+            "entity": {
+                "value": "Thu Mar 12 2025 07:40:57",
+                "description": "Event creation timestamp"
+            },
+            "ocsf_path": "time",
+            "path_rationale": "This timestamp represents when the authentication event occurred, which directly maps to the OCSF '\''time'\'' field that requires the normalized event occurrence time."
+        },
+        {
+            "id": "e146ee7c-84ba-4cb0-82cc-a22d06fb585c",
+            "entity": {
+                "value": "Failed password",
+                "description": "Authentication failure indication"
+            },
+            "ocsf_path": "status_id",
+            "path_rationale": "The '\''Failed password'\'' text explicitly indicates this was an unsuccessful authentication attempt, which maps to status_id value 2 (Failure)."
+        }
+    ]
+}'
+
 curl -X POST "http://127.0.0.1:8000/transformer/logic/v1_1_0/create/" -H "Content-Type: application/json" -d '
 {
     "input_entry": "Thu Mar 12 2025 07:40:57 mailsv1 sshd[4351]: Failed password for invalid user guest from 86.212.199.60 port 3771 ssh2",
