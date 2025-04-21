@@ -1,13 +1,8 @@
 from dataclasses import dataclass
-import logging
-from typing import Any, Callable, Dict, List
-
-
-logger = logging.getLogger("backend")
-
+from typing import Any, Dict, List, Callable
 
 @dataclass
-class ValidationReportExtraction:
+class ValidationReport:
     input: str
     output: Dict[str, Any]
     report_entries: List[str]

@@ -15,7 +15,7 @@ logger = logging.getLogger("backend")
 
 
 @dataclass
-class ValidationReport:
+class ValidationReportTransform:
     input: str
     transform: TransformBase
     output: Dict[str, Any]
@@ -39,7 +39,7 @@ class TransformValidatorBase(ABC):
     def __init__(self, transform_task: TransformTask):
         self.transform_task = transform_task
 
-    def _try_load_transform(self, report: ValidationReport) -> Callable[[Dict[str, Any]], List[Dict[str, Any]]]:
+    def _try_load_transform(self, report: ValidationReportTransform) -> Callable[[Dict[str, Any]], List[Dict[str, Any]]]:
         try:
             report.append_entry("Attempting to load the transform function...", logger.info)
             transform_func = load_transform(report.transform)
@@ -50,7 +50,7 @@ class TransformValidatorBase(ABC):
         
         return transform_func
     
-    def _try_invoke_transform(self, transform_func: Callable[[Dict[str, Any]], List[Dict[str, Any]]], report: ValidationReport) -> List[Dict[str, Any]]:
+    def _try_invoke_transform(self, transform_func: Callable[[Dict[str, Any]], List[Dict[str, Any]]], report: ValidationReportTransform) -> List[Dict[str, Any]]:
         try:
             report.append_entry("Attempting to invoke the transform function against the input...", logger.info)
             output = transform_func(report.input)
@@ -63,11 +63,11 @@ class TransformValidatorBase(ABC):
         return output
     
     @abstractmethod
-    def _try_validate_schema(self, output: Dict[str, Any], report: ValidationReport):
+    def _try_validate_schema(self, output: Dict[str, Any], report: ValidationReportTransform):
         pass
 
-    def validate(self) -> ValidationReport:
-        report = ValidationReport(
+    def validate(self) -> ValidationReportTransform:
+        report = ValidationReportTransform(
             input=self.transform_task.input,
             transform=self.transform_task.transform,
             output=None,
@@ -89,7 +89,7 @@ class TransformValidatorBase(ABC):
         return report
     
 class OcsfV1_1_0TransformValidator(TransformValidatorBase):
-    def _try_validate_schema(self, output: Dict[str, Any], report: ValidationReport):
+    def _try_validate_schema(self, output: Dict[str, Any], report: ValidationReportTransform):
         ocsf_version = OcsfVersion.V1_1_0
         category_name = self.transform_task.category_name
         category_schemas = CATEGORY_SCHEMAS_V1_1_0

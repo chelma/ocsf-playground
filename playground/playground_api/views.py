@@ -15,10 +15,11 @@ from backend.categorization_expert.task_def import CategorizationTask
 
 from backend.core.ocsf.ocsf_versions import OcsfVersion
 
-from backend.entities_expert.entities import ExtractionPattern, EntityMapping, Entity
+from backend.entities_expert.entities import EntityMapping, Entity
+from backend.entities_expert.extraction_pattern import ExtractionPattern
 from backend.entities_expert.expert_def import get_analysis_expert, get_extraction_expert, invoke_analysis_expert, invoke_extraction_expert
 from backend.entities_expert.task_def import AnalysisTask, ExtractTask
-from backend.entities_expert.validation import ValidationReportExtraction
+from backend.entities_expert.validators import PythonExtractionPatternValidator
 
 from backend.regex_expert.expert_def import get_regex_expert, invoke_regex_expert
 from backend.regex_expert.task_def import RegexTask
@@ -28,7 +29,7 @@ from backend.transformation_expert.expert_def import get_transformation_expert, 
 from backend.transformation_expert.parameters import TransformLanguage
 from backend.transformation_expert.task_def import PythonTransformTask, TransformTask
 from backend.transformation_expert.transforms import TransformPython
-from backend.transformation_expert.validation import OcsfV1_1_0TransformValidator, ValidationReport
+from backend.transformation_expert.validation import OcsfV1_1_0TransformValidator, ValidationReportTransform
 
 from .serializers import (TransformerHeuristicCreateRequestSerializer, TransformerHeuristicCreateResponseSerializer,
                           TransformerCategorizeV1_1_0RequestSerializer, TransformerCategorizeV1_1_0ResponseSerializer,
@@ -260,7 +261,7 @@ class TransformerLogicV1_1_0CreateView(APIView):
 
             return result
     
-    def _validate(self, transform_taks: TransformTask) -> ValidationReport:
+    def _validate(self, transform_taks: TransformTask) -> ValidationReportTransform:
         # Create the validator
         validator = OcsfV1_1_0TransformValidator(transform_task=transform_taks)
 
@@ -319,7 +320,7 @@ class TransformerLogicV1_1_0TestView(APIView):
         
         return Response(response.data, status=status.HTTP_200_OK)
     
-    def _validate(self, task_id: str, request: TransformerLogicV1_1_0TestRequestSerializer) -> ValidationReport:
+    def _validate(self, task_id: str, request: TransformerLogicV1_1_0TestRequestSerializer) -> ValidationReportTransform:
         # Create the task object to validate
         if request.validated_data["transform_language"] == TransformLanguage.PYTHON:
             task = PythonTransformTask(
@@ -399,14 +400,14 @@ class TransformerLogicV1_1_0IterateView(APIView):
         
         return Response(response.data, status=status.HTTP_200_OK)
     
-    def _create_validation_report(self, task_id: str, request: TransformerLogicV1_1_0IterateRequestSerializer) -> ValidationReport:
+    def _create_validation_report(self, task_id: str, request: TransformerLogicV1_1_0IterateRequestSerializer) -> ValidationReportTransform:
         logger.debug(f"Creating validation report for task ID: {task_id}")        
         # Create the task object to validate
         if request.validated_data["transform_language"] == TransformLanguage.PYTHON:
-            output = json.loads(request.validated_data["transform_output"]) if request.validated_data["transform_output"] else None
+            output = json.loads(request.validated_data["transform_output"]) if request.validated_data["transform_output"] else {}
             report_entries = request.validated_data["validation_report"] if request.validated_data["validation_report"] else []
 
-            report = ValidationReport(
+            report = ValidationReportTransform(
                 input=request.validated_data["input_entry"],
                 transform=TransformPython(
                     imports="", # Just put everything in the `code` section
@@ -460,7 +461,7 @@ class TransformerLogicV1_1_0IterateView(APIView):
 
             return result
     
-    def _validate(self, transform_taks: TransformTask) -> ValidationReport:
+    def _validate(self, transform_taks: TransformTask) -> ValidationReportTransform:
         # Create the validator
         validator = OcsfV1_1_0TransformValidator(transform_task=transform_taks)
 
@@ -573,7 +574,7 @@ class TransformerEntitiesV1_1_0ExtractView(APIView):
 
         # Serialize and return the response
         response = TransformerEntitiesV1_1_0ExtractResponseSerializer(data={
-            "extraction_language":  request.validated_data["extraction_language"].value,
+            "transform_language":  request.validated_data["transform_language"].value,
             "ocsf_version": OcsfVersion.V1_1_0.value,
             "ocsf_category":  request.validated_data["ocsf_category"].value,
             "input_entry":  request.validated_data["input_entry"],
@@ -603,7 +604,7 @@ class TransformerEntitiesV1_1_0ExtractView(APIView):
                 HumanMessage(content="Please create the extraction patterns.")
             ]
 
-            if request.validated_data["extraction_language"] == TransformLanguage.PYTHON:
+            if request.validated_data["transform_language"] == TransformLanguage.PYTHON:
                 task = ExtractTask(
                     task_id=task_id,
                     input=request.validated_data["input_entry"],
@@ -611,7 +612,7 @@ class TransformerEntitiesV1_1_0ExtractView(APIView):
                     patterns=None
                 )
             else:
-                raise UnsupportedTransformLanguageError(f"Unsupported extraction language: {request.validated_data['extraction_language']}")
+                raise UnsupportedTransformLanguageError(f"Unsupported extraction language: {request.validated_data['transform_language']}")
 
             result = invoke_extraction_expert(expert, task)
 
@@ -638,14 +639,10 @@ class TransformerEntitiesV1_1_0ExtractView(APIView):
             return result
     
     def _validate(self, input_entry: str, patterns: List[ExtractionPattern]) -> List[ExtractionPattern]:
-        
-        # TODO Dummy values until we implement for real
         for pattern in patterns:
-            pattern.validation_report = ValidationReportExtraction(
-                input=input_entry,
-                output="This is a dummy output",
-                report_entries=["This is a dummy report entry"],
-                passed=True
-            )
+            pattern.validation_report = PythonExtractionPatternValidator(
+                input_entry=input_entry,
+                pattern=pattern
+            ).validate()
 
         return patterns

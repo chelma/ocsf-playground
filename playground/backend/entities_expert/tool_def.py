@@ -7,7 +7,8 @@ from pydantic import BaseModel, Field
 
 from backend.core.ocsf.ocsf_versions import OcsfVersion
 from backend.core.tools import ToolBundle
-from backend.entities_expert.entities import Entity, EntityMapping, EntityReport, ExtractionPattern
+from backend.entities_expert.entities import Entity, EntityMapping, EntityReport
+from backend.entities_expert.extraction_pattern import ExtractionPattern
 
 
 logger = logging.getLogger("backend")
@@ -71,8 +72,8 @@ def get_extract_tool_bundle(ocsf_version: OcsfVersion) -> ToolBundle:
 class PythonExtractionPatternInput(BaseModel):
     """The Python extraction pattern for a single mapping of the input data entry to a specific OCSF schema path"""
     id: str = Field(description="The unique identifier for the mapping the pattern is associated with.  It MUST be the EXACT SAME as the mapping's identifier.")
-    imports: str = Field(description="Some executable code that imports all necessary modules for the extraction logic and NOTHING ELSE.")
-    code: str = Field(description="The executable code that performs the extraction.  It MUST be a single function with the signature `def extract(input_entry: str) -> str:`.")
+    extract_logic: str = Field(description="The executable code that performs the extraction.  It MUST be a single function with the signature `def extract(input_entry: str) -> str:`.")
+    transform_logic: str = Field(description="The executable code that performs the transformation.  It MUST be a single function with the signature `def transform(extracted_value: str) -> str:`.")
     
 
 class GenerateExtractionPatterns(BaseModel):
@@ -81,11 +82,15 @@ class GenerateExtractionPatterns(BaseModel):
         description="List of extraction patterns created for input data entry and mappings",
     )
 
-def generate_extraction_patterns(patterns: List[GenerateExtractionPatterns]) -> List[ExtractionPattern]:
+def generate_extraction_patterns(patterns: List[PythonExtractionPatternInput]) -> List[ExtractionPattern]:
+    static_imports = "import re\nimport typing\nimport json\nimport yaml\nimport xml\nimport datetime\nimport urllib\n\n"
+
     return [
         ExtractionPattern(
             id=pattern.id,
-            logic=f"{pattern.imports}\n\n{pattern.code}",
+            dependency_setup=static_imports,
+            extract_logic=pattern.extract_logic,
+            transform_logic=pattern.transform_logic,
         )
         for pattern in patterns
     ]

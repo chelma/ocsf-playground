@@ -173,7 +173,11 @@ class TransformerEntitiesV1_1_0AnalyzeResponseSerializer(serializers.Serializer)
     "type": "object",
     "properties": {
         "input": {"type": "string", "description": "Input data that was validated"},
-        "output": {"type": "string", "description": "Output data that was generated"},
+        "output": {
+            "type": "object",
+            "additionalProperties": {"type": "string"},
+            "description": "Output data that was generated"
+        },
         "report_entries": {
             "type": "array",
             "items": {"type": "string"},
@@ -188,7 +192,7 @@ class ValidationReportField(serializers.Field):
     Custom serializer field for validation report data with the structure:
     {
         "input": <string>,
-        "output": <string>,
+        "output": <dict>,
         "report_entries": [<string>, ...],
         "passed": <boolean>
     }
@@ -211,8 +215,8 @@ class ValidationReportField(serializers.Field):
             raise serializers.ValidationError("'input' must be a string.")
 
         # Validate output
-        if not isinstance(data['output'], str):
-            raise serializers.ValidationError("'output' must be a string.")
+        if not isinstance(data['output'], dict):
+            raise serializers.ValidationError("'output' must be a dictionary.")
 
         # Validate report_entries
         if not isinstance(data['report_entries'], list):
@@ -257,13 +261,19 @@ class ValidationReportField(serializers.Field):
             },
             "required": ["id", "entity", "ocsf_path"]
         },
-        "logic": {"type": "string", "description": "The extraction logic for the entity mapping, such a some Python or Javascript code"},
+        "dependency_setup": {"type": "string", "description": "The logic to set up any dependencies for the extraction/transformation logic, such as package import statements"},
+        "extract_logic": {"type": "string", "description": "The extraction logic for the entity mapping, such a some Python or Javascript code"},
+        "transform_logic": {"type": "string", "description": "The transformation logic for the entity mapping, such a some Python or Javascript code"},
         "validation_report": {
             "type": "object",
             "description": "Validation information for the extraction pattern",
             "properties": {
                 "input": {"type": "string", "description": "Input data that was validated"},
-                "output": {"type": "string", "description": "Output data that was generated"},
+                "output": {
+                    "type": "object",
+                    "additionalProperties": {"type": "string"},
+                    "description": "Output data that was generated"
+                },
                 "report_entries": {
                     "type": "array",
                     "items": {"type": "string"},
@@ -274,7 +284,7 @@ class ValidationReportField(serializers.Field):
             "required": ["input", "output", "report_entries", "passed"]
         }
     },
-    "required": ["id", "mapping", "logic", "validation_report"],
+    "required": ["id", "mapping", "extract_logic", "transform_logic", "validation_report"],
 })
 class ExtractionPatternField(serializers.Field):
     """Custom serializer field for an extraction patterns on entity mappings"""
@@ -289,7 +299,7 @@ class ExtractionPatternField(serializers.Field):
             raise serializers.ValidationError("Must be a JSON object.")
 
         # Ensure required keys exist
-        required_keys = ['id', 'mapping', 'logic', 'validation_report']
+        required_keys = ['id', 'mapping', 'extract_logic', 'transform_logic', 'validation_report']
         missing_keys = [key for key in required_keys if key not in data]
         if missing_keys:
             raise serializers.ValidationError(
@@ -305,10 +315,18 @@ class ExtractionPatternField(serializers.Field):
             mapping = self.mapping_field.to_internal_value(data['mapping'])
         except serializers.ValidationError as e:
             raise serializers.ValidationError({"mapping": e.detail})
+        
+        # Validate dependency_setup
+        if 'dependency_setup' in data and not isinstance(data['dependency_setup'], str):
+            raise serializers.ValidationError("'dependency_setup' must be a string.")
             
-        # Validate logic
-        if not isinstance(data['logic'], str):
-            raise serializers.ValidationError("'logic' must be a string.")
+        # Validate extract_logic
+        if not isinstance(data['extract_logic'], str):
+            raise serializers.ValidationError("'extract_logic' must be a string.")
+            
+        # Validate transform_logic
+        if not isinstance(data['transform_logic'], str):
+            raise serializers.ValidationError("'transform_logic' must be a string.")
         
         # Validate validation_report if present
         try:
@@ -319,7 +337,9 @@ class ExtractionPatternField(serializers.Field):
         return {
             'id': data['id'],
             'mapping': mapping,
-            'logic': data['logic'],
+            'dependency_setup': data.get('dependency_setup', None),
+            'extract_logic': data['extract_logic'],
+            'transform_logic': data['transform_logic'],
             'validation_report': validation_report
         }
 
@@ -327,13 +347,13 @@ class ExtractionPatternField(serializers.Field):
         return value
 
 class TransformerEntitiesV1_1_0ExtractRequestSerializer(serializers.Serializer):
-    extraction_language = EnumChoiceField(enum=TransformLanguage)
+    transform_language = EnumChoiceField(enum=TransformLanguage)
     ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
     input_entry = serializers.CharField()
     mappings = serializers.ListField(child=EntityMappingField())
 
 class TransformerEntitiesV1_1_0ExtractResponseSerializer(serializers.Serializer):
-    extraction_language = EnumChoiceField(enum=TransformLanguage)
+    transform_language = EnumChoiceField(enum=TransformLanguage)
     ocsf_version = EnumChoiceField(enum=OcsfVersion)
     ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
     input_entry = serializers.CharField()

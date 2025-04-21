@@ -3,7 +3,8 @@ import logging
 from typing import Any, Dict, List
 
 from backend.core.tasks import PlaygroundTask
-from backend.entities_expert.entities import EntityReport, ExtractionPattern
+from backend.entities_expert.entities import EntityReport
+from backend.entities_expert.extraction_pattern import ExtractionPattern
 
 logger = logging.getLogger("backend")
 

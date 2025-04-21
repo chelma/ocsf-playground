@@ -148,6 +148,268 @@ export interface TransformerCategorizeV110Response {
 /**
  * 
  * @export
+ * @interface TransformerEntitiesV110AnalyzeRequest
+ */
+export interface TransformerEntitiesV110AnalyzeRequest {
+    /**
+     * 
+     * @type {OcsfCategoryEnum}
+     * @memberof TransformerEntitiesV110AnalyzeRequest
+     */
+    'ocsf_category': OcsfCategoryEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerEntitiesV110AnalyzeRequest
+     */
+    'input_entry': string;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface TransformerEntitiesV110AnalyzeResponse
+ */
+export interface TransformerEntitiesV110AnalyzeResponse {
+    /**
+     * 
+     * @type {OcsfVersionEnum}
+     * @memberof TransformerEntitiesV110AnalyzeResponse
+     */
+    'ocsf_version': OcsfVersionEnum;
+    /**
+     * 
+     * @type {OcsfCategoryEnum}
+     * @memberof TransformerEntitiesV110AnalyzeResponse
+     */
+    'ocsf_category': OcsfCategoryEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerEntitiesV110AnalyzeResponse
+     */
+    'input_entry': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerEntitiesV110AnalyzeResponse
+     */
+    'data_type': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerEntitiesV110AnalyzeResponse
+     */
+    'type_rationale': string;
+    /**
+     * 
+     * @type {Array<TransformerEntitiesV110AnalyzeResponseMappingsInner>}
+     * @memberof TransformerEntitiesV110AnalyzeResponse
+     */
+    'mappings': Array<TransformerEntitiesV110AnalyzeResponseMappingsInner>;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface TransformerEntitiesV110AnalyzeResponseMappingsInner
+ */
+export interface TransformerEntitiesV110AnalyzeResponseMappingsInner {
+    /**
+     * Unique identifier for the entity mapping
+     * @type {string}
+     * @memberof TransformerEntitiesV110AnalyzeResponseMappingsInner
+     */
+    'id': string;
+    /**
+     * 
+     * @type {TransformerEntitiesV110AnalyzeResponseMappingsInnerEntity}
+     * @memberof TransformerEntitiesV110AnalyzeResponseMappingsInner
+     */
+    'entity': TransformerEntitiesV110AnalyzeResponseMappingsInnerEntity;
+    /**
+     * Period-delimited path in OCSF schema (e.g., \'http_request.url.port\')
+     * @type {string}
+     * @memberof TransformerEntitiesV110AnalyzeResponseMappingsInner
+     */
+    'ocsf_path': string;
+    /**
+     * A precise explanation of why the entity was mapped to the OCSF path
+     * @type {string}
+     * @memberof TransformerEntitiesV110AnalyzeResponseMappingsInner
+     */
+    'path_rationale'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface TransformerEntitiesV110AnalyzeResponseMappingsInnerEntity
+ */
+export interface TransformerEntitiesV110AnalyzeResponseMappingsInnerEntity {
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerEntitiesV110AnalyzeResponseMappingsInnerEntity
+     */
+    'value': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerEntitiesV110AnalyzeResponseMappingsInnerEntity
+     */
+    'description': string;
+}
+/**
+ * 
+ * @export
+ * @interface TransformerEntitiesV110ExtractRequest
+ */
+export interface TransformerEntitiesV110ExtractRequest {
+    /**
+     * 
+     * @type {TransformLanguageEnum}
+     * @memberof TransformerEntitiesV110ExtractRequest
+     */
+    'transform_language': TransformLanguageEnum;
+    /**
+     * 
+     * @type {OcsfCategoryEnum}
+     * @memberof TransformerEntitiesV110ExtractRequest
+     */
+    'ocsf_category': OcsfCategoryEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerEntitiesV110ExtractRequest
+     */
+    'input_entry': string;
+    /**
+     * 
+     * @type {Array<TransformerEntitiesV110AnalyzeResponseMappingsInner>}
+     * @memberof TransformerEntitiesV110ExtractRequest
+     */
+    'mappings': Array<TransformerEntitiesV110AnalyzeResponseMappingsInner>;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface TransformerEntitiesV110ExtractResponse
+ */
+export interface TransformerEntitiesV110ExtractResponse {
+    /**
+     * 
+     * @type {TransformLanguageEnum}
+     * @memberof TransformerEntitiesV110ExtractResponse
+     */
+    'transform_language': TransformLanguageEnum;
+    /**
+     * 
+     * @type {OcsfVersionEnum}
+     * @memberof TransformerEntitiesV110ExtractResponse
+     */
+    'ocsf_version': OcsfVersionEnum;
+    /**
+     * 
+     * @type {OcsfCategoryEnum}
+     * @memberof TransformerEntitiesV110ExtractResponse
+     */
+    'ocsf_category': OcsfCategoryEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerEntitiesV110ExtractResponse
+     */
+    'input_entry': string;
+    /**
+     * 
+     * @type {Array<TransformerEntitiesV110ExtractResponsePatternsInner>}
+     * @memberof TransformerEntitiesV110ExtractResponse
+     */
+    'patterns': Array<TransformerEntitiesV110ExtractResponsePatternsInner>;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface TransformerEntitiesV110ExtractResponsePatternsInner
+ */
+export interface TransformerEntitiesV110ExtractResponsePatternsInner {
+    /**
+     * Unique identifier for the extraction pattern
+     * @type {string}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInner
+     */
+    'id': string;
+    /**
+     * 
+     * @type {TransformerEntitiesV110AnalyzeResponseMappingsInner}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInner
+     */
+    'mapping': TransformerEntitiesV110AnalyzeResponseMappingsInner;
+    /**
+     * The logic to set up any dependencies for the extraction/transformation logic, such as package import statements
+     * @type {string}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInner
+     */
+    'dependency_setup'?: string;
+    /**
+     * The extraction logic for the entity mapping, such a some Python or Javascript code
+     * @type {string}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInner
+     */
+    'extract_logic': string;
+    /**
+     * The transformation logic for the entity mapping, such a some Python or Javascript code
+     * @type {string}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInner
+     */
+    'transform_logic': string;
+    /**
+     * 
+     * @type {TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInner
+     */
+    'validation_report': TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport;
+}
+/**
+ * Validation information for the extraction pattern
+ * @export
+ * @interface TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport
+ */
+export interface TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport {
+    /**
+     * Input data that was validated
+     * @type {string}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport
+     */
+    'input': string;
+    /**
+     * Output data that was generated
+     * @type {{ [key: string]: string; }}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport
+     */
+    'output': { [key: string]: string; };
+    /**
+     * List of validation messages or details
+     * @type {Array<string>}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport
+     */
+    'report_entries': Array<string>;
+    /**
+     * Whether validation passed (true) or failed (false)
+     * @type {boolean}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport
+     */
+    'passed': boolean;
+}
+/**
+ * 
+ * @export
  * @interface TransformerHeuristicCreateRequest
  */
 export interface TransformerHeuristicCreateRequest {
@@ -765,6 +1027,88 @@ export const TransformerApiAxiosParamCreator = function (configuration?: Configu
         },
         /**
          * 
+         * @param {TransformerEntitiesV110AnalyzeRequest} transformerEntitiesV110AnalyzeRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        transformerEntitiesV110AnalyzeCreate: async (transformerEntitiesV110AnalyzeRequest: TransformerEntitiesV110AnalyzeRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'transformerEntitiesV110AnalyzeRequest' is not null or undefined
+            assertParamExists('transformerEntitiesV110AnalyzeCreate', 'transformerEntitiesV110AnalyzeRequest', transformerEntitiesV110AnalyzeRequest)
+            const localVarPath = `/transformer/entities/v1_1_0/analyze/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication cookieAuth required
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(transformerEntitiesV110AnalyzeRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {TransformerEntitiesV110ExtractRequest} transformerEntitiesV110ExtractRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        transformerEntitiesV110ExtractCreate: async (transformerEntitiesV110ExtractRequest: TransformerEntitiesV110ExtractRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'transformerEntitiesV110ExtractRequest' is not null or undefined
+            assertParamExists('transformerEntitiesV110ExtractCreate', 'transformerEntitiesV110ExtractRequest', transformerEntitiesV110ExtractRequest)
+            const localVarPath = `/transformer/entities/v1_1_0/extract/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication cookieAuth required
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(transformerEntitiesV110ExtractRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -951,6 +1295,30 @@ export const TransformerApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {TransformerEntitiesV110AnalyzeRequest} transformerEntitiesV110AnalyzeRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async transformerEntitiesV110AnalyzeCreate(transformerEntitiesV110AnalyzeRequest: TransformerEntitiesV110AnalyzeRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TransformerEntitiesV110AnalyzeResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.transformerEntitiesV110AnalyzeCreate(transformerEntitiesV110AnalyzeRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TransformerApi.transformerEntitiesV110AnalyzeCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {TransformerEntitiesV110ExtractRequest} transformerEntitiesV110ExtractRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async transformerEntitiesV110ExtractCreate(transformerEntitiesV110ExtractRequest: TransformerEntitiesV110ExtractRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TransformerEntitiesV110ExtractResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.transformerEntitiesV110ExtractCreate(transformerEntitiesV110ExtractRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TransformerApi.transformerEntitiesV110ExtractCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1018,6 +1386,24 @@ export const TransformerApiFactory = function (configuration?: Configuration, ba
         },
         /**
          * 
+         * @param {TransformerEntitiesV110AnalyzeRequest} transformerEntitiesV110AnalyzeRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        transformerEntitiesV110AnalyzeCreate(transformerEntitiesV110AnalyzeRequest: TransformerEntitiesV110AnalyzeRequest, options?: RawAxiosRequestConfig): AxiosPromise<TransformerEntitiesV110AnalyzeResponse> {
+            return localVarFp.transformerEntitiesV110AnalyzeCreate(transformerEntitiesV110AnalyzeRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {TransformerEntitiesV110ExtractRequest} transformerEntitiesV110ExtractRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        transformerEntitiesV110ExtractCreate(transformerEntitiesV110ExtractRequest: TransformerEntitiesV110ExtractRequest, options?: RawAxiosRequestConfig): AxiosPromise<TransformerEntitiesV110ExtractResponse> {
+            return localVarFp.transformerEntitiesV110ExtractCreate(transformerEntitiesV110ExtractRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1071,6 +1457,28 @@ export class TransformerApi extends BaseAPI {
      */
     public transformerCategorizeV110Create(transformerCategorizeV110Request: TransformerCategorizeV110Request, options?: RawAxiosRequestConfig) {
         return TransformerApiFp(this.configuration).transformerCategorizeV110Create(transformerCategorizeV110Request, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {TransformerEntitiesV110AnalyzeRequest} transformerEntitiesV110AnalyzeRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TransformerApi
+     */
+    public transformerEntitiesV110AnalyzeCreate(transformerEntitiesV110AnalyzeRequest: TransformerEntitiesV110AnalyzeRequest, options?: RawAxiosRequestConfig) {
+        return TransformerApiFp(this.configuration).transformerEntitiesV110AnalyzeCreate(transformerEntitiesV110AnalyzeRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {TransformerEntitiesV110ExtractRequest} transformerEntitiesV110ExtractRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TransformerApi
+     */
+    public transformerEntitiesV110ExtractCreate(transformerEntitiesV110ExtractRequest: TransformerEntitiesV110ExtractRequest, options?: RawAxiosRequestConfig) {
+        return TransformerApiFp(this.configuration).transformerEntitiesV110ExtractCreate(transformerEntitiesV110ExtractRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
