@@ -9,8 +9,8 @@ import {
   OcsfCategoryEnum,
   TransformLanguageEnum
 } from '../generated-api-client';
-import { API_BASE_URL } from '../utils/constants';
-import { ApiError } from '../utils/types';
+import { API_BASE_URL } from './constants';
+import { ApiError } from './types';
 
 // Create API configuration and client
 const apiConfig = new Configuration({ basePath: API_BASE_URL });
@@ -60,6 +60,24 @@ export const getCategoryRecommendation = async (
       user_guidance: guidance
     };
     const response = await apiClient.transformerCategorizeV110Create(payload);
+    return response.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+// Analyze entities in a log entry
+export const analyzeEntities = async (
+  ocsfCategory: OcsfCategoryEnum,
+  logEntry: string
+) => {
+  try {
+    const payload = {
+      ocsf_category: ocsfCategory,
+      input_entry: logEntry
+    };
+    
+    const response = await apiClient.transformerEntitiesV110AnalyzeCreate(payload);
     return response.data;
   } catch (error) {
     return handleApiError(error);

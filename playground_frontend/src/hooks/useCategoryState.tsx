@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CategoryState } from '../utils/types';
 import { SelectProps } from '@cloudscape-design/components';
-import { getCategoryRecommendation } from '../api/transformerClient';
+import { getCategoryRecommendation } from '../utils/transformerClient';
 import { ocsfCategoryOptions, ocsfVersionOptions } from '../utils/constants';
 
 export interface UseCategoryStateProps {

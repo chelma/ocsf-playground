@@ -1,12 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
+import dynamic from 'next/dynamic';
 import "@cloudscape-design/global-styles/index.css";
 import 'ace-builds/css/ace.css';
 import {
   Container,
   Header,
   SpaceBetween,
+  Spinner
 } from "@cloudscape-design/components";
 
 // Import utilities
@@ -22,10 +24,16 @@ import SplitLayout from '../components/common/SplitLayout';
 import useLogsState from '../hooks/useLogsState';
 import useRegexState from '../hooks/useRegexState';
 import useCategoryState from '../hooks/useCategoryState';
+import useEntitiesState from '../hooks/useEntitiesState';
 import useTransformState from '../hooks/useTransformState';
 import LogsPanel from '../components/LogsPanel';
 import RegexPanel from '../components/RegexPanel';
 import CategoryPanel from '../components/CategoryPanel';
+// Import EntitiesPanel dynamically to avoid hydration issues
+const EntitiesPanel = dynamic(() => import('../components/EntitiesPanel'), {
+  ssr: false,
+  loading: () => <Spinner size="normal" />
+});
 import TransformPanel from '../components/TransformPanel';
 import { OcsfCategoryEnum } from '../generated-api-client';
 
@@ -44,6 +52,13 @@ const OcsfPlaygroundPage = () => {
   const categoryState = useCategoryState({
     logs: logsState.logs,
     selectedLogIds: logsState.selectedLogIds
+  });
+  
+  // Use the entities state hook with access to logs state and category
+  const entitiesState = useEntitiesState({
+    logs: logsState.logs,
+    selectedLogIds: logsState.selectedLogIds,
+    categoryValue: categoryState.category.value as OcsfCategoryEnum
   });
   
   // Use the transform state hook with access to logs state and category
@@ -76,6 +91,9 @@ const OcsfPlaygroundPage = () => {
 
             {/* Category Panel - extracted to its own component */}
             <CategoryPanel {...categoryState} />
+            
+            {/* Entities Panel - new component with client-only rendering */}
+            <EntitiesPanel {...entitiesState} />
 
             {/* Transform Panel - extracted to its own component */}
             <TransformPanel {...transformState} />

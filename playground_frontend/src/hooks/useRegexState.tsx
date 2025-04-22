@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { RegexState } from '../utils/types';
-import { getRegexRecommendation } from '../api/transformerClient';
+import { getRegexRecommendation } from '../utils/transformerClient';
 
 export interface UseRegexStateProps {
   logs: string[];

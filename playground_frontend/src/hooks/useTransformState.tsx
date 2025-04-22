@@ -5,7 +5,7 @@ import {
   getTransformRecommendation, 
   testTransformLogic,
   debugTransformLogic
-} from '../api/transformerClient';
+} from '../utils/transformerClient';
 import { 
   defaultTransformLogic, 
   transformLanguageOptions, 
