@@ -11,7 +11,6 @@ import {
   SpaceBetween,
   Textarea,
   Header,
-  Input,
   Spinner,
   Select,
 } from "@cloudscape-design/components";
@@ -35,12 +34,10 @@ import {
   defaultTransformLanguage
 } from '../utils/constants';
 import { 
-  RegexState, 
   CategoryState, 
   TransformState
 } from '../utils/types';
 import { 
-  getRegexRecommendation, 
   getCategoryRecommendation, 
   getTransformRecommendation, 
   testTransformLogic,
@@ -56,27 +53,24 @@ import SplitLayout from '../components/common/SplitLayout';
 
 // Import custom hooks and components
 import useLogsState from '../hooks/useLogsState';
+import useRegexState from '../hooks/useRegexState';
 import LogsPanel from '../components/LogsPanel';
+import RegexPanel from '../components/RegexPanel';
 
 const OcsfPlaygroundPage = () => {
   // Use the logs state hook
   const logsState = useLogsState();
   
+  // Use the regex state hook with access to logs state
+  const regexState = useRegexState({
+    logs: logsState.logs,
+    selectedLogIds: logsState.selectedLogIds,
+    setSelectedLogIds: logsState.setSelectedLogIds
+  });
+  
   // Ace editor state
   const [ace, setAce] = useState<any>(null);
   const [aceLoading, setAceLoading] = useState(true);
-
-  // Regex state
-  const [regexState, setRegexState] = useState<RegexState>({
-    pattern: "",
-    guidance: "",
-    guidanceTemp: "",
-    guidanceModalVisible: false,
-    rationale: "",
-    rationaleModalVisible: false,
-    error: null,
-    isRecommending: false
-  });
 
   // OCSF categorization state
   const [categoryState, setCategoryState] = useState<CategoryState>({
@@ -122,73 +116,6 @@ const OcsfPlaygroundPage = () => {
         setAceLoading(false);
       });
   }, []);
-
-  // Function to test regex against log entries
-  const testRegexPattern = () => {
-    if (!regexState.pattern.trim()) {
-      setRegexState(prev => ({ ...prev, error: "Please enter a regex pattern" }));
-      return;
-    }
-
-    try {
-      // Create a new RegExp object from the pattern
-      const regex = new RegExp(regexState.pattern);
-      setRegexState(prev => ({ ...prev, error: null }));
-      
-      // Test against all logs and select matching ones
-      const matchingIds = logsState.logs
-        .map((log, index) => ({ id: index.toString(), matches: regex.test(log) }))
-        .filter(item => item.matches)
-        .map(item => item.id);
-      
-      // Update selection to only include matching logs
-      logsState.setSelectedLogIds(matchingIds);
-    } catch (error) {
-      // Handle invalid regex
-      setRegexState(prev => ({ ...prev, error: `Invalid regex: ${(error as Error).message}` }));
-    }
-  };
-
-  // Function to clear selected logs, regex pattern and rationale
-  const handleClear = () => {
-    setRegexState(prev => ({
-      ...prev,
-      pattern: "",
-      rationale: "",
-      error: null
-    }));
-    logsState.setSelectedLogIds([]);
-  };
-
-  // Handle Get Regex Recommendation Request
-  const handleGetRegexRecommendation = async () => {
-    // Make sure one, and only one, log entry is selected
-    if (logsState.selectedLogIds.length !== 1) {
-      alert("Please select exactly one log entry to get a regex recommendation.");
-      return;
-    }
-    const selectedLog = logsState.logs[parseInt(logsState.selectedLogIds[0])];
-
-    setRegexState(prev => ({ ...prev, isRecommending: true }));
-
-    try {
-      const response = await getRegexRecommendation(
-        selectedLog,
-        regexState.pattern,
-        regexState.guidance
-      );
-
-      setRegexState(prev => ({
-        ...prev,
-        pattern: response.new_heuristic,
-        rationale: response.rationale,
-        isRecommending: false
-      }));
-    } catch (error) {
-      alert((error as Error).message);
-      setRegexState(prev => ({ ...prev, isRecommending: false }));
-    }
-  };
 
   // Handle Get OCSF Category Recommendation
   const handleGetCategoryRecommendation = async () => {
@@ -357,15 +284,6 @@ const OcsfPlaygroundPage = () => {
     }));
   };
 
-  // Function to handle setting regex guidance
-  const handleSetRegexGuidance = () => {
-    setRegexState(prev => ({ 
-      ...prev, 
-      guidanceModalVisible: false,
-      guidance: prev.guidanceTemp 
-    }));
-  };
-
   // Function to handle setting category guidance
   const handleSetCategoryGuidance = () => {
     setCategoryState(prev => ({ 
@@ -393,7 +311,7 @@ const OcsfPlaygroundPage = () => {
       snapOffset={30}
       direction="horizontal"
     >
-      {/* Logs Panel - now extracted to its own component */}
+      {/* Logs Panel - extracted to its own component */}
       <LogsPanel {...logsState} />
 
       {/* Right panel - OCSF Tools (now including transformation results) */}
@@ -402,127 +320,8 @@ const OcsfPlaygroundPage = () => {
           <SpaceBetween size="m">
             <Header variant="h1">OCSF Tools</Header>
             
-            {/* Regex Testing Section */}
-            <div style={borderContainerStyle}>
-              <Box>
-                <Header variant="h3">Regex Pattern Testing</Header>
-                <SpaceBetween size="m">
-                  {/* Field to create and edit the regex */}
-                  <FormField
-                    label="Log Pattern Matcher"
-                    description="Enter a regular expression to match log entries."
-                    errorText={regexState.error}
-                    stretch={true}  // Make the form field stretch to full width
-                  >
-                    <Input
-                      value={regexState.pattern}
-                      onChange={({ detail }) => 
-                        setRegexState(prev => ({ ...prev, pattern: detail.value }))
-                      }
-                      placeholder="Enter regex pattern (e.g., .*error.*)"
-                      type="text"
-                    />
-                  </FormField>
-                  
-                  {/* Buttons in a horizontal row for pattern testing */}
-                  <SpaceBetween direction="horizontal" size="xs">
-                    {/* Button to test the regex by highlighting the log entries it applies to */}
-                    <Button onClick={testRegexPattern}>
-                      Test Pattern
-                    </Button>
-
-                    {/* Button to clear selections and input */}
-                    <Button onClick={handleClear}>
-                      Clear
-                    </Button>
-                  </SpaceBetween>
-                  
-                  {/* GenAI buttons in a separate row */}
-                  <SpaceBetween direction="horizontal" size="xs">
-                    {/* Button to get a GenAI recommendation for the Regex */}
-                    <Button onClick={handleGetRegexRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
-                      {regexState.isRecommending ? <Spinner/> : "Get GenAI Recommendation"}
-                    </Button>
-
-                    {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation for the Regex */}
-                    <Button 
-                      iconAlign="left" 
-                      iconName="gen-ai" 
-                      onClick={() => {
-                        setRegexState(prev => ({ 
-                          ...prev, 
-                          guidanceModalVisible: true,
-                          guidanceTemp: prev.guidance 
-                        }));
-                      }}
-                      disabled={regexState.isRecommending}
-                    >
-                      {regexState.isRecommending ? <Spinner/> : "Set User Guidance"}
-                    </Button>
-                    
-                    {/* Button to view the rationale for the generated regex */}
-                    <Button 
-                      iconAlign="left" 
-                      iconName="status-info" 
-                      onClick={() => 
-                        setRegexState(prev => ({ ...prev, rationaleModalVisible: true }))
-                      }
-                      disabled={!regexState.rationale || regexState.isRecommending}
-                    >
-                      {regexState.isRecommending ? <Spinner/> : "View Rationale"}
-                    </Button>
-                  </SpaceBetween>
-                  
-                  {/* User Guidance Modal Dialog */}
-                  <ModalDialog
-                    title="GenAI User Guidance (Regex)"
-                    visible={regexState.guidanceModalVisible}
-                    onClose={() => setRegexState(prev => ({ ...prev, guidanceModalVisible: false }))}
-                    onConfirm={handleSetRegexGuidance}
-                    confirmLabel="Set"
-                  >
-                    <FormField
-                      label="If you have guidance for the LLM when generating your regex, set it here:"
-                      stretch={true}
-                    >
-                      <Textarea
-                        value={regexState.guidanceTemp}
-                        onChange={({ detail }) => 
-                          setRegexState(prev => ({ ...prev, guidanceTemp: detail.value }))
-                        }
-                        placeholder="Instead of the default behavior, I want you to do X instead..."
-                        rows={25}
-                      />
-                    </FormField>
-                  </ModalDialog>
-                  
-                  {/* Modal for displaying regex rationale */}
-                  <ModalDialog
-                    title="Regex Generation Rationale"
-                    visible={regexState.rationaleModalVisible}
-                    onClose={() => setRegexState(prev => ({ ...prev, rationaleModalVisible: false }))}
-                    hideCancel={true}
-                    confirmLabel="Close"
-                  >
-                    <Box>
-                      <p style={{ whiteSpace: 'pre-wrap' }}>{regexState.rationale}</p>
-                    </Box>
-                  </ModalDialog>
-                  
-                  {logsState.selectedLogIds.length > 0 && (
-                    <Box>
-                      <p>{logsState.selectedLogIds.length} log entries matched your pattern.</p>
-                    </Box>
-                  )}
-                  
-                  {logsState.selectedLogIds.length === 0 && logsState.logs.length > 0 && (
-                    <Box>
-                      <p>No log entries matched your pattern.</p>
-                    </Box>
-                  )}
-                </SpaceBetween>
-              </Box>
-            </div>
+            {/* Regex Panel - now extracted to its own component */}
+            <RegexPanel {...regexState} />
 
             {/* OCSF Categorization Section */}
             <div style={borderContainerStyle}>
