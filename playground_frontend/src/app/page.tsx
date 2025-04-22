@@ -9,7 +9,6 @@ import {
   Container,
   FormField,
   SpaceBetween,
-  Table,
   Textarea,
   Header,
   Input,
@@ -36,7 +35,6 @@ import {
   defaultTransformLanguage
 } from '../utils/constants';
 import { 
-  LogEntry, 
   RegexState, 
   CategoryState, 
   TransformState
@@ -56,12 +54,13 @@ import CodeEditorWrapper from '../components/common/CodeEditorWrapper';
 import ModalDialog from '../components/common/ModalDialog';
 import SplitLayout from '../components/common/SplitLayout';
 
+// Import custom hooks and components
+import useLogsState from '../hooks/useLogsState';
+import LogsPanel from '../components/LogsPanel';
+
 const OcsfPlaygroundPage = () => {
-  // Shared state objects
-  const [logs, setLogs] = useState<string[]>([]);
-  const [selectedLogIds, setSelectedLogIds] = useState<string[]>([]);
-  const [importDialogVisible, setImportDialogVisible] = useState(false);
-  const [importText, setImportText] = useState("");
+  // Use the logs state hook
+  const logsState = useLogsState();
   
   // Ace editor state
   const [ace, setAce] = useState<any>(null);
@@ -124,35 +123,6 @@ const OcsfPlaygroundPage = () => {
       });
   }, []);
 
-  // Function to handle row click for selection
-  const handleRowClick = (item: LogEntry) => {
-    setSelectedLogIds(prevSelectedIds => {
-      const id = item.id;
-      if (prevSelectedIds.includes(id)) {
-        // If already selected, deselect it
-        return prevSelectedIds.filter(selectedId => selectedId !== id);
-      } else {
-        // If not selected, add it to selection
-        return [...prevSelectedIds, id];
-      }
-    });
-  };
-
-  // Handle log import
-  const handleImportLogs = () => {
-    if (importText.trim()) {
-      // Split by new line and filter out empty entries
-      const logEntries = importText
-        .split("\n")
-        .filter(entry => entry.trim().length > 0);
-      
-      setLogs(logEntries);
-      setSelectedLogIds([]);
-      setImportDialogVisible(false);
-      setImportText("");
-    }
-  };
-
   // Function to test regex against log entries
   const testRegexPattern = () => {
     if (!regexState.pattern.trim()) {
@@ -166,13 +136,13 @@ const OcsfPlaygroundPage = () => {
       setRegexState(prev => ({ ...prev, error: null }));
       
       // Test against all logs and select matching ones
-      const matchingIds = logs
+      const matchingIds = logsState.logs
         .map((log, index) => ({ id: index.toString(), matches: regex.test(log) }))
         .filter(item => item.matches)
         .map(item => item.id);
       
       // Update selection to only include matching logs
-      setSelectedLogIds(matchingIds);
+      logsState.setSelectedLogIds(matchingIds);
     } catch (error) {
       // Handle invalid regex
       setRegexState(prev => ({ ...prev, error: `Invalid regex: ${(error as Error).message}` }));
@@ -187,17 +157,17 @@ const OcsfPlaygroundPage = () => {
       rationale: "",
       error: null
     }));
-    setSelectedLogIds([]);
+    logsState.setSelectedLogIds([]);
   };
 
   // Handle Get Regex Recommendation Request
   const handleGetRegexRecommendation = async () => {
     // Make sure one, and only one, log entry is selected
-    if (selectedLogIds.length !== 1) {
+    if (logsState.selectedLogIds.length !== 1) {
       alert("Please select exactly one log entry to get a regex recommendation.");
       return;
     }
-    const selectedLog = logs[parseInt(selectedLogIds[0])];
+    const selectedLog = logsState.logs[parseInt(logsState.selectedLogIds[0])];
 
     setRegexState(prev => ({ ...prev, isRecommending: true }));
 
@@ -223,12 +193,12 @@ const OcsfPlaygroundPage = () => {
   // Handle Get OCSF Category Recommendation
   const handleGetCategoryRecommendation = async () => {
     // Make sure a log entry is selected
-    if (selectedLogIds.length !== 1) {
+    if (logsState.selectedLogIds.length !== 1) {
       alert("Please select exactly one log entry to get a category recommendation.");
       return;
     }
 
-    const selectedLog = logs[parseInt(selectedLogIds[0])];
+    const selectedLog = logsState.logs[parseInt(logsState.selectedLogIds[0])];
     setCategoryState(prev => ({ ...prev, isRecommending: true }));
 
     try {
@@ -256,12 +226,12 @@ const OcsfPlaygroundPage = () => {
   // Handle Get Transform Logic Recommendation
   const handleGetTransformRecommendation = async () => {
     // Make sure one log entry is selected
-    if (selectedLogIds.length !== 1) {
+    if (logsState.selectedLogIds.length !== 1) {
       alert("Please select exactly one log entry to get a transform logic recommendation.");
       return;
     }
 
-    const selectedLog = logs[parseInt(selectedLogIds[0])];
+    const selectedLog = logsState.logs[parseInt(logsState.selectedLogIds[0])];
     setTransformState(prev => ({ ...prev, isGenerating: true }));
 
     try {
@@ -291,12 +261,12 @@ const OcsfPlaygroundPage = () => {
   // Function for testing transformation logic
   const handleTestTransformLogic = async () => {
     // Make sure one log entry is selected
-    if (selectedLogIds.length !== 1) {
+    if (logsState.selectedLogIds.length !== 1) {
       alert("Please select exactly one log entry to test the transformation logic.");
       return;
     }
 
-    const selectedLog = logs[parseInt(selectedLogIds[0])];
+    const selectedLog = logsState.logs[parseInt(logsState.selectedLogIds[0])];
     setTransformState(prev => ({ ...prev, isGenerating: true }));
 
     try {
@@ -325,7 +295,7 @@ const OcsfPlaygroundPage = () => {
   // Function for iterate/debug functionality
   const handleDebugWithGenAI = async () => {
     // Make sure one log entry is selected
-    if (selectedLogIds.length !== 1) {
+    if (logsState.selectedLogIds.length !== 1) {
       alert("Please select exactly one log entry to debug the transformation.");
       return;
     }
@@ -343,7 +313,7 @@ const OcsfPlaygroundPage = () => {
       return;
     }
 
-    const selectedLog = logs[parseInt(selectedLogIds[0])];
+    const selectedLog = logsState.logs[parseInt(logsState.selectedLogIds[0])];
     setTransformState(prev => ({ ...prev, isGenerating: true }));
 
     try {
@@ -423,98 +393,8 @@ const OcsfPlaygroundPage = () => {
       snapOffset={30}
       direction="horizontal"
     >
-      {/* Left panel - Log entries list */}
-      <div style={paneStyles}>
-        <Container>
-          <SpaceBetween size="m">
-            <Header variant="h1">Log Entries</Header>
-
-            <Button onClick={() => setImportDialogVisible(true)}>
-              Import Logs
-            </Button>
-
-            {logs.length > 0 ? (
-              <Box>
-                <p>{logs.length} log entries available</p>
-                <div 
-                  style={{ 
-                    maxHeight: "1150px",  
-                    overflowY: "auto" as const,   
-                    padding: "10px"       
-                  }}
-                >
-                  <Table
-                    items={logs.map((log, index) => ({
-                      id: index.toString(),
-                      content: log
-                    }))}
-                    selectedItems={selectedLogIds.map(id => ({ 
-                      id, 
-                      content: logs[parseInt(id)] 
-                    }))}
-                    onSelectionChange={({ detail }) => {
-                      const selectedIds = detail.selectedItems.map(item => item.id);
-                      setSelectedLogIds(selectedIds);
-                    }}
-                    columnDefinitions={[
-                      {
-                        id: "index",
-                        header: "ID",
-                        cell: item => parseInt(item.id) + 1,
-                        width: 50,
-                      },
-                      {
-                        id: "content",
-                        header: "Log Content",
-                        cell: item => (
-                          <div style={logBlockStyle}>
-                            {item.content}
-                          </div>
-                        ),
-                      }
-                    ]}
-                    trackBy="id"
-                    selectionType="multi"
-                    variant="container"
-                    
-                    // Instead of selectableRows, use onRowClick
-                    onRowClick={({ detail }) => handleRowClick(detail.item)}
-                    
-                    ariaLabels={{
-                      selectionGroupLabel: "Log entries selection",
-                      allItemsSelectionLabel: ({ selectedItems }) =>
-                        `${selectedItems.length} ${
-                          selectedItems.length === 1 ? "item" : "items"
-                        } selected`,
-                      itemSelectionLabel: ({ selectedItems }, item) => {
-                        const isSelected = selectedItems.some(
-                          selectedItem => selectedItem.id === item.id
-                        );
-                        return `${isSelected ? "Deselect" : "Select"} log entry ${
-                          parseInt(item.id) + 1
-                        }`;
-                      }
-                    }}
-                    
-                    empty={
-                      <Box textAlign="center" color="inherit">
-                        <b>No logs</b>
-                        <Box padding={{ bottom: "s" }} variant="p" color="inherit">
-                          No log entries to display
-                        </Box>
-                      </Box>
-                    }
-                  />
-                </div>
-              </Box>
-            ) : (
-              <Box>
-                <p>No logs imported. Click "Import Logs" to get started.</p>
-              </Box>
-            )}
-          </SpaceBetween>
-        </Container>
-      </div>
+      {/* Logs Panel - now extracted to its own component */}
+      <LogsPanel {...logsState} />
 
       {/* Right panel - OCSF Tools (now including transformation results) */}
       <div style={paneStyles}>
@@ -629,13 +509,13 @@ const OcsfPlaygroundPage = () => {
                     </Box>
                   </ModalDialog>
                   
-                  {selectedLogIds.length > 0 && (
+                  {logsState.selectedLogIds.length > 0 && (
                     <Box>
-                      <p>{selectedLogIds.length} log entries matched your pattern.</p>
+                      <p>{logsState.selectedLogIds.length} log entries matched your pattern.</p>
                     </Box>
                   )}
                   
-                  {selectedLogIds.length === 0 && logs.length > 0 && (
+                  {logsState.selectedLogIds.length === 0 && logsState.logs.length > 0 && (
                     <Box>
                       <p>No log entries matched your pattern.</p>
                     </Box>
@@ -938,27 +818,6 @@ const OcsfPlaygroundPage = () => {
           </SpaceBetween>
         </Container>
       </div>
-
-      {/* Import Dialog */}
-      <ModalDialog
-        title="Import Log Entries"
-        visible={importDialogVisible}
-        onClose={() => setImportDialogVisible(false)}
-        onConfirm={handleImportLogs}
-        confirmLabel="Import"
-      >
-        <FormField
-          label="Paste your log entries below (one per line)"
-          description="Each line will be treated as a separate log entry"
-        >
-          <Textarea
-            value={importText}
-            onChange={({ detail }) => setImportText(detail.value)}
-            placeholder="Paste your log entries here..."
-            rows={20}
-          />
-        </FormField>
-      </ModalDialog>
     </SplitLayout>
   );
 };
