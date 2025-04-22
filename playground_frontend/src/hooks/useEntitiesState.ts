@@ -16,6 +16,9 @@ export interface EntitiesState {
   isLoading: boolean;
   error: string | null;
   mappings: EntityMappingField[];
+  dataType: string;
+  typeRationale: string;
+  hasRationale: boolean;
   analyzeEntities: () => Promise<void>;
   clearEntities: () => void;
 }
@@ -34,6 +37,8 @@ const useEntitiesState = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [mappings, setMappings] = useState<EntityMappingField[]>([]);
+  const [dataType, setDataType] = useState<string>('');
+  const [typeRationale, setTypeRationale] = useState<string>('');
 
   const handleAnalyzeEntities = async () => {
     if (!selectedLogIds.length || !categoryValue) {
@@ -48,11 +53,13 @@ const useEntitiesState = ({
       // Get the selected log entry
       const selectedLogEntry = logs[parseInt(selectedLogIds[0])];
       
-      // Call the transformer client function instead of directly using the API client
+      // Call the transformer client function
       const response = await analyzeEntities(categoryValue, selectedLogEntry);
       
       // Update state with the response
       setMappings(response.mappings);
+      setDataType(response.data_type);
+      setTypeRationale(response.type_rationale);
     } catch (error) {
       console.error('Error analyzing entities:', error);
       setError('Failed to analyze entities. Please try again.');
@@ -63,6 +70,8 @@ const useEntitiesState = ({
 
   const clearEntities = () => {
     setMappings([]);
+    setDataType('');
+    setTypeRationale('');
     setError(null);
   };
 
@@ -70,6 +79,9 @@ const useEntitiesState = ({
     isLoading,
     error,
     mappings,
+    dataType,
+    typeRationale,
+    hasRationale: typeRationale !== '',
     analyzeEntities: handleAnalyzeEntities,
     clearEntities
   };
