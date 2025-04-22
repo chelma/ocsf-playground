@@ -3,14 +3,11 @@
 import React, { useState, useEffect } from "react";
 import "@cloudscape-design/global-styles/index.css";
 import 'ace-builds/css/ace.css';
-import Split from 'react-split';
 import {
   Box,
   Button,
-  CodeEditor,
   Container,
   FormField,
-  Modal,
   SpaceBetween,
   Table,
   Textarea,
@@ -18,15 +15,12 @@ import {
   Input,
   Spinner,
   Select,
-  SelectProps,
-  CodeEditorProps
 } from "@cloudscape-design/components";
 
 // Import utilities, constants, and types
 import { 
   splitStyles, 
   paneStyles, 
-  getGutterStyle, 
   logBlockStyle, 
   borderContainerStyle,
   transformContainerStyle,
@@ -56,6 +50,11 @@ import {
 } from '../api/transformerClient';
 import { aceLoader } from './aceLoader';
 import { OcsfCategoryEnum, TransformLanguageEnum } from '../generated-api-client';
+
+// Import common components
+import CodeEditorWrapper from '../components/common/CodeEditorWrapper';
+import ModalDialog from '../components/common/ModalDialog';
+import SplitLayout from '../components/common/SplitLayout';
 
 const OcsfPlaygroundPage = () => {
   // Shared state objects
@@ -388,17 +387,41 @@ const OcsfPlaygroundPage = () => {
     }));
   };
 
+  // Function to handle setting regex guidance
+  const handleSetRegexGuidance = () => {
+    setRegexState(prev => ({ 
+      ...prev, 
+      guidanceModalVisible: false,
+      guidance: prev.guidanceTemp 
+    }));
+  };
+
+  // Function to handle setting category guidance
+  const handleSetCategoryGuidance = () => {
+    setCategoryState(prev => ({ 
+      ...prev, 
+      guidanceModalVisible: false,
+      guidance: prev.guidanceTemp 
+    }));
+  };
+
+  // Function to handle setting transform guidance
+  const handleSetTransformGuidance = () => {
+    setTransformState(prev => ({ 
+      ...prev, 
+      guidanceModalVisible: false,
+      guidance: prev.guidanceTemp 
+    }));
+  };
+
   return (
-    <Split
-      className="split"
+    <SplitLayout
       style={splitStyles}
-      gutterStyle={getGutterStyle as any}
-      sizes={[30, 70]} // Updated to two columns with new proportions
-      minSize={200} // Minimum size in pixels
-      gutterSize={10}  // Make gutters easier to grab
-      snapOffset={30}  // Snap when close to default position
-      dragInterval={1}  // Smoother dragging
-      direction="horizontal"  // Explicitly set direction
+      sizes={[30, 70]}
+      minSize={200}
+      gutterSize={10}
+      snapOffset={30}
+      direction="horizontal"
     >
       {/* Left panel - Log entries list */}
       <div style={paneStyles}>
@@ -570,36 +593,17 @@ const OcsfPlaygroundPage = () => {
                     </Button>
                   </SpaceBetween>
                   
-                  <Modal
-                    onDismiss={() => 
-                      setRegexState(prev => ({ ...prev, guidanceModalVisible: false }))
-                    }
+                  {/* User Guidance Modal Dialog */}
+                  <ModalDialog
+                    title="GenAI User Guidance (Regex)"
                     visible={regexState.guidanceModalVisible}
-                    footer={
-                      <Box float="right">
-                        <SpaceBetween direction="horizontal" size="xs">
-                          <Button variant="link" onClick={() => {
-                            setRegexState(prev => ({ ...prev, guidanceModalVisible: false }));
-                          }}>
-                            Cancel
-                          </Button>
-                          <Button variant="primary" onClick={() => {
-                            setRegexState(prev => ({ 
-                              ...prev, 
-                              guidanceModalVisible: false,
-                              guidance: prev.guidanceTemp 
-                            }));
-                          }}>
-                            Set
-                          </Button>
-                        </SpaceBetween>
-                      </Box>
-                    }
-                    header="GenAI User Guidance (Regex)"
+                    onClose={() => setRegexState(prev => ({ ...prev, guidanceModalVisible: false }))}
+                    onConfirm={handleSetRegexGuidance}
+                    confirmLabel="Set"
                   >
                     <FormField
                       label="If you have guidance for the LLM when generating your regex, set it here:"
-                      stretch={true}  // Make the form field stretch to full width
+                      stretch={true}
                     >
                       <Textarea
                         value={regexState.guidanceTemp}
@@ -610,29 +614,20 @@ const OcsfPlaygroundPage = () => {
                         rows={25}
                       />
                     </FormField>
-                  </Modal>
+                  </ModalDialog>
                   
                   {/* Modal for displaying regex rationale */}
-                  <Modal
-                    onDismiss={() => 
-                      setRegexState(prev => ({ ...prev, rationaleModalVisible: false }))
-                    }
+                  <ModalDialog
+                    title="Regex Generation Rationale"
                     visible={regexState.rationaleModalVisible}
-                    footer={
-                      <Box float="right">
-                        <Button variant="primary" onClick={() => 
-                          setRegexState(prev => ({ ...prev, rationaleModalVisible: false }))
-                        }>
-                          Close
-                        </Button>
-                      </Box>
-                    }
-                    header="Regex Generation Rationale"
+                    onClose={() => setRegexState(prev => ({ ...prev, rationaleModalVisible: false }))}
+                    hideCancel={true}
+                    confirmLabel="Close"
                   >
                     <Box>
                       <p style={{ whiteSpace: 'pre-wrap' }}>{regexState.rationale}</p>
                     </Box>
-                  </Modal>
+                  </ModalDialog>
                   
                   {selectedLogIds.length > 0 && (
                     <Box>
@@ -723,32 +718,12 @@ const OcsfPlaygroundPage = () => {
                   </div>
                   
                   {/* Modal for setting category guidance */}
-                  <Modal
-                    onDismiss={() => 
-                      setCategoryState(prev => ({ ...prev, guidanceModalVisible: false }))
-                    }
+                  <ModalDialog
+                    title="GenAI User Guidance (OCSF Category)"
                     visible={categoryState.guidanceModalVisible}
-                    footer={
-                      <Box float="right">
-                        <SpaceBetween direction="horizontal" size="xs">
-                          <Button variant="link" onClick={() => {
-                            setCategoryState(prev => ({ ...prev, guidanceModalVisible: false }));
-                          }}>
-                            Cancel
-                          </Button>
-                          <Button variant="primary" onClick={() => {
-                            setCategoryState(prev => ({ 
-                              ...prev, 
-                              guidanceModalVisible: false,
-                              guidance: prev.guidanceTemp 
-                            }));
-                          }}>
-                            Set
-                          </Button>
-                        </SpaceBetween>
-                      </Box>
-                    }
-                    header="GenAI User Guidance (OCSF Category)"
+                    onClose={() => setCategoryState(prev => ({ ...prev, guidanceModalVisible: false }))}
+                    onConfirm={handleSetCategoryGuidance}
+                    confirmLabel="Set"
                   >
                     <FormField
                       label="If you have guidance for the LLM when categorizing, set it here:"
@@ -762,29 +737,20 @@ const OcsfPlaygroundPage = () => {
                         rows={25}
                       />
                     </FormField>
-                  </Modal>
+                  </ModalDialog>
                   
                   {/* Modal for displaying category rationale */}
-                  <Modal
-                    onDismiss={() => 
-                      setCategoryState(prev => ({ ...prev, rationaleModalVisible: false }))
-                    }
+                  <ModalDialog
+                    title="OCSF Category Recommendation Rationale"
                     visible={categoryState.rationaleModalVisible}
-                    footer={
-                      <Box float="right">
-                        <Button variant="primary" onClick={() => 
-                          setCategoryState(prev => ({ ...prev, rationaleModalVisible: false }))
-                        }>
-                          Close
-                        </Button>
-                      </Box>
-                    }
-                    header="OCSF Category Recommendation Rationale"
+                    onClose={() => setCategoryState(prev => ({ ...prev, rationaleModalVisible: false }))}
+                    hideCancel={true}
+                    confirmLabel="Close"
                   >
                     <Box>
                       <p style={{ whiteSpace: 'pre-wrap' }}>{categoryState.rationale}</p>
                     </Box>
-                  </Modal>
+                  </ModalDialog>
                 </SpaceBetween>
               </Box>
             </div>
@@ -795,14 +761,10 @@ const OcsfPlaygroundPage = () => {
                 <Header variant="h3">Transformation Logic</Header>
                 
                 {/* Nested Split for transformation logic and results */}
-                <Split
+                <SplitLayout
                   style={transformNestedSplitStyle}
-                  gutterStyle={getGutterStyle as any}
                   sizes={[60, 40]} // 60% for logic, 40% for results
                   minSize={100}
-                  gutterSize={10}
-                  snapOffset={30}
-                  dragInterval={1}
                   direction="horizontal"
                 >
                   {/* Left nested pane - Transformation Controls */}
@@ -885,37 +847,19 @@ const OcsfPlaygroundPage = () => {
                           label="Transform Code"
                           stretch={true}
                         >
-                          <CodeEditor
+                          <CodeEditorWrapper
                             ace={ace}
                             language={transformState.language.value === TransformLanguageEnum.Python ? "python" : "javascript"}
                             value={transformState.logic}
-                            onChange={({ detail }) => 
-                              setTransformState(prev => ({ ...prev, logic: detail.value }))
+                            onChange={(value) => 
+                              setTransformState(prev => ({ ...prev, logic: value }))
                             }
                             preferences={transformState.editorPreferences}
-                            onPreferencesChange={({ detail }) => 
-                              setTransformState(prev => ({ ...prev, editorPreferences: detail }))
+                            onPreferencesChange={(preferences) => 
+                              setTransformState(prev => ({ ...prev, editorPreferences: preferences }))
                             }
                             loading={aceLoading || transformState.isGenerating}
-                            i18nStrings={{
-                              loadingState: 'Loading code editor',
-                              errorState: 'There was an error loading the code editor.',
-                              errorStateRecovery: 'Retry',
-                              editorGroupAriaLabel: 'Code editor',
-                              statusBarGroupAriaLabel: 'Status bar',
-                              cursorPosition: (row, column) => `Ln ${row}, Col ${column}`,
-                              errorsTab: 'Errors',
-                              warningsTab: 'Warnings',
-                              preferencesButtonAriaLabel: 'Preferences',
-                              paneCloseButtonAriaLabel: 'Close',
-                              preferencesModalHeader: 'Preferences',
-                              preferencesModalCancel: 'Cancel',
-                              preferencesModalConfirm: 'Confirm',
-                              preferencesModalWrapLines: 'Wrap lines',
-                              preferencesModalTheme: 'Theme',
-                              preferencesModalLightThemes: 'Light themes',
-                              preferencesModalDarkThemes: 'Dark themes'
-                            }}
+                            height="100%"
                           />
                         </FormField>
                       </div>
@@ -966,36 +910,16 @@ const OcsfPlaygroundPage = () => {
                       </div>
                     </SpaceBetween>
                   </div>
-                </Split>
+                </SplitLayout>
               </Box>
               
               {/* Modal for setting transform guidance */}
-              <Modal
-                onDismiss={() => 
-                  setTransformState(prev => ({ ...prev, guidanceModalVisible: false }))
-                }
+              <ModalDialog
+                title="GenAI User Guidance (Transform Logic)"
                 visible={transformState.guidanceModalVisible}
-                footer={
-                  <Box float="right">
-                    <SpaceBetween direction="horizontal" size="xs">
-                      <Button variant="link" onClick={() => {
-                        setTransformState(prev => ({ ...prev, guidanceModalVisible: false }));
-                      }}>
-                        Cancel
-                      </Button>
-                      <Button variant="primary" onClick={() => {
-                        setTransformState(prev => ({ 
-                          ...prev, 
-                          guidanceModalVisible: false,
-                          guidance: prev.guidanceTemp 
-                        }));
-                      }}>
-                        Set
-                      </Button>
-                    </SpaceBetween>
-                  </Box>
-                }
-                header="GenAI User Guidance (Transform Logic)"
+                onClose={() => setTransformState(prev => ({ ...prev, guidanceModalVisible: false }))}
+                onConfirm={handleSetTransformGuidance}
+                confirmLabel="Set"
               >
                 <FormField
                   label="If you have guidance for the LLM when generating transform logic, set it here:"
@@ -1009,32 +933,19 @@ const OcsfPlaygroundPage = () => {
                     rows={25}
                   />
                 </FormField>
-              </Modal>
+              </ModalDialog>
             </div>
           </SpaceBetween>
         </Container>
       </div>
 
       {/* Import Dialog */}
-      <Modal
+      <ModalDialog
+        title="Import Log Entries"
         visible={importDialogVisible}
-        onDismiss={() => setImportDialogVisible(false)}
-        header="Import Log Entries"
-        footer={
-          <Box float="right">
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button
-                variant="link"
-                onClick={() => setImportDialogVisible(false)}
-              >
-                Cancel
-              </Button>
-              <Button variant="primary" onClick={handleImportLogs}>
-                Import
-              </Button>
-            </SpaceBetween>
-          </Box>
-        }
+        onClose={() => setImportDialogVisible(false)}
+        onConfirm={handleImportLogs}
+        confirmLabel="Import"
       >
         <FormField
           label="Paste your log entries below (one per line)"
@@ -1047,8 +958,8 @@ const OcsfPlaygroundPage = () => {
             rows={20}
           />
         </FormField>
-      </Modal>
-    </Split>
+      </ModalDialog>
+    </SplitLayout>
   );
 };
 
