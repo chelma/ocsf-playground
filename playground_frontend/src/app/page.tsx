@@ -54,8 +54,10 @@ import SplitLayout from '../components/common/SplitLayout';
 // Import custom hooks and components
 import useLogsState from '../hooks/useLogsState';
 import useRegexState from '../hooks/useRegexState';
+import useCategoryState from '../hooks/useCategoryState';
 import LogsPanel from '../components/LogsPanel';
 import RegexPanel from '../components/RegexPanel';
+import CategoryPanel from '../components/CategoryPanel';
 
 const OcsfPlaygroundPage = () => {
   // Use the logs state hook
@@ -67,22 +69,16 @@ const OcsfPlaygroundPage = () => {
     selectedLogIds: logsState.selectedLogIds,
     setSelectedLogIds: logsState.setSelectedLogIds
   });
+
+  // Use the category state hook with access to logs state
+  const categoryState = useCategoryState({
+    logs: logsState.logs,
+    selectedLogIds: logsState.selectedLogIds
+  });
   
   // Ace editor state
   const [ace, setAce] = useState<any>(null);
   const [aceLoading, setAceLoading] = useState(true);
-
-  // OCSF categorization state
-  const [categoryState, setCategoryState] = useState<CategoryState>({
-    version: ocsfVersionOptions[0],
-    category: ocsfCategoryOptions[0],
-    guidance: "",
-    guidanceTemp: "",
-    guidanceModalVisible: false,
-    rationale: "",
-    rationaleModalVisible: false,
-    isRecommending: false
-  });
 
   // Transform state
   const [transformState, setTransformState] = useState<TransformState>({
@@ -116,39 +112,6 @@ const OcsfPlaygroundPage = () => {
         setAceLoading(false);
       });
   }, []);
-
-  // Handle Get OCSF Category Recommendation
-  const handleGetCategoryRecommendation = async () => {
-    // Make sure a log entry is selected
-    if (logsState.selectedLogIds.length !== 1) {
-      alert("Please select exactly one log entry to get a category recommendation.");
-      return;
-    }
-
-    const selectedLog = logsState.logs[parseInt(logsState.selectedLogIds[0])];
-    setCategoryState(prev => ({ ...prev, isRecommending: true }));
-
-    try {
-      const response = await getCategoryRecommendation(
-        selectedLog,
-        categoryState.guidance
-      );
-
-      const recommendedCategory = ocsfCategoryOptions.find(
-        option => option.value === response.ocsf_category
-      ) || ocsfCategoryOptions[0];
-      
-      setCategoryState(prev => ({
-        ...prev,
-        category: recommendedCategory,
-        rationale: response.rationale,
-        isRecommending: false
-      }));
-    } catch (error) {
-      alert((error as Error).message);
-      setCategoryState(prev => ({ ...prev, isRecommending: false }));
-    }
-  };
 
   // Handle Get Transform Logic Recommendation
   const handleGetTransformRecommendation = async () => {
@@ -284,15 +247,6 @@ const OcsfPlaygroundPage = () => {
     }));
   };
 
-  // Function to handle setting category guidance
-  const handleSetCategoryGuidance = () => {
-    setCategoryState(prev => ({ 
-      ...prev, 
-      guidanceModalVisible: false,
-      guidance: prev.guidanceTemp 
-    }));
-  };
-
   // Function to handle setting transform guidance
   const handleSetTransformGuidance = () => {
     setTransformState(prev => ({ 
@@ -320,119 +274,11 @@ const OcsfPlaygroundPage = () => {
           <SpaceBetween size="m">
             <Header variant="h1">OCSF Tools</Header>
             
-            {/* Regex Panel - now extracted to its own component */}
+            {/* Regex Panel - extracted to its own component */}
             <RegexPanel {...regexState} />
 
-            {/* OCSF Categorization Section */}
-            <div style={borderContainerStyle}>
-              <Box>
-                <Header variant="h3">OCSF Categorization</Header>
-                <SpaceBetween size="m">
-                  {/* Version and Category Selection */}
-                  <div key="ocsf-version-category-selection">
-                    <SpaceBetween direction="horizontal" size="xs">
-                      <FormField
-                        label="OCSF Version"
-                      >
-                        <Select
-                          selectedOption={categoryState.version}
-                          onChange={({ detail }) => 
-                            setCategoryState(prev => ({ ...prev, version: detail.selectedOption }))
-                          }
-                          options={ocsfVersionOptions}
-                          placeholder="Select an OCSF version"
-                        />
-                      </FormField>
-                      <FormField
-                        label="OCSF Category"
-                      >
-                        <Select
-                          selectedOption={categoryState.category}
-                          onChange={({ detail }) => 
-                            setCategoryState(prev => ({ ...prev, category: detail.selectedOption }))
-                          }
-                          options={ocsfCategoryOptions}
-                          placeholder="Select an OCSF category"
-                        />
-                      </FormField>
-                    </SpaceBetween>
-                  </div>
-                  
-                  {/* GenAI buttons for OCSF categorization */}
-                  <div key="ocsf-genai-buttons">
-                    <SpaceBetween direction="horizontal" size="xs">
-                      {/* Button to get a GenAI recommendation for the Category */}
-                      <Button onClick={handleGetCategoryRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
-                        {categoryState.isRecommending ? <Spinner/> : "Get GenAI Recommendation"}
-                      </Button>
-
-                      {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation */}
-                      <Button 
-                        iconAlign="left" 
-                        iconName="gen-ai" 
-                        onClick={() => {
-                          setCategoryState(prev => ({ 
-                            ...prev, 
-                            guidanceModalVisible: true,
-                            guidanceTemp: prev.guidance 
-                          }));
-                        }}
-                        disabled={categoryState.isRecommending}
-                      >
-                        {categoryState.isRecommending ? <Spinner/> : "Set User Guidance"}
-                      </Button>
-                      
-                      {/* Button to view the rationale for the generated category */}
-                      <Button 
-                        iconAlign="left" 
-                        iconName="status-info" 
-                        onClick={() => 
-                          setCategoryState(prev => ({ ...prev, rationaleModalVisible: true }))
-                        }
-                        disabled={!categoryState.rationale || categoryState.isRecommending}
-                      >
-                        {categoryState.isRecommending ? <Spinner/> : "View Rationale"}
-                      </Button>
-                    </SpaceBetween>
-                  </div>
-                  
-                  {/* Modal for setting category guidance */}
-                  <ModalDialog
-                    title="GenAI User Guidance (OCSF Category)"
-                    visible={categoryState.guidanceModalVisible}
-                    onClose={() => setCategoryState(prev => ({ ...prev, guidanceModalVisible: false }))}
-                    onConfirm={handleSetCategoryGuidance}
-                    confirmLabel="Set"
-                  >
-                    <FormField
-                      label="If you have guidance for the LLM when categorizing, set it here:"
-                    >
-                      <Textarea
-                        value={categoryState.guidanceTemp}
-                        onChange={({ detail }) => 
-                          setCategoryState(prev => ({ ...prev, guidanceTemp: detail.value }))
-                        }
-                        placeholder="Instead of the default behavior, I want you to do X instead..."
-                        rows={25}
-                      />
-                    </FormField>
-                  </ModalDialog>
-                  
-                  {/* Modal for displaying category rationale */}
-                  <ModalDialog
-                    title="OCSF Category Recommendation Rationale"
-                    visible={categoryState.rationaleModalVisible}
-                    onClose={() => setCategoryState(prev => ({ ...prev, rationaleModalVisible: false }))}
-                    hideCancel={true}
-                    confirmLabel="Close"
-                  >
-                    <Box>
-                      <p style={{ whiteSpace: 'pre-wrap' }}>{categoryState.rationale}</p>
-                    </Box>
-                  </ModalDialog>
-                </SpaceBetween>
-              </Box>
-            </div>
+            {/* Category Panel - extracted to its own component */}
+            <CategoryPanel {...categoryState} />
 
             {/* Transformation Logic and Results Section - Now using a nested Split */}
             <div style={transformContainerStyle}>
