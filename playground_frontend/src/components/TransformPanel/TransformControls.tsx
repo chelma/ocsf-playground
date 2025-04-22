@@ -125,7 +125,6 @@ const TransformControls: React.FC<TransformControlsProps> = ({
             preferences={editorPreferences}
             onPreferencesChange={onPreferencesChange}
             loading={aceLoading || isGenerating}
-            height="100%"
           />
         </FormField>
       </div>

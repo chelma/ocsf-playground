@@ -9,9 +9,8 @@ export interface CodeEditorWrapperProps {
   preferences?: CodeEditorProps.Preferences;
   onPreferencesChange?: (preferences: CodeEditorProps.Preferences) => void;
   loading?: boolean;
-  height?: string;
+  height?: number;
   ariaLabel?: string;
-  disabled?: boolean;
 }
 
 const CodeEditorWrapper: React.FC<CodeEditorWrapperProps> = ({
@@ -22,7 +21,7 @@ const CodeEditorWrapper: React.FC<CodeEditorWrapperProps> = ({
   preferences,
   onPreferencesChange,
   loading = false,
-  height = '100%',
+  height,
   ariaLabel = 'Code editor'
 }) => {
   // Common i18n strings for code editor
@@ -53,22 +52,30 @@ const CodeEditorWrapper: React.FC<CodeEditorWrapperProps> = ({
     position: 'relative' as const,
   };
 
+  // Create base props object for the editor
+  const editorProps: React.ComponentProps<typeof CodeEditor> = {
+    ace,
+    language,
+    value,
+    onChange: ({ detail }) => onChange(detail.value),
+    preferences,
+    onPreferencesChange: ({ detail }) => {
+      if (onPreferencesChange) {
+        onPreferencesChange(detail);
+      }
+    },
+    loading,
+    i18nStrings,
+  };
+
+  // Only add editorContentHeight if height is defined
+  if (height !== undefined) {
+    editorProps.editorContentHeight = height;
+  }
+
   return (
     <div style={wrapperStyle}>
-      <CodeEditor
-        ace={ace}
-        language={language}
-        value={value}
-        onChange={({ detail }) => onChange(detail.value)}
-        preferences={preferences}
-        onPreferencesChange={({ detail }) => {
-          if (onPreferencesChange) {
-            onPreferencesChange(detail);
-          }
-        }}
-        loading={loading}
-        i18nStrings={i18nStrings}
-      />
+      <CodeEditor {...editorProps} />
     </div>
   );
 };

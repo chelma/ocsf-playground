@@ -84,6 +84,28 @@ export const analyzeEntities = async (
   }
 };
 
+// Extract transformation patterns for entities
+export const extractEntityPatterns = async (
+  transformLanguage: TransformLanguageEnum,
+  ocsfCategory: OcsfCategoryEnum,
+  logEntry: string,
+  mappings: any[]
+) => {
+  try {
+    const payload = {
+      transform_language: transformLanguage,
+      ocsf_category: ocsfCategory,
+      input_entry: logEntry,
+      mappings: mappings
+    };
+    
+    const response = await apiClient.transformerEntitiesV110ExtractCreate(payload);
+    return response.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
 // Get transform logic recommendation
 export const getTransformRecommendation = async (
   transformLanguage: TransformLanguageEnum,

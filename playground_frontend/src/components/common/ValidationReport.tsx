@@ -9,15 +9,17 @@ import { getValidationReportStyle, logBlockStyle } from '../../utils/styles';
 export interface ValidationReportProps {
   report: string[];
   outcome: string;
+  title?: string;
 }
 
 const ValidationReport: React.FC<ValidationReportProps> = ({
   report,
-  outcome
+  outcome,
+  title = "Validation Report"
 }) => {
   return (
     <div>
-      <Header variant="h3">Validation Report</Header>
+      <Header variant="h3">{title}</Header>
       <FormField
         label={outcome ? `Status: ${outcome}` : "Status: Not Available"}
         description="Results of validating against the OCSF schema"

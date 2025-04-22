@@ -3,7 +3,7 @@ import { Box, FormField, Header, SpaceBetween, Textarea } from '@cloudscape-desi
 import { transformContainerStyle, transformNestedSplitStyle } from '../../utils/styles';
 import TransformControls from './TransformControls';
 import TransformOutput from './TransformOutput';
-import ValidationReport from './ValidationReport';
+import ValidationReport from '../common/ValidationReport';
 import ModalDialog from '../common/ModalDialog';
 import SplitLayout from '../common/SplitLayout';
 import { CodeEditorProps, SelectProps } from '@cloudscape-design/components';

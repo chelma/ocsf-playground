@@ -66,7 +66,7 @@ const useTransformState = ({
     isGenerating: false,
     editorPreferences: {
       theme: 'dawn',
-      wrapLines: false,
+      wrapLines: true,
     },
     validation: {
       report: [],

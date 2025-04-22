@@ -6,7 +6,10 @@ import {
   Box,
   Button,
   Container,
+  FormField,
   Header,
+  Select,
+  SelectProps,
   SpaceBetween,
   Table,
   TableProps,
@@ -30,13 +33,19 @@ interface EntitiesPanelProps extends EntitiesState {}
 
 const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
   isLoading,
+  isExtracting,
   error,
   mappings,
+  extractionPatterns,
   dataType,
   typeRationale,
   hasRationale,
+  language,
+  languageOptions,
   analyzeEntities,
-  clearEntities
+  extractEntities,
+  clearEntities,
+  onLanguageChange
 }) => {
   // Track column widths state
   const [columnWidths, setColumnWidths] = useState([
@@ -70,6 +79,11 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
     }));
     
     setColumnWidths(newWidths);
+  };
+
+  // Get the corresponding extraction pattern for a mapping
+  const getExtractionPatternForMapping = (mappingId: string) => {
+    return extractionPatterns.find(pattern => pattern.id === mappingId) || null;
   };
 
   // Define table columns
@@ -115,7 +129,21 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
           <Header variant="h2">Entities Analysis</Header>
         }
       >
-        <SpaceBetween size="m">
+        <SpaceBetween size="m">          
+          {/* Transform Language Selection */}
+          <FormField label="Transform Language">
+            <div style={{ width: 'fit-content' }}>
+              <Select
+                selectedOption={language}
+                onChange={({ detail }) => onLanguageChange(detail.selectedOption)}
+                options={languageOptions}
+                placeholder="Select a transform language"
+                expandToViewport
+              />
+            </div>
+          </FormField>
+
+          {/* Primary action buttons */}
           <Box>
             <SpaceBetween direction="horizontal" size="s">
               <Button
@@ -136,6 +164,16 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
                 View Rationale
               </Button>
               <Button
+                variant="primary"
+                iconAlign="left" 
+                iconName="gen-ai"
+                loading={isExtracting}
+                onClick={extractEntities}
+                disabled={mappings.length === 0}
+              >
+                Extract Entities
+              </Button>
+              <Button
                 onClick={clearEntities}
                 disabled={mappings.length === 0}
               >
@@ -144,12 +182,14 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
             </SpaceBetween>
           </Box>
 
+          {/* Error alerts */}
           {error && (
             <Alert type="error">
               {error}
             </Alert>
           )}
 
+          {/* Entities Table */}
           <Table
             columnDefinitions={columnDefinitions}
             items={mappings}
@@ -189,6 +229,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
       <MappingDetailsModal
         visible={isDetailsModalVisible}
         mapping={selectedMapping}
+        extractionPattern={selectedMapping ? getExtractionPatternForMapping(selectedMapping.id) : null}
         onClose={() => {
           setIsDetailsModalVisible(false);
           setSelectedMapping(null);

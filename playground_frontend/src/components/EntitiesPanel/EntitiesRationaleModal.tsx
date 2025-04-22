@@ -1,7 +1,13 @@
 "use client";
 
 import React from 'react';
-import { Box, SpaceBetween } from '@cloudscape-design/components';
+import { 
+  Box, 
+  SpaceBetween, 
+  ColumnLayout, 
+  Container, 
+  Header 
+} from '@cloudscape-design/components';
 import ModalDialog from '../common/ModalDialog';
 
 export interface EntitiesRationaleModalProps {
@@ -24,16 +30,28 @@ const EntitiesRationaleModal: React.FC<EntitiesRationaleModalProps> = ({
       onClose={onClose}
       hideCancel={true}
       confirmLabel="Close"
+      size="large"
     >
-      <SpaceBetween size="m">
-        <Box>
-          <h3>Data Type</h3>
-          <p>{dataType}</p>
-        </Box>
-        <Box>
-          <h3>Type Rationale</h3>
-          <p style={{ whiteSpace: 'pre-wrap' }}>{typeRationale}</p>
-        </Box>
+      <SpaceBetween size="l">
+        {/* Data Type Section */}
+        <Container
+          header={<Header variant="h3">Data Type</Header>}
+        >
+          <Box variant="code">{dataType}</Box>
+        </Container>
+        
+        {/* Type Rationale Section */}
+        <Container
+          header={<Header variant="h3">Type Rationale</Header>}
+        >
+          <ColumnLayout columns={1} variant="text-grid">
+            <div>
+              <Box variant="p">
+                <span style={{ whiteSpace: 'pre-wrap' }}>{typeRationale}</span>
+              </Box>
+            </div>
+          </ColumnLayout>
+        </Container>
       </SpaceBetween>
     </ModalDialog>
   );

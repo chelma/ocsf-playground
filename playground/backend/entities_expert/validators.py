@@ -137,7 +137,7 @@ class PythonExtractionPatternValidator(ExtractionPatternValidatorBase):
         # Take the raw logic and attempt to load it into an executable form
         try:
             extract_module = ModuleType("extract")
-            exec(f"{pattern.dependency_setup}{pattern.extract_logic}", extract_module.__dict__)
+            exec(f"{pattern.dependency_setup}\n\n{pattern.extract_logic}", extract_module.__dict__)
         except SyntaxError as e:
             raise PythonLogicInvalidSyntaxError(f"Syntax error in the extract logic: {str(e)}")
 
@@ -154,7 +154,7 @@ class PythonExtractionPatternValidator(ExtractionPatternValidatorBase):
         # Take the raw logic and attempt to load it into an executable form
         try:
             transform_module = ModuleType("transform")
-            exec(f"{pattern.dependency_setup}{pattern.transform_logic}", transform_module.__dict__)
+            exec(f"{pattern.dependency_setup}\n\n{pattern.transform_logic}", transform_module.__dict__)
         except SyntaxError as e:
             raise PythonLogicInvalidSyntaxError(f"Syntax error in the transform logic: {str(e)}")
 

@@ -83,7 +83,7 @@ class GenerateExtractionPatterns(BaseModel):
     )
 
 def generate_extraction_patterns(patterns: List[PythonExtractionPatternInput]) -> List[ExtractionPattern]:
-    static_imports = "import re\nimport typing\nimport json\nimport yaml\nimport xml\nimport datetime\nimport urllib\n\n"
+    static_imports = "import re\nimport typing\nimport json\nimport yaml\nimport xml\nimport datetime\nimport urllib"
 
     return [
         ExtractionPattern(
