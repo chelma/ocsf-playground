@@ -76,7 +76,7 @@ export const transformEditorContainerStyle: CSSProperties = {
 export const getValidationReportStyle = (validationOutcome: string): CSSProperties => ({
   width: '100%',
   minHeight: '100px',
-  maxHeight: '300px',
+  maxHeight: '1200px',
   overflowY: 'auto',
   padding: '10px',
   backgroundColor: validationOutcome === 'PASSED' ? '#f2fcf3' :

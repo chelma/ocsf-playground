@@ -93,7 +93,11 @@ const OcsfPlaygroundPage = () => {
             <CategoryPanel {...categoryState} />
             
             {/* Entities Panel - new component with client-only rendering */}
-            <EntitiesPanel {...entitiesState} />
+            <EntitiesPanel 
+              {...entitiesState} 
+              logs={logsState.logs}
+              selectedLogIds={logsState.selectedLogIds}
+            />
 
             {/* Transform Panel - extracted to its own component */}
             <TransformPanel {...transformState} />

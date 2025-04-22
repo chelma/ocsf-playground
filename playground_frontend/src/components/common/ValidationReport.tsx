@@ -22,7 +22,6 @@ const ValidationReport: React.FC<ValidationReportProps> = ({
       <Header variant="h3">{title}</Header>
       <FormField
         label={outcome ? `Status: ${outcome}` : "Status: Not Available"}
-        description="Results of validating against the OCSF schema"
         stretch={true}
       >
         <div style={getValidationReportStyle(outcome)}>
