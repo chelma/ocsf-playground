@@ -447,7 +447,7 @@ const OcsfPlaygroundPage = () => {
       className="split"
       style={splitStyles}
       gutterStyle={getGutterStyle as any}
-      sizes={[25, 50, 25]} // Initial width percentages for each pane
+      sizes={[30, 70]} // Updated to two columns with new proportions
       minSize={200} // Minimum size in pixels
       gutterSize={10}  // Make gutters easier to grab
       snapOffset={30}  // Snap when close to default position
@@ -547,11 +547,12 @@ const OcsfPlaygroundPage = () => {
         </Container>
       </div>
 
-      {/* Middle panel - OCSF Playground Tools */}
+      {/* Right panel - OCSF Tools (now including transformation results) */}
       <div style={paneStyles}>
         <Container>
           <SpaceBetween size="m">
             <Header variant="h1">OCSF Tools</Header>
+            
             {/* Regex Testing Section */}
             <div style={{ 
               border: '1px solid #d5dbdb', 
@@ -812,112 +813,203 @@ const OcsfPlaygroundPage = () => {
               </Box>
             </div>
 
-            {/* Transformation Logic Section */}
+            {/* Transformation Logic and Results Section - Now using a nested Split */}
             <div style={{ 
               border: '1px solid #d5dbdb', 
               padding: '10px',
-              borderRadius: '3px'
+              borderRadius: '3px',
+              height: 'auto',
+              minHeight: '600px'
             }}>
               <Box>
                 <Header variant="h3">Transformation Logic</Header>
-                <SpaceBetween size="m">
-                  {/* Transform Language Selection */}
-                  <div key="transform-language-selection">
-                    <FormField
-                      label="Transform Language"
-                    >
-                      <div style={{ width: 'fit-content' }}>
-                        <Select
-                          selectedOption={transformLanguage}
-                          onChange={({ detail }) => setTransformLanguage(detail.selectedOption)}
-                          options={transformLanguageOptions}
-                          placeholder="Select a transform language"
-                          expandToViewport
-                        />
+                
+                {/* Nested Split for transformation logic and results */}
+                <Split
+                  style={{
+                    display: 'flex',
+                    width: '100%',
+                    height: 'calc(100% - 40px)',
+                    overflow: 'hidden',
+                    marginTop: '10px'
+                  }}
+                  gutterStyle={getGutterStyle as any}
+                  sizes={[60, 40]} // 60% for logic, 40% for results
+                  minSize={100}
+                  gutterSize={10}
+                  snapOffset={30}
+                  dragInterval={1}
+                  direction="horizontal"
+                >
+                  {/* Left nested pane - Transformation Controls */}
+                  <div style={{ 
+                    overflow: 'auto', 
+                    width: '100%', 
+                    height: '100%',
+                    display: 'flex', 
+                    flexDirection: 'column' 
+                  }}>
+                    <SpaceBetween size="m">
+                      {/* Transform Language Selection */}
+                      <div key="transform-language-selection">
+                        <FormField label="Transform Language">
+                          <div style={{ width: 'fit-content' }}>
+                            <Select
+                              selectedOption={transformLanguage}
+                              onChange={({ detail }) => setTransformLanguage(detail.selectedOption)}
+                              options={transformLanguageOptions}
+                              placeholder="Select a transform language"
+                              expandToViewport
+                            />
+                          </div>
+                        </FormField>
                       </div>
-                    </FormField>
+                      
+                      {/* Buttons for testing, clearing, and getting GenAI recommendations */}
+                      <SpaceBetween direction="horizontal" size="xs">
+                        {/* Button to test the transform logic against the selected log entry */}
+                        <Button onClick={handleTestTransformLogic}>
+                          {isGeneratingTransform ? <Spinner/> : "Test Logic"}
+                        </Button>
+
+                        {/* Button to clear transform logic and results */}
+                        <Button onClick={handleClearTransform}>
+                        {isGeneratingTransform ? <Spinner/> : "Clear"}
+                        </Button>
+
+                        {/* Button to get a GenAI recommendation for the Transform Logic */}
+                        <Button onClick={handleGetTransformRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
+                          {isGeneratingTransform ? <Spinner/> : "Get GenAI Recommendation"}
+                        </Button>
+
+                        {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation */}
+                        <Button 
+                          iconAlign="left" 
+                          iconName="gen-ai" 
+                          onClick={() => {
+                            setTransformGuidanceModalVisible(true);
+                            setTransformGuidanceTemp(transformGuidance);
+                          }}
+                          disabled={isGeneratingTransform}
+                        >
+                          {isGeneratingTransform ? <Spinner/> : "Set User Guidance"}
+                        </Button>
+                        
+                        {/* New Button for debugging with GenAI */}
+                        <Button 
+                          iconAlign="left" 
+                          iconName="gen-ai" 
+                          onClick={handleDebugWithGenAI}
+                          disabled={isGeneratingTransform || !transformLogic.trim() || 
+                            (validationReport.length === 0 && !transformOutput.trim())}
+                          variant="normal"
+                        >
+                          {isGeneratingTransform ? <Spinner/> : "Debug with GenAI"}
+                        </Button>
+                      </SpaceBetween>
+                      
+                      {/* Transformation Code Editor */}
+                      <div key="transform-code-editor" style={{ 
+                        flex: '1 1 auto', 
+                        minHeight: '200px',
+                        position: 'relative',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden'
+                      }}>
+                        <FormField
+                          label="Transform Code"
+                          stretch={true}
+                        >
+                          <CodeEditor
+                            ace={ace}
+                            language={transformLanguage.value === TransformLanguageEnum.Python ? "python" : "javascript"}
+                            value={transformLogic}
+                            onChange={({ detail }) => setTransformLogic(detail.value)}
+                            preferences={transformEditorPreferences}
+                            onPreferencesChange={({ detail }) => setTransformEditorPreferences(detail)}
+                            loading={aceLoading || isGeneratingTransform}
+                            i18nStrings={{
+                              loadingState: 'Loading code editor',
+                              errorState: 'There was an error loading the code editor.',
+                              errorStateRecovery: 'Retry',
+                              editorGroupAriaLabel: 'Code editor',
+                              statusBarGroupAriaLabel: 'Status bar',
+                              cursorPosition: (row, column) => `Ln ${row}, Col ${column}`,
+                              errorsTab: 'Errors',
+                              warningsTab: 'Warnings',
+                              preferencesButtonAriaLabel: 'Preferences',
+                              paneCloseButtonAriaLabel: 'Close',
+                              preferencesModalHeader: 'Preferences',
+                              preferencesModalCancel: 'Cancel',
+                              preferencesModalConfirm: 'Confirm',
+                              preferencesModalWrapLines: 'Wrap lines',
+                              preferencesModalTheme: 'Theme',
+                              preferencesModalLightThemes: 'Light themes',
+                              preferencesModalDarkThemes: 'Dark themes'
+                            }}
+                          />
+                        </FormField>
+                      </div>
+                    </SpaceBetween>
                   </div>
-                  
-                  {/* Buttons for testing, clearing, and getting GenAI recommendations */}
-                  <SpaceBetween direction="horizontal" size="xs">
-                    {/* Button to test the transform logic against the selected log entry */}
-                    <Button onClick={handleTestTransformLogic}>
-                      {isGeneratingTransform ? <Spinner/> : "Test Logic"}
-                    </Button>
 
-                    {/* Button to clear transform logic and results */}
-                    <Button onClick={handleClearTransform}>
-                    {isGeneratingTransform ? <Spinner/> : "Clear"}
-                    </Button>
+                  {/* Right nested pane - Transformation Results */}
+                  <div style={{ overflow: 'auto', padding: '0 5px', width: '100%', height: '100%' }}>
+                    <SpaceBetween size="m">
+                      {/* Transformation Output */}
+                      <div>
+                        <Header variant="h3">Transformation Output</Header>
+                        <FormField
+                          description="The result of applying the transformation to the selected log entry"
+                          stretch={true}
+                        >
+                          <Textarea
+                            value={transformOutput}
+                            readOnly
+                            rows={10}
+                            placeholder="Transformation output will appear here after you click 'Get GenAI Recommendation'"
+                          />
+                        </FormField>
+                      </div>
 
-                    {/* Button to get a GenAI recommendation for the Transform Logic */}
-                    <Button onClick={handleGetTransformRecommendation} variant="primary" iconAlign="left" iconName="gen-ai">
-                      {isGeneratingTransform ? <Spinner/> : "Get GenAI Recommendation"}
-                    </Button>
-
-                    {/* Button to create a modal window that lets the user set guidance for the GenAI recommendation */}
-                    <Button 
-                      iconAlign="left" 
-                      iconName="gen-ai" 
-                      onClick={() => {
-                        setTransformGuidanceModalVisible(true);
-                        setTransformGuidanceTemp(transformGuidance);
-                      }}
-                      disabled={isGeneratingTransform}
-                    >
-                      {isGeneratingTransform ? <Spinner/> : "Set User Guidance"}
-                    </Button>
-                    
-                    {/* New Button for debugging with GenAI */}
-                    <Button 
-                      iconAlign="left" 
-                      iconName="gen-ai" 
-                      onClick={handleDebugWithGenAI}
-                      disabled={isGeneratingTransform || !transformLogic.trim() || 
-                        (validationReport.length === 0 && !transformOutput.trim())}
-                      variant="normal"
-                    >
-                      {isGeneratingTransform ? <Spinner/> : "Debug with GenAI"}
-                    </Button>
-                  </SpaceBetween>
-                  
-                  {/* Transformation Code Editor */}
-                  <div key="transform-code-editor">
-                    <FormField
-                      label="Transform Code"
-                      stretch={true}  // Make the form field stretch to full width
-                    >
-                      <CodeEditor
-                        ace={ace}
-                        language={transformLanguage.value === TransformLanguageEnum.Python ? "python" : "javascript"}
-                        value={transformLogic}
-                        onChange={({ detail }) => setTransformLogic(detail.value)}
-                        preferences={transformEditorPreferences}
-                        onPreferencesChange={({ detail }) => setTransformEditorPreferences(detail)}
-                        loading={aceLoading || isGeneratingTransform}
-                        i18nStrings={{
-                          loadingState: 'Loading code editor',
-                          errorState: 'There was an error loading the code editor.',
-                          errorStateRecovery: 'Retry',
-                          editorGroupAriaLabel: 'Code editor',
-                          statusBarGroupAriaLabel: 'Status bar',
-                          cursorPosition: (row, column) => `Ln ${row}, Col ${column}`,
-                          errorsTab: 'Errors',
-                          warningsTab: 'Warnings',
-                          preferencesButtonAriaLabel: 'Preferences',
-                          paneCloseButtonAriaLabel: 'Close',
-                          preferencesModalHeader: 'Preferences',
-                          preferencesModalCancel: 'Cancel',
-                          preferencesModalConfirm: 'Confirm',
-                          preferencesModalWrapLines: 'Wrap lines',
-                          preferencesModalTheme: 'Theme',
-                          preferencesModalLightThemes: 'Light themes',
-                          preferencesModalDarkThemes: 'Dark themes'
-                        }}
-                      />
-                    </FormField>
+                      {/* Validation Report */}
+                      <div>
+                        <Header variant="h3">Validation Report</Header>
+                        <FormField
+                          label={validationOutcome ? `Status: ${validationOutcome}` : "Status: Not Available"}
+                          description="Results of validating against the OCSF schema"
+                          stretch={true}
+                        >
+                          <div style={{ 
+                            width: '100%',
+                            minHeight: '100px',
+                            maxHeight: '300px', 
+                            overflowY: 'auto', 
+                            padding: '10px',
+                            backgroundColor: validationOutcome === 'PASSED' ? '#f2fcf3' : 
+                                          validationOutcome === 'FAILED' ? '#fff0f0' : '#f5f5f5',
+                            borderRadius: '4px',
+                            border: `1px solid ${
+                              validationOutcome === 'PASSED' ? '#d5e8d8' : 
+                              validationOutcome === 'FAILED' ? '#ffd7d7' : '#e0e0e0'
+                            }`
+                          }}>
+                            {validationReport.length > 0 ? (
+                              validationReport.map((entry, index) => (
+                                <div key={`validation-entry-${index}`} style={codeBlockStyle}>
+                                  {entry}
+                                </div>
+                              ))
+                            ) : (
+                              <p>Validation report will appear here after transformation</p>
+                            )}
+                          </div>
+                        </FormField>
+                      </div>
+                    </SpaceBetween>
                   </div>
-                </SpaceBetween>
+                </Split>
               </Box>
               
               {/* Modal for setting transform guidance */}
@@ -954,83 +1046,6 @@ const OcsfPlaygroundPage = () => {
                   />
                 </FormField>
               </Modal>
-            </div>
-          </SpaceBetween>
-        </Container>
-      </div>
-
-      {/* Right panel - Transformation Output */}
-      <div style={paneStyles}>
-        <Container>
-          <SpaceBetween size="m">
-            <Header variant="h1">Transformation Results</Header>
-
-            {/* Transformation Output */}
-            <div style={{ 
-              border: '1px solid #d5dbdb', 
-              padding: '10px',
-              borderRadius: '3px'
-            }}>
-              <Box>
-                <Header variant="h3">Transformation Output</Header>
-                <SpaceBetween size="m">
-                  <FormField
-                    label="JSON Result"
-                    description="The result of applying the transformation to the selected log entry"
-                    stretch={true}  // Make the form field stretch to full width
-                  >
-                    <Textarea
-                      value={transformOutput}
-                      readOnly
-                      rows={20}
-                      placeholder="Transformation output will appear here after you click 'Get GenAI Recommendation'"
-                    />
-                  </FormField>
-                </SpaceBetween>
-              </Box>
-            </div>
-
-            {/* Validation Report */}
-            <div style={{ 
-              border: '1px solid #d5dbdb', 
-              padding: '10px',
-              borderRadius: '3px'
-            }}>
-              <Box>
-                <Header variant="h3">Validation Report</Header>
-                <SpaceBetween size="m">
-                  <FormField
-                    label={validationOutcome ? `Status: ${validationOutcome}` : "Status: Not Available"}
-                    description="The results of validating the transformed output against the OCSF schema"
-                    stretch={true}  // Make the form field stretch to full width
-                  >
-                    <div style={{ 
-                      width: '100%',  // Ensure the div takes full width
-                      minHeight: '100px',
-                      maxHeight: '400px', 
-                      overflowY: 'auto', 
-                      padding: '10px',
-                      backgroundColor: validationOutcome === 'PASSED' ? '#f2fcf3' : 
-                                      validationOutcome === 'FAILED' ? '#fff0f0' : '#f5f5f5',
-                      borderRadius: '4px',
-                      border: `1px solid ${
-                        validationOutcome === 'PASSED' ? '#d5e8d8' : 
-                        validationOutcome === 'FAILED' ? '#ffd7d7' : '#e0e0e0'
-                      }`
-                    }}>
-                      {validationReport.length > 0 ? (
-                        validationReport.map((entry, index) => (
-                          <div key={`validation-entry-${index}`} style={codeBlockStyle}>
-                            {entry}
-                          </div>
-                        ))
-                      ) : (
-                        <p>Validation report will appear here after transformation</p>
-                      )}
-                    </div>
-                  </FormField>
-                </SpaceBetween>
-              </Box>
             </div>
           </SpaceBetween>
         </Container>
