@@ -100,7 +100,7 @@ const OcsfPlaygroundPage = () => {
             />
 
             {/* Transform Panel - extracted to its own component */}
-            <TransformPanel {...transformState} />
+            {/* <TransformPanel {...transformState} /> */}
           </SpaceBetween>
         </Container>
       </div>

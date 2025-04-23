@@ -284,7 +284,7 @@ class ValidationReportField(serializers.Field):
             "required": ["input", "output", "report_entries", "passed"]
         }
     },
-    "required": ["id", "mapping", "extract_logic", "transform_logic", "validation_report"],
+    "required": ["id", "mapping", "extract_logic", "transform_logic"],
 })
 class ExtractionPatternField(serializers.Field):
     """Custom serializer field for an extraction patterns on entity mappings"""
@@ -299,7 +299,7 @@ class ExtractionPatternField(serializers.Field):
             raise serializers.ValidationError("Must be a JSON object.")
 
         # Ensure required keys exist
-        required_keys = ['id', 'mapping', 'extract_logic', 'transform_logic', 'validation_report']
+        required_keys = ['id', 'mapping', 'extract_logic', 'transform_logic']
         missing_keys = [key for key in required_keys if key not in data]
         if missing_keys:
             raise serializers.ValidationError(
@@ -329,10 +329,11 @@ class ExtractionPatternField(serializers.Field):
             raise serializers.ValidationError("'transform_logic' must be a string.")
         
         # Validate validation_report if present
-        try:
-            validation_report = self.validation_report_field.to_internal_value(data['validation_report'])
-        except serializers.ValidationError as e:
-            raise serializers.ValidationError({"validation_report": e.detail})
+        if 'validation_report' in data:
+            try:
+                validation_report = self.validation_report_field.to_internal_value(data['validation_report'])
+            except serializers.ValidationError as e:
+                raise serializers.ValidationError({"validation_report": e.detail})
             
         return {
             'id': data['id'],
@@ -340,7 +341,7 @@ class ExtractionPatternField(serializers.Field):
             'dependency_setup': data.get('dependency_setup', None),
             'extract_logic': data['extract_logic'],
             'transform_logic': data['transform_logic'],
-            'validation_report': validation_report
+            'validation_report': validation_report if 'validation_report' in data else None
         }
 
     def to_representation(self, value: Dict[str, Any]) -> Dict[str, Any]:
@@ -353,6 +354,19 @@ class TransformerEntitiesV1_1_0ExtractRequestSerializer(serializers.Serializer):
     mappings = serializers.ListField(child=EntityMappingField())
 
 class TransformerEntitiesV1_1_0ExtractResponseSerializer(serializers.Serializer):
+    transform_language = EnumChoiceField(enum=TransformLanguage)
+    ocsf_version = EnumChoiceField(enum=OcsfVersion)
+    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    input_entry = serializers.CharField()
+    patterns = serializers.ListField(child=ExtractionPatternField())
+
+class TransformerEntitiesV1_1_0TestRequestSerializer(serializers.Serializer):
+    transform_language = EnumChoiceField(enum=TransformLanguage)
+    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    input_entry = serializers.CharField()
+    patterns = serializers.ListField(child=ExtractionPatternField())
+
+class TransformerEntitiesV1_1_0TestResponseSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)
     ocsf_version = EnumChoiceField(enum=OcsfVersion)
     ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)

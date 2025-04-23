@@ -38,6 +38,7 @@ interface EntitiesPanelProps extends EntitiesState {
 const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
   isLoading,
   isExtracting,
+  isTestingPattern,
   error,
   mappings,
   extractionPatterns,
@@ -48,6 +49,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
   languageOptions,
   analyzeEntities,
   extractEntities,
+  testPattern,
   clearEntities,
   onLanguageChange,
   logs,
@@ -175,7 +177,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
     },
     {
       id: "validationStatus",
-      header: "Validation",
+      header: "Validation Status",
       cell: item => {
         const status = getValidationStatus(item.id);
         return status.text === "N/A" ? 
@@ -295,6 +297,8 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
         mapping={selectedMapping}
         extractionPattern={selectedMapping ? getExtractionPatternForMapping(selectedMapping.id) : null}
         selectedLog={selectedLog}
+        onTestPattern={testPattern}
+        isTestingPattern={isTestingPattern}
         onClose={() => {
           setIsDetailsModalVisible(false);
           setSelectedMapping(null);

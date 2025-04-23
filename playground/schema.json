@@ -234,6 +234,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/TransformerEntitiesV1_1_0ExtractResponse'
           description: ''
+  /transformer/entities/v1_1_0/test/:
+    post:
+      operationId: transformer_entities_v1_1_0_test_create
+      tags:
+      - transformer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransformerEntitiesV1_1_0TestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransformerEntitiesV1_1_0TestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransformerEntitiesV1_1_0TestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransformerEntitiesV1_1_0TestResponse'
+          description: ''
   /transformer/heuristic/create/:
     post:
       operationId: transformer_heuristic_create_create
@@ -650,7 +678,191 @@ components:
             - mapping
             - extract_logic
             - transform_logic
-            - validation_report
+      required:
+      - input_entry
+      - ocsf_category
+      - ocsf_version
+      - patterns
+      - transform_language
+    TransformerEntitiesV1_1_0TestRequest:
+      type: object
+      properties:
+        transform_language:
+          $ref: '#/components/schemas/TransformLanguageEnum'
+        ocsf_category:
+          $ref: '#/components/schemas/OcsfCategoryEnum'
+        input_entry:
+          type: string
+        patterns:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique identifier for the extraction pattern
+              mapping:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Unique identifier for the entity mapping
+                  entity:
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                      description:
+                        type: string
+                    required:
+                    - value
+                    - description
+                  ocsf_path:
+                    type: string
+                    description: Period-delimited path in OCSF schema (e.g., 'http_request.url.port')
+                  path_rationale:
+                    type: string
+                    description: A precise explanation of why the entity was mapped
+                      to the OCSF path
+                required:
+                - id
+                - entity
+                - ocsf_path
+              dependency_setup:
+                type: string
+                description: The logic to set up any dependencies for the extraction/transformation
+                  logic, such as package import statements
+              extract_logic:
+                type: string
+                description: The extraction logic for the entity mapping, such a some
+                  Python or Javascript code
+              transform_logic:
+                type: string
+                description: The transformation logic for the entity mapping, such
+                  a some Python or Javascript code
+              validation_report:
+                type: object
+                description: Validation information for the extraction pattern
+                properties:
+                  input:
+                    type: string
+                    description: Input data that was validated
+                  output:
+                    type: object
+                    additionalProperties:
+                      type: string
+                    description: Output data that was generated
+                  report_entries:
+                    type: array
+                    items:
+                      type: string
+                    description: List of validation messages or details
+                  passed:
+                    type: boolean
+                    description: Whether validation passed (true) or failed (false)
+                required:
+                - input
+                - output
+                - report_entries
+                - passed
+            required:
+            - id
+            - mapping
+            - extract_logic
+            - transform_logic
+      required:
+      - input_entry
+      - ocsf_category
+      - patterns
+      - transform_language
+    TransformerEntitiesV1_1_0TestResponse:
+      type: object
+      properties:
+        transform_language:
+          $ref: '#/components/schemas/TransformLanguageEnum'
+        ocsf_version:
+          $ref: '#/components/schemas/OcsfVersionEnum'
+        ocsf_category:
+          $ref: '#/components/schemas/OcsfCategoryEnum'
+        input_entry:
+          type: string
+        patterns:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique identifier for the extraction pattern
+              mapping:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Unique identifier for the entity mapping
+                  entity:
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                      description:
+                        type: string
+                    required:
+                    - value
+                    - description
+                  ocsf_path:
+                    type: string
+                    description: Period-delimited path in OCSF schema (e.g., 'http_request.url.port')
+                  path_rationale:
+                    type: string
+                    description: A precise explanation of why the entity was mapped
+                      to the OCSF path
+                required:
+                - id
+                - entity
+                - ocsf_path
+              dependency_setup:
+                type: string
+                description: The logic to set up any dependencies for the extraction/transformation
+                  logic, such as package import statements
+              extract_logic:
+                type: string
+                description: The extraction logic for the entity mapping, such a some
+                  Python or Javascript code
+              transform_logic:
+                type: string
+                description: The transformation logic for the entity mapping, such
+                  a some Python or Javascript code
+              validation_report:
+                type: object
+                description: Validation information for the extraction pattern
+                properties:
+                  input:
+                    type: string
+                    description: Input data that was validated
+                  output:
+                    type: object
+                    additionalProperties:
+                      type: string
+                    description: Output data that was generated
+                  report_entries:
+                    type: array
+                    items:
+                      type: string
+                    description: List of validation messages or details
+                  passed:
+                    type: boolean
+                    description: Whether validation passed (true) or failed (false)
+                required:
+                - input
+                - output
+                - report_entries
+                - passed
+            required:
+            - id
+            - mapping
+            - extract_logic
+            - transform_logic
       required:
       - input_entry
       - ocsf_category

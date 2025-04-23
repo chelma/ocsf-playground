@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { OcsfCategoryEnum, TransformLanguageEnum } from '../generated-api-client';
-import { analyzeEntities, extractEntityPatterns } from '../utils/transformerClient';
+import { analyzeEntities, extractEntityPatterns, testExtractionPattern } from '../utils/transformerClient';
 import { SelectProps } from '@cloudscape-design/components';
 import { transformLanguageOptions, defaultTransformLanguage } from '../utils/constants';
 
@@ -20,7 +20,7 @@ interface ExtractionPattern {
   dependency_setup?: string;
   extract_logic: string;
   transform_logic: string;
-  validation_report: {
+  validation_report?: {
     input: string;
     output: any;
     report_entries: string[];
@@ -43,6 +43,8 @@ export interface EntitiesState {
   extractEntities: () => Promise<void>;
   clearEntities: () => void;
   onLanguageChange: (option: SelectProps.Option) => void;
+  isTestingPattern: boolean;
+  testPattern: (patternId: string, editedPattern?: Partial<ExtractionPattern>) => Promise<void>;
 }
 
 interface EntitiesStateProps {
@@ -69,6 +71,7 @@ const useEntitiesState = ({
   
   // Use language options from constants.ts
   const languageOptions: SelectProps.Options = transformLanguageOptions;
+  const [isTestingPattern, setIsTestingPattern] = useState<boolean>(false);
 
   const handleAnalyzeEntities = async () => {
     if (!selectedLogIds.length || !categoryValue) {
@@ -137,6 +140,58 @@ const useEntitiesState = ({
     }
   };
 
+  const handleTestPattern = async (patternId: string, editedPattern?: Partial<ExtractionPattern>) => {
+    if (!selectedLogIds.length || !categoryValue) {
+      setError("Please select a log entry and category before testing extraction pattern");
+      return;
+    }
+
+    const patternToTest = extractionPatterns.find(p => p.id === patternId);
+    if (!patternToTest) {
+      setError(`Pattern with ID ${patternId} not found`);
+      return;
+    }
+
+    try {
+      setIsTestingPattern(true);
+      setError(null);
+      
+      // Get the selected log entry
+      const selectedLogEntry = logs[parseInt(selectedLogIds[0])];
+      
+      // Get transform language value
+      const transformLanguage = language.value as TransformLanguageEnum;
+
+      // Create a modified pattern if edits were provided
+      const testPattern = editedPattern 
+        ? { ...patternToTest, ...editedPattern }
+        : patternToTest;
+
+      // Call the transformer client function for testing the pattern
+      const response = await testExtractionPattern(
+        transformLanguage, 
+        categoryValue, 
+        selectedLogEntry,
+        testPattern
+      );
+      
+      // Update state with the response - replace the pattern in the array
+      setExtractionPatterns(prevPatterns => {
+        const newPatterns = [...prevPatterns];
+        const index = newPatterns.findIndex(p => p.id === patternId);
+        if (index !== -1 && response.patterns.length > 0) {
+          newPatterns[index] = response.patterns[0];
+        }
+        return newPatterns;
+      });
+    } catch (error) {
+      console.error('Error testing extraction pattern:', error);
+      setError('Failed to test extraction pattern. Please try again.');
+    } finally {
+      setIsTestingPattern(false);
+    }
+  };
+
   const clearEntities = () => {
     setMappings([]);
     setExtractionPatterns([]);
@@ -163,7 +218,9 @@ const useEntitiesState = ({
     analyzeEntities: handleAnalyzeEntities,
     extractEntities: handleExtractEntities,
     clearEntities,
-    onLanguageChange: handleLanguageChange
+    onLanguageChange: handleLanguageChange,
+    isTestingPattern,
+    testPattern: handleTestPattern,
   };
 };
 

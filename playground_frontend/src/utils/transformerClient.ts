@@ -179,3 +179,25 @@ export const debugTransformLogic = async (
     return handleApiError(error);
   }
 };
+
+// Test extraction pattern
+export const testExtractionPattern = async (
+  transformLanguage: TransformLanguageEnum,
+  ocsfCategory: OcsfCategoryEnum,
+  logEntry: string,
+  pattern: any
+) => {
+  try {
+    const payload = {
+      transform_language: transformLanguage,
+      ocsf_category: ocsfCategory,
+      input_entry: logEntry,
+      patterns: [pattern]
+    };
+    
+    const response = await apiClient.transformerEntitiesV110TestCreate(payload);
+    return response.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};

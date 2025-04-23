@@ -35,6 +35,7 @@ from .serializers import (TransformerHeuristicCreateRequestSerializer, Transform
                           TransformerCategorizeV1_1_0RequestSerializer, TransformerCategorizeV1_1_0ResponseSerializer,
                           TransformerEntitiesV1_1_0AnalyzeRequestSerializer, TransformerEntitiesV1_1_0AnalyzeResponseSerializer,
                           TransformerEntitiesV1_1_0ExtractRequestSerializer, TransformerEntitiesV1_1_0ExtractResponseSerializer,
+                          TransformerEntitiesV1_1_0TestRequestSerializer, TransformerEntitiesV1_1_0TestResponseSerializer,
                           TransformerLogicV1_1_0CreateRequestSerializer, TransformerLogicV1_1_0CreateResponseSerializer,
                           TransformerLogicV1_1_0TestRequestSerializer, TransformerLogicV1_1_0TestResponseSerializer,
                           TransformerLogicV1_1_0IterateRequestSerializer, TransformerLogicV1_1_0IterateResponseSerializer
@@ -637,6 +638,80 @@ class TransformerEntitiesV1_1_0ExtractView(APIView):
                 raise ValueError(f"Mapping ID {pattern.id} not found in the input mappings.")
 
             return result
+    
+    def _validate(self, input_entry: str, patterns: List[ExtractionPattern]) -> List[ExtractionPattern]:
+        for pattern in patterns:
+            pattern.validation_report = PythonExtractionPatternValidator(
+                input_entry=input_entry,
+                pattern=pattern
+            ).validate()
+
+        return patterns
+
+class TransformerEntitiesV1_1_0TestView(APIView):
+    @csrf_exempt
+    @extend_schema(
+        request=TransformerEntitiesV1_1_0TestRequestSerializer,
+        responses=TransformerEntitiesV1_1_0TestResponseSerializer
+    )
+    def post(self, request):
+        logger.info(f"Received entities test request: {request.data}")
+
+        # Validate incoming data
+        request = TransformerEntitiesV1_1_0TestRequestSerializer(data=request.data)
+        if not request.is_valid():
+            logger.error(f"Invalid entities test request: {request.errors}")
+            return Response(request.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        task_id = str(uuid.uuid4())
+
+        # Perform the task
+        try:
+            # Validate the patterns
+            raw_patterns = request.validated_data["patterns"]
+            patterns = []
+            for raw_pattern in raw_patterns:
+                pattern = ExtractionPattern(
+                    id=raw_pattern["id"],
+                    dependency_setup=raw_pattern["dependency_setup"],
+                    extract_logic=raw_pattern["extract_logic"],
+                    transform_logic=raw_pattern["transform_logic"],
+                    mapping=EntityMapping(
+                        id=raw_pattern["mapping"]["id"],
+                        entity=Entity(
+                            value=raw_pattern["mapping"]["entity"]["value"],
+                            description=raw_pattern["mapping"]["entity"]["description"]
+                        ),
+                        ocsf_path=raw_pattern["mapping"]["ocsf_path"],
+                        path_rationale=raw_pattern["mapping"]["path_rationale"]
+                    ) if raw_pattern["mapping"] else None,
+                )
+                patterns.append(pattern)
+
+            validated_patterns = self._validate(request.validated_data["input_entry"], patterns)
+            logger.info(f"Extraction pattern validation completed")
+        except UnsupportedTransformLanguageError as e:
+            logger.error(f"{str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Entities testing process failed: {str(e)}")
+            logger.exception(e)
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Serialize and return the response
+        response = TransformerEntitiesV1_1_0TestResponseSerializer(data={
+            "transform_language":  request.validated_data["transform_language"].value,
+            "ocsf_version": OcsfVersion.V1_1_0.value,
+            "ocsf_category":  request.validated_data["ocsf_category"].value,
+            "input_entry":  request.validated_data["input_entry"],
+            "patterns": [validated_pattern.to_json() for validated_pattern in validated_patterns],
+        })
+
+        if not response.is_valid():
+            logger.error(f"Invalid entities test response: {response.errors}")
+            return Response(response.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(response.data, status=status.HTTP_200_OK)
     
     def _validate(self, input_entry: str, patterns: List[ExtractionPattern]) -> List[ExtractionPattern]:
         for pattern in patterns:

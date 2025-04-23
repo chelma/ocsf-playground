@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
+  Alert,
   Box, 
   SpaceBetween, 
   ColumnLayout, 
   Container, 
   Header,
   Textarea,
-  CodeEditorProps
+  CodeEditorProps,
+  Button
 } from '@cloudscape-design/components';
 import CodeEditorWrapper from '../common/CodeEditorWrapper';
 import SplitLayout from '../common/SplitLayout';
@@ -43,7 +45,7 @@ interface ExtractionPattern {
   dependency_setup?: string;
   extract_logic: string;
   transform_logic: string;
-  validation_report: {
+  validation_report?: {
     input: string;
     output: any;
     report_entries: string[];
@@ -57,6 +59,8 @@ export interface MappingDetailsModalProps {
   extractionPattern?: ExtractionPattern | null;
   selectedLog?: string;
   onClose: () => void;
+  onTestPattern?: (patternId: string, editedPattern?: Partial<ExtractionPattern>) => void;
+  isTestingPattern?: boolean;
 }
 
 const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
@@ -64,12 +68,28 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
   mapping,
   extractionPattern,
   selectedLog,
-  onClose
+  onClose,
+  onTestPattern,
+  isTestingPattern = false
 }) => {
   const [editorPreferences, setEditorPreferences] = useState<CodeEditorProps.Preferences>({
      theme: 'dawn',
      wrapLines: true
-});
+  });
+  
+  // State to track edited logic
+  const [extractLogic, setExtractLogic] = useState<string>("");
+  const [transformLogic, setTransformLogic] = useState<string>("");
+  const [hasMadeEdits, setHasMadeEdits] = useState<boolean>(false);
+  
+  // Update local state when extraction pattern changes
+  useEffect(() => {
+    if (extractionPattern) {
+      setExtractLogic(extractionPattern.extract_logic);
+      setTransformLogic(extractionPattern.transform_logic);
+      setHasMadeEdits(false);
+    }
+  }, [extractionPattern]);
   
   if (!mapping) return null;
 
@@ -78,6 +98,20 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
   
   // Determine if we have extraction data to display
   const hasExtractionData = pattern !== null;
+  
+  // Handle testing with edited pattern
+  const handleTestPattern = () => {
+    if (!pattern || !onTestPattern) return;
+    
+    // Only include the edited fields if changes were made
+    const editedPattern = hasMadeEdits ? {
+      id: pattern.id,
+      extract_logic: extractLogic,
+      transform_logic: transformLogic
+    } : undefined;
+    
+    onTestPattern(pattern.id, editedPattern);
+  };
 
   return (
     <FullPageDialog
@@ -181,14 +215,17 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
                 >
                   <div style={{ height: '280px' }}>
                       <CodeEditorWrapper
-                      ace={ace}
-                      language="python"
-                      value={pattern.extract_logic}
-                      onChange={() => {}} // Read-only
-                      preferences={editorPreferences}
-                      onPreferencesChange={setEditorPreferences}
-                      ariaLabel="Extract logic code editor"
-                      height={250}
+                        ace={ace}
+                        language="python"
+                        value={extractLogic}
+                        onChange={(value) => {
+                          setExtractLogic(value);
+                          setHasMadeEdits(true);
+                        }}
+                        preferences={editorPreferences}
+                        onPreferencesChange={setEditorPreferences}
+                        ariaLabel="Extract logic code editor"
+                        height={250}
                       />
                   </div>
                 </Container>
@@ -198,14 +235,17 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
                 >
                   <div style={{ height: '280px' }}>
                       <CodeEditorWrapper
-                      ace={ace}
-                      language="python"
-                      value={pattern.transform_logic}
-                      onChange={() => {}} // Read-only
-                      preferences={editorPreferences}
-                      onPreferencesChange={setEditorPreferences}
-                      ariaLabel="Transform logic code editor"
-                      height={250}
+                        ace={ace}
+                        language="python"
+                        value={transformLogic}
+                        onChange={(value) => {
+                          setTransformLogic(value);
+                          setHasMadeEdits(true);
+                        }}
+                        preferences={editorPreferences}
+                        onPreferencesChange={setEditorPreferences}
+                        ariaLabel="Transform logic code editor"
+                        height={250}
                       />
                   </div>
                 </Container>
@@ -217,26 +257,44 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
         {/* Right Column: Validation and Output */}
         <div style={{ height: '100%', overflow: 'auto' }}>
           <Container
-            header={<Header variant="h1">Validation</Header>}
+            header={<Header variant="h1">Validation & Output</Header>}
             fitHeight={true}
           >
           {!hasExtractionData ? (
             <Box variant="p">No validation report available. Click the "Extract Entities" button to generate.</Box>
           ) : (
             <SpaceBetween size="s">
+              {/* Test Pattern Button */}
+              <Button
+                variant="primary"
+                iconAlign="left"
+                iconName="refresh"
+                loading={isTestingPattern}
+                onClick={handleTestPattern}
+                disabled={!pattern || !onTestPattern}
+              >
+                Test Extraction Pattern
+              </Button>
+
+              {hasMadeEdits && (
+                <Alert type="info">
+                  Changes have been made to the extraction/transformation logic. 
+                  Click "Test Extraction Pattern" to validate your changes.
+                </Alert>
+              )}
 
               <Header variant="h3">Extract/Transform Output</Header>
               <div style={{ height: '110px' }}>
                 <Textarea
-                  value={JSON.stringify(pattern.validation_report.output, null, 4)}
+                  value={JSON.stringify(pattern.validation_report?.output, null, 4) || 'N/A'}
                   readOnly
                   rows={5}
                 />
               </div>
               
               <ValidationReport
-                report={pattern.validation_report.report_entries}
-                outcome={pattern.validation_report.passed ? "PASSED" : "FAILED"}
+                report={pattern.validation_report?.report_entries || ["N/A"]}
+                outcome={pattern.validation_report?.passed ? "PASSED" : "FAILED"}
                 title="Validation Report"
               />
             </SpaceBetween>

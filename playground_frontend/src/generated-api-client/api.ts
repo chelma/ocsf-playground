@@ -374,7 +374,7 @@ export interface TransformerEntitiesV110ExtractResponsePatternsInner {
      * @type {TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport}
      * @memberof TransformerEntitiesV110ExtractResponsePatternsInner
      */
-    'validation_report': TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport;
+    'validation_report'?: TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport;
 }
 /**
  * Validation information for the extraction pattern
@@ -407,6 +407,78 @@ export interface TransformerEntitiesV110ExtractResponsePatternsInnerValidationRe
      */
     'passed': boolean;
 }
+/**
+ * 
+ * @export
+ * @interface TransformerEntitiesV110TestRequest
+ */
+export interface TransformerEntitiesV110TestRequest {
+    /**
+     * 
+     * @type {TransformLanguageEnum}
+     * @memberof TransformerEntitiesV110TestRequest
+     */
+    'transform_language': TransformLanguageEnum;
+    /**
+     * 
+     * @type {OcsfCategoryEnum}
+     * @memberof TransformerEntitiesV110TestRequest
+     */
+    'ocsf_category': OcsfCategoryEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerEntitiesV110TestRequest
+     */
+    'input_entry': string;
+    /**
+     * 
+     * @type {Array<TransformerEntitiesV110ExtractResponsePatternsInner>}
+     * @memberof TransformerEntitiesV110TestRequest
+     */
+    'patterns': Array<TransformerEntitiesV110ExtractResponsePatternsInner>;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface TransformerEntitiesV110TestResponse
+ */
+export interface TransformerEntitiesV110TestResponse {
+    /**
+     * 
+     * @type {TransformLanguageEnum}
+     * @memberof TransformerEntitiesV110TestResponse
+     */
+    'transform_language': TransformLanguageEnum;
+    /**
+     * 
+     * @type {OcsfVersionEnum}
+     * @memberof TransformerEntitiesV110TestResponse
+     */
+    'ocsf_version': OcsfVersionEnum;
+    /**
+     * 
+     * @type {OcsfCategoryEnum}
+     * @memberof TransformerEntitiesV110TestResponse
+     */
+    'ocsf_category': OcsfCategoryEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TransformerEntitiesV110TestResponse
+     */
+    'input_entry': string;
+    /**
+     * 
+     * @type {Array<TransformerEntitiesV110ExtractResponsePatternsInner>}
+     * @memberof TransformerEntitiesV110TestResponse
+     */
+    'patterns': Array<TransformerEntitiesV110ExtractResponsePatternsInner>;
+}
+
+
 /**
  * 
  * @export
@@ -1109,6 +1181,47 @@ export const TransformerApiAxiosParamCreator = function (configuration?: Configu
         },
         /**
          * 
+         * @param {TransformerEntitiesV110TestRequest} transformerEntitiesV110TestRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        transformerEntitiesV110TestCreate: async (transformerEntitiesV110TestRequest: TransformerEntitiesV110TestRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'transformerEntitiesV110TestRequest' is not null or undefined
+            assertParamExists('transformerEntitiesV110TestCreate', 'transformerEntitiesV110TestRequest', transformerEntitiesV110TestRequest)
+            const localVarPath = `/transformer/entities/v1_1_0/test/`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication basicAuth required
+            // http basic authentication required
+            setBasicAuthToObject(localVarRequestOptions, configuration)
+
+            // authentication cookieAuth required
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(transformerEntitiesV110TestRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1319,6 +1432,18 @@ export const TransformerApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {TransformerEntitiesV110TestRequest} transformerEntitiesV110TestRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async transformerEntitiesV110TestCreate(transformerEntitiesV110TestRequest: TransformerEntitiesV110TestRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TransformerEntitiesV110TestResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.transformerEntitiesV110TestCreate(transformerEntitiesV110TestRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TransformerApi.transformerEntitiesV110TestCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1404,6 +1529,15 @@ export const TransformerApiFactory = function (configuration?: Configuration, ba
         },
         /**
          * 
+         * @param {TransformerEntitiesV110TestRequest} transformerEntitiesV110TestRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        transformerEntitiesV110TestCreate(transformerEntitiesV110TestRequest: TransformerEntitiesV110TestRequest, options?: RawAxiosRequestConfig): AxiosPromise<TransformerEntitiesV110TestResponse> {
+            return localVarFp.transformerEntitiesV110TestCreate(transformerEntitiesV110TestRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {TransformerHeuristicCreateRequest} transformerHeuristicCreateRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1479,6 +1613,17 @@ export class TransformerApi extends BaseAPI {
      */
     public transformerEntitiesV110ExtractCreate(transformerEntitiesV110ExtractRequest: TransformerEntitiesV110ExtractRequest, options?: RawAxiosRequestConfig) {
         return TransformerApiFp(this.configuration).transformerEntitiesV110ExtractCreate(transformerEntitiesV110ExtractRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {TransformerEntitiesV110TestRequest} transformerEntitiesV110TestRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TransformerApi
+     */
+    public transformerEntitiesV110TestCreate(transformerEntitiesV110TestRequest: TransformerEntitiesV110TestRequest, options?: RawAxiosRequestConfig) {
+        return TransformerApiFp(this.configuration).transformerEntitiesV110TestCreate(transformerEntitiesV110TestRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
