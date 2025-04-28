@@ -1,6 +1,33 @@
 import { SelectProps, CodeEditorProps } from "@cloudscape-design/components";
 
-// Log entry interface
+export interface Entity {
+  value: string;
+  description: string;
+}
+
+export interface EntityMapping {
+  id: string;
+  entity: Entity;
+  ocsf_path: string;
+  path_rationale?: string;
+}
+
+export interface ValidationReport {
+  input: string;
+  output: any;
+  report_entries: string[];
+  passed: boolean;
+}
+
+export interface ExtractionPattern {
+  id: string;
+  mapping?: EntityMapping;
+  dependency_setup?: string;
+  extract_logic: string;
+  transform_logic: string;
+  validation_report?: ValidationReport;
+}
+
 export interface LogEntry {
   id: string;
   content: string;

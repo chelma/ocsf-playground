@@ -1,22 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Container, Header } from '@cloudscape-design/components';
 import { logBlockStyle } from '../../utils/styles';
+import { ExtractionPattern } from '../../utils/types';
 
 interface ExtractedHighlight {
   start: number;
   end: number;
-}
-
-interface ExtractionPattern {
-  id: string;
-  validation_report?: {
-    input: string;
-    output: any;
-  };
-  mapping: {
-    id: string;
-    ocsf_path: string;
-  };
 }
 
 interface ExtractionVisualizationProps {
@@ -42,6 +31,7 @@ const ExtractionVisualization: React.FC<ExtractionVisualizationProps> = ({
     
     // For each extraction pattern with output, try to find its value in the log
     extractionPatterns.forEach(pattern => {
+      // Skip patterns without validation reports or outputs
       if (!pattern.validation_report?.output?.extract_output) return;
       
       const extractedValue = String(pattern.validation_report.output.extract_output);

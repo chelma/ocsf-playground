@@ -284,7 +284,7 @@ class ValidationReportField(serializers.Field):
             "required": ["input", "output", "report_entries", "passed"]
         }
     },
-    "required": ["id", "mapping", "extract_logic", "transform_logic"],
+    "required": ["id", "extract_logic", "transform_logic"],
 })
 class ExtractionPatternField(serializers.Field):
     """Custom serializer field for an extraction patterns on entity mappings"""
@@ -299,7 +299,7 @@ class ExtractionPatternField(serializers.Field):
             raise serializers.ValidationError("Must be a JSON object.")
 
         # Ensure required keys exist
-        required_keys = ['id', 'mapping', 'extract_logic', 'transform_logic']
+        required_keys = ['id', 'extract_logic', 'transform_logic']
         missing_keys = [key for key in required_keys if key not in data]
         if missing_keys:
             raise serializers.ValidationError(
@@ -310,11 +310,12 @@ class ExtractionPatternField(serializers.Field):
         if not isinstance(data['id'], str):
             raise serializers.ValidationError("'id' must be a string.")
 
-        # Validate entity using the existing EntityMappingField
-        try:
-            mapping = self.mapping_field.to_internal_value(data['mapping'])
-        except serializers.ValidationError as e:
-            raise serializers.ValidationError({"mapping": e.detail})
+        # Validate mapping using the existing EntityMappingField
+        if 'mapping' in data:
+            try:
+                mapping = self.mapping_field.to_internal_value(data['mapping'])
+            except serializers.ValidationError as e:
+                raise serializers.ValidationError({"mapping": e.detail})
         
         # Validate dependency_setup
         if 'dependency_setup' in data and not isinstance(data['dependency_setup'], str):
@@ -337,8 +338,8 @@ class ExtractionPatternField(serializers.Field):
             
         return {
             'id': data['id'],
-            'mapping': mapping,
-            'dependency_setup': data.get('dependency_setup', None),
+            'mapping': mapping if 'mapping' in data else None,
+            'dependency_setup': data['dependency_setup'] if 'dependency_setup' in data else None,
             'extract_logic': data['extract_logic'],
             'transform_logic': data['transform_logic'],
             'validation_report': validation_report if 'validation_report' in data else None
@@ -359,12 +360,35 @@ class TransformerEntitiesV1_1_0ExtractResponseSerializer(serializers.Serializer)
     ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
     input_entry = serializers.CharField()
     patterns = serializers.ListField(child=ExtractionPatternField())
+    
+    def validate_patterns(self, patterns):
+        for i, pattern in enumerate(patterns):
+            if not pattern.get('mapping'):
+                raise serializers.ValidationError(
+                    f"Pattern at index {i} must have a 'mapping' field in EntitiesExtractResponse context"
+                )
+            
+            if not pattern.get('validation_report'):
+                raise serializers.ValidationError(
+                    f"Pattern at index {i} must have a 'validation_report' field in EntitiesExtractResponse context"
+                )
+        
+        return patterns
 
 class TransformerEntitiesV1_1_0TestRequestSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)
     ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
     input_entry = serializers.CharField()
     patterns = serializers.ListField(child=ExtractionPatternField())
+    
+    def validate_patterns(self, patterns):
+        for i, pattern in enumerate(patterns):
+            if not pattern.get('mapping'):
+                raise serializers.ValidationError(
+                    f"Pattern at index {i} must have a 'mapping' field in EntitiesTestRequest context"
+                )
+        
+        return patterns
 
 class TransformerEntitiesV1_1_0TestResponseSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)
@@ -372,6 +396,15 @@ class TransformerEntitiesV1_1_0TestResponseSerializer(serializers.Serializer):
     ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
     input_entry = serializers.CharField()
     patterns = serializers.ListField(child=ExtractionPatternField())
+    
+    def validate_patterns(self, patterns):
+        for i, pattern in enumerate(patterns):
+            if not pattern.get('validation_report'):
+                raise serializers.ValidationError(
+                    f"Pattern at index {i} must have a 'validation_report' field in EntitiesTestResponse context"
+                )
+        
+        return patterns
 
 class TransformerLogicV1_1_0CreateRequestSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)

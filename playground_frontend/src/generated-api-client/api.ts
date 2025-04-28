@@ -350,7 +350,7 @@ export interface TransformerEntitiesV110ExtractResponsePatternsInner {
      * @type {TransformerEntitiesV110AnalyzeResponseMappingsInner}
      * @memberof TransformerEntitiesV110ExtractResponsePatternsInner
      */
-    'mapping': TransformerEntitiesV110AnalyzeResponseMappingsInner;
+    'mapping'?: TransformerEntitiesV110AnalyzeResponseMappingsInner;
     /**
      * The logic to set up any dependencies for the extraction/transformation logic, such as package import statements
      * @type {string}

@@ -675,7 +675,6 @@ components:
                 - passed
             required:
             - id
-            - mapping
             - extract_logic
             - transform_logic
       required:
@@ -767,7 +766,6 @@ components:
                 - passed
             required:
             - id
-            - mapping
             - extract_logic
             - transform_logic
       required:
@@ -860,7 +858,6 @@ components:
                 - passed
             required:
             - id
-            - mapping
             - extract_logic
             - transform_logic
       required:

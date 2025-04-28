@@ -17,6 +17,7 @@ import SplitLayout from '../common/SplitLayout';
 import ValidationReport from '../common/ValidationReport';
 import FullPageDialog from '../common/FullPageDialog';
 import { splitStyles, logBlockStyle } from '../../utils/styles';
+import { EntityMapping, ExtractionPattern } from '../../utils/types';
 import ace from 'ace-builds';
 import 'ace-builds/src-noconflict/mode-python';
 import 'ace-builds/src-noconflict/mode-json';
@@ -28,30 +29,6 @@ const enhancedSplitStyles = {
   height: '100%',
   overflow: 'hidden'
 };
-
-interface EntityMapping {
-  id: string;
-  entity: {
-    value: string;
-    description: string;
-  };
-  ocsf_path: string;
-  path_rationale?: string;
-}
-
-interface ExtractionPattern {
-  id: string;
-  mapping: EntityMapping;
-  dependency_setup?: string;
-  extract_logic: string;
-  transform_logic: string;
-  validation_report?: {
-    input: string;
-    output: any;
-    report_entries: string[];
-    passed: boolean;
-  };
-}
 
 export interface MappingDetailsModalProps {
   visible: boolean;
@@ -107,7 +84,9 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
     const editedPattern = hasMadeEdits ? {
       id: pattern.id,
       extract_logic: extractLogic,
-      transform_logic: transformLogic
+      transform_logic: transformLogic,
+      // Preserve the mapping if it exists
+      ...(pattern.mapping && { mapping: pattern.mapping })
     } : undefined;
     
     onTestPattern(pattern.id, editedPattern);

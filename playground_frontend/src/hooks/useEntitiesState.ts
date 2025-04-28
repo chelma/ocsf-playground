@@ -3,30 +3,10 @@ import { OcsfCategoryEnum, TransformLanguageEnum } from '../generated-api-client
 import { analyzeEntities, extractEntityPatterns, testExtractionPattern } from '../utils/transformerClient';
 import { SelectProps } from '@cloudscape-design/components';
 import { transformLanguageOptions, defaultTransformLanguage } from '../utils/constants';
+import { EntityMapping, ExtractionPattern } from '../utils/types';
 
-interface EntityMappingField {
-  id: string;
-  entity: {
-    value: string;
-    description: string;
-  };
-  ocsf_path: string;
-  path_rationale?: string;
-}
-
-interface ExtractionPattern {
-  id: string;
-  mapping: EntityMappingField;
-  dependency_setup?: string;
-  extract_logic: string;
-  transform_logic: string;
-  validation_report?: {
-    input: string;
-    output: any;
-    report_entries: string[];
-    passed: boolean;
-  };
-}
+// Use the imported EntityMapping type instead of redefining
+type EntityMappingField = EntityMapping;
 
 export interface EntitiesState {
   isLoading: boolean;
@@ -162,9 +142,14 @@ const useEntitiesState = ({
       // Get transform language value
       const transformLanguage = language.value as TransformLanguageEnum;
 
-      // Create a modified pattern if edits were provided
+      // Create a modified pattern if edits were provided, preserving mapping if it exists
       const testPattern = editedPattern 
-        ? { ...patternToTest, ...editedPattern }
+        ? { 
+            ...patternToTest, 
+            ...editedPattern, 
+            // Make sure we're not overriding the mapping if it wasn't explicitly provided
+            mapping: editedPattern.mapping || patternToTest.mapping 
+          }
         : patternToTest;
 
       // Call the transformer client function for testing the pattern

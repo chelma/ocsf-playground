@@ -20,16 +20,7 @@ import { EntitiesState } from "../../hooks/useEntitiesState";
 import EntitiesRationaleModal from "./EntitiesRationaleModal";
 import MappingDetailsModal from "./MappingDetailsModal";
 import ExtractionVisualization from "./ExtractionVisualization";
-
-interface EntityMapping {
-  id: string;
-  entity: {
-    value: string;
-    description: string;
-  };
-  ocsf_path: string;
-  path_rationale?: string;
-}
+import { EntityMapping } from "../../utils/types";
 
 interface EntitiesPanelProps extends EntitiesState {
   logs: string[];
