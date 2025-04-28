@@ -9,12 +9,10 @@ import {
   FormField,
   Header,
   Select,
-  SelectProps,
   SpaceBetween,
   Table,
   TableProps,
-  NonCancelableCustomEvent,
-  StatusIndicator
+  NonCancelableCustomEvent
 } from "@cloudscape-design/components";
 import { EntitiesState } from "../../hooks/useEntitiesState";
 import EntitiesRationaleModal from "./EntitiesRationaleModal";
@@ -57,6 +55,16 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
     { id: "validationStatus", width: 120 }
   ]);
 
+  // Local state to manage mappings and patterns when deleted
+  const [localMappings, setLocalMappings] = useState<EntityMapping[]>([]);
+  const [localPatterns, setLocalPatterns] = useState<any[]>([]);
+
+  // Update local state when props change
+  React.useEffect(() => {
+    setLocalMappings(mappings);
+    setLocalPatterns(extractionPatterns);
+  }, [mappings, extractionPatterns]);
+
   // Rationale modal state
   const [isRationaleModalVisible, setIsRationaleModalVisible] = useState(false);
   
@@ -68,6 +76,19 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
   const handleOpenDetails = (mapping: EntityMapping) => {
     setSelectedMapping(mapping);
     setIsDetailsModalVisible(true);
+  };
+
+  // Handle deleting a mapping
+  const handleDeleteMapping = (mappingId: string) => {
+    // Remove the mapping from localMappings
+    const updatedMappings = localMappings.filter(mapping => mapping.id !== mappingId);
+    
+    // Remove any associated extraction pattern
+    const updatedPatterns = localPatterns.filter(pattern => pattern.id !== mappingId);
+    
+    // Update local state
+    setLocalMappings(updatedMappings);
+    setLocalPatterns(updatedPatterns);
   };
 
   // Column IDs in order
@@ -86,7 +107,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
 
   // Get the corresponding extraction pattern for a mapping
   const getExtractionPatternForMapping = (mappingId: string) => {
-    return extractionPatterns.find(pattern => pattern.id === mappingId) || null;
+    return localPatterns.find(pattern => pattern.id === mappingId) || null;
   };
 
   // Get the selected log entry
@@ -250,13 +271,13 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
           {/* Extraction Visualization - always shown, the component handles the "no log selected" case */}
           <ExtractionVisualization 
             log={selectedLog}
-            extractionPatterns={extractionPatterns}
+            extractionPatterns={localPatterns}
           />
 
           {/* Entities Table */}
           <Table
             columnDefinitions={columnDefinitions}
-            items={mappings}
+            items={localMappings}
             loading={isLoading || isExtracting}
             loadingText={isExtracting ? "Extracting entities" : "Analyzing entities"}
             sortingDisabled
@@ -272,7 +293,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
             }
             header={
               <Header 
-                counter={mappings.length > 0 ? `(${mappings.length})` : undefined}
+                counter={localMappings.length > 0 ? `(${localMappings.length})` : undefined}
               >
                 Entities Table
               </Header>
@@ -296,6 +317,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
         extractionPattern={selectedMapping ? getExtractionPatternForMapping(selectedMapping.id) : null}
         selectedLog={selectedLog}
         onTestPattern={testPattern}
+        onDeleteMapping={handleDeleteMapping}
         isTestingPattern={isTestingPattern}
         onClose={() => {
           setIsDetailsModalVisible(false);
