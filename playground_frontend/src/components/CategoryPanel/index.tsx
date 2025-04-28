@@ -69,7 +69,7 @@ const CategoryPanel: React.FC<CategoryPanelProps> = ({
           
           {/* Modal for setting category guidance */}
           <ModalDialog
-            title="GenAI User Guidance (OCSF Category)"
+            title="GenAI User Guidance (OCSF Categorization)"
             visible={guidanceModalVisible}
             onClose={onCloseGuidanceModal}
             onConfirm={onSetGuidance}

@@ -48,12 +48,12 @@ const CategoryControls: React.FC<CategoryControlsProps> = ({
               placeholder="Select an OCSF version"
             />
           </FormField>
-          <FormField label="OCSF Category">
+          <FormField label="OCSF Event Class">
             <Select
               selectedOption={category}
               onChange={({ detail }) => onCategoryChange(detail.selectedOption)}
               options={categoryOptions}
-              placeholder="Select an OCSF category"
+              placeholder="Select an OCSF event class"
             />
           </FormField>
         </SpaceBetween>

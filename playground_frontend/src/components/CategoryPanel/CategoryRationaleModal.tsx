@@ -15,7 +15,7 @@ const CategoryRationaleModal: React.FC<CategoryRationaleModalProps> = ({
 }) => {
   return (
     <ModalDialog
-      title="OCSF Category Recommendation Rationale"
+      title="OCSF Event Class Recommendation Rationale"
       visible={visible}
       onClose={onClose}
       hideCancel={true}

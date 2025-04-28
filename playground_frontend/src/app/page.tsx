@@ -34,6 +34,11 @@ const EntitiesPanel = dynamic(() => import('../components/EntitiesPanel'), {
   ssr: false,
   loading: () => <Spinner size="normal" />
 });
+// Import CoveragePanel with the same dynamic pattern
+const CoveragePanel = dynamic(() => import('../components/CoveragePanel'), {
+  ssr: false,
+  loading: () => <Spinner size="normal" />
+});
 import TransformPanel from '../components/TransformPanel';
 import { OcsfCategoryEnum } from '../generated-api-client';
 
@@ -77,26 +82,33 @@ const OcsfPlaygroundPage = () => {
       snapOffset={30}
       direction="horizontal"
     >
-      {/* Logs Panel - extracted to its own component */}
+      {/* Logs Panel - Enables import of logs and other data entries into the playground */}
       <LogsPanel {...logsState} />
 
-      {/* Right panel - OCSF Tools (now including transformation results) */}
+      {/* Right panel - OCSF Tools */}
       <div style={paneStyles}>
         <Container>
           <SpaceBetween size="m">
             <Header variant="h1">OCSF Tools</Header>
             
-            {/* Regex Panel - extracted to its own component */}
+            {/* Regex Panel - enables creation/testing of a targeting heuristic/regex */}
             <RegexPanel {...regexState} />
 
-            {/* Category Panel - extracted to its own component */}
+            {/* Category Panel - enables selection of the OCSF event class for the new transformer */}
             <CategoryPanel {...categoryState} />
             
-            {/* Entities Panel - new component with client-only rendering */}
+            {/* Entities Panel - enables creation/testing of extraction patterns for entities */}
             <EntitiesPanel 
               {...entitiesState} 
               logs={logsState.logs}
               selectedLogIds={logsState.selectedLogIds}
+            />
+            
+            {/* Coverage Panel - enables visualiztion of extraction pattern coverage */}
+            <CoveragePanel
+              logs={logsState.logs}
+              selectedLogIds={logsState.selectedLogIds}
+              extractionPatterns={entitiesState.extractionPatterns}
             />
 
             {/* Transform Panel - extracted to its own component */}
