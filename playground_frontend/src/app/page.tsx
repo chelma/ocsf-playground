@@ -34,11 +34,6 @@ const EntitiesPanel = dynamic(() => import('../components/EntitiesPanel'), {
   ssr: false,
   loading: () => <Spinner size="normal" />
 });
-// Import CoveragePanel with the same dynamic pattern
-const CoveragePanel = dynamic(() => import('../components/CoveragePanel'), {
-  ssr: false,
-  loading: () => <Spinner size="normal" />
-});
 import TransformPanel from '../components/TransformPanel';
 import { OcsfCategoryEnum } from '../generated-api-client';
 
@@ -102,13 +97,6 @@ const OcsfPlaygroundPage = () => {
               {...entitiesState} 
               logs={logsState.logs}
               selectedLogIds={logsState.selectedLogIds}
-            />
-            
-            {/* Coverage Panel - enables visualiztion of extraction pattern coverage */}
-            <CoveragePanel
-              logs={logsState.logs}
-              selectedLogIds={logsState.selectedLogIds}
-              extractionPatterns={entitiesState.extractionPatterns}
             />
 
             {/* Transform Panel - extracted to its own component */}

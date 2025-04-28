@@ -19,6 +19,7 @@ import {
 import { EntitiesState } from "../../hooks/useEntitiesState";
 import EntitiesRationaleModal from "./EntitiesRationaleModal";
 import MappingDetailsModal from "./MappingDetailsModal";
+import ExtractionVisualization from "./ExtractionVisualization";
 
 interface EntityMapping {
   id: string;
@@ -254,6 +255,12 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
               {error}
             </Alert>
           )}
+          
+          {/* Extraction Visualization - always shown, the component handles the "no log selected" case */}
+          <ExtractionVisualization 
+            log={selectedLog}
+            extractionPatterns={extractionPatterns}
+          />
 
           {/* Entities Table */}
           <Table
