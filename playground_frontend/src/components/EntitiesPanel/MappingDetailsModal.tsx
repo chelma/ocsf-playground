@@ -10,7 +10,9 @@ import {
   Header,
   Textarea,
   CodeEditorProps,
-  Button
+  Button,
+  Input,
+  FormField
 } from '@cloudscape-design/components';
 import CodeEditorWrapper from '../common/CodeEditorWrapper';
 import SplitLayout from '../common/SplitLayout';
@@ -37,7 +39,8 @@ export interface MappingDetailsModalProps {
   selectedLog?: string;
   onClose: () => void;
   onTestPattern?: (patternId: string, editedPattern?: Partial<ExtractionPattern>) => void;
-  onDeleteMapping?: (mappingId: string) => void; // New prop for handling mapping deletion
+  onDeleteMapping?: (mappingId: string) => void;
+  onUpdateMapping?: (mappingId: string, updatedMapping: Partial<EntityMapping>) => void;
   isTestingPattern?: boolean;
 }
 
@@ -49,6 +52,7 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
   onClose,
   onTestPattern,
   onDeleteMapping,
+  onUpdateMapping,
   isTestingPattern = false
 }) => {
   const [editorPreferences, setEditorPreferences] = useState<CodeEditorProps.Preferences>({
@@ -61,14 +65,29 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
   const [transformLogic, setTransformLogic] = useState<string>("");
   const [hasMadeEdits, setHasMadeEdits] = useState<boolean>(false);
   
-  // Update local state when extraction pattern changes
+  // State to track edited entity fields
+  const [entityValue, setEntityValue] = useState<string>("");
+  const [entityDescription, setEntityDescription] = useState<string>("");
+  const [ocsfPath, setOcsfPath] = useState<string>("");
+  const [pathRationale, setPathRationale] = useState<string>("");
+  const [hasMadeMappingEdits, setHasMadeMappingEdits] = useState<boolean>(false);
+  
+  // Update local state when mapping or extraction pattern changes
   useEffect(() => {
+    if (mapping) {
+      setEntityValue(mapping.entity.value);
+      setEntityDescription(mapping.entity.description);
+      setOcsfPath(mapping.ocsf_path);
+      setPathRationale(mapping.path_rationale || "");
+      setHasMadeMappingEdits(false);
+    }
+    
     if (extractionPattern) {
       setExtractLogic(extractionPattern.extract_logic);
       setTransformLogic(extractionPattern.transform_logic);
       setHasMadeEdits(false);
     }
-  }, [extractionPattern]);
+  }, [mapping, extractionPattern]);
   
   if (!mapping) return null;
 
@@ -101,6 +120,29 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
       onClose(); // Close the modal after deletion
     }
   };
+  
+  // Handle saving mapping changes
+  const handleSaveMapping = () => {
+    if (onUpdateMapping && mapping) {
+      const updatedMapping: Partial<EntityMapping> = {
+        id: mapping.id,
+        entity: {
+          value: entityValue,
+          description: entityDescription
+        },
+        ocsf_path: ocsfPath,
+        path_rationale: pathRationale || undefined
+      };
+      
+      onUpdateMapping(mapping.id, updatedMapping);
+      setHasMadeMappingEdits(false);
+    }
+  };
+  
+  // Track changes to mapping fields
+  const handleMappingFieldChange = () => {
+    setHasMadeMappingEdits(true);
+  };
 
   return (
     <FullPageDialog
@@ -112,7 +154,7 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
     >
       {/* Add the Delete Mapping button above the split layout */}
       <SpaceBetween size="m">
-        <div style={{ textAlign: 'left' }}>
+        <div style={{ display: 'flex' }}>
           <Button 
             variant="normal" 
             iconName="remove" 
@@ -121,6 +163,16 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
           >
             Delete Mapping
           </Button>
+          
+          {hasMadeMappingEdits && (
+            <Button 
+              variant="primary"
+              onClick={handleSaveMapping}
+              disabled={!onUpdateMapping}
+            >
+              Save Mapping Changes
+            </Button>
+          )}
         </div>
         
         <SplitLayout
@@ -152,38 +204,58 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
                   <Box variant="code">{mapping.id}</Box>
                 </Container>
                 
-                {/* Entity Section */}
+                {/* Entity Section - Now Editable */}
                 <Container
-                header={<Header variant="h3">Entity</Header>}
+                  header={<Header variant="h3">Entity</Header>}
                 >
-                <ColumnLayout columns={1} variant="text-grid">
-                    <div>
-                    <Box variant="awsui-key-label">Value</Box>
-                    <Box variant="p">{mapping.entity.value}</Box>
-                    </div>
-                    <div>
-                    <Box variant="awsui-key-label">Description</Box>
-                    <Box variant="p">{mapping.entity.description}</Box>
-                    </div>
-                </ColumnLayout>
+                  <SpaceBetween size="m">
+                    <FormField label="Value">
+                      <Input
+                        value={entityValue}
+                        onChange={e => {
+                          setEntityValue(e.detail.value);
+                          handleMappingFieldChange();
+                        }}
+                      />
+                    </FormField>
+                    <FormField label="Description">
+                      <Textarea
+                        value={entityDescription}
+                        onChange={e => {
+                          setEntityDescription(e.detail.value);
+                          handleMappingFieldChange();
+                        }}
+                        rows={3}
+                      />
+                    </FormField>
+                  </SpaceBetween>
                 </Container>
 
-                {/* OCSF Mapping Section */}
+                {/* OCSF Mapping Section - Now Editable */}
                 <Container
-                header={<Header variant="h3">OCSF Mapping</Header>}
+                  header={<Header variant="h3">OCSF Mapping</Header>}
                 >
-                <ColumnLayout columns={1} variant="text-grid">
-                    <div>
-                    <Box variant="awsui-key-label">OCSF Path</Box>
-                    <Box variant="code">{mapping.ocsf_path}</Box>
-                    </div>
-                    {mapping.path_rationale && (
-                    <div>
-                        <Box variant="awsui-key-label">Path Rationale</Box>
-                        <Box variant="p">{mapping.path_rationale}</Box>
-                    </div>
-                    )}
-                </ColumnLayout>
+                  <SpaceBetween size="m">
+                    <FormField label="OCSF Path">
+                      <Input
+                        value={ocsfPath}
+                        onChange={e => {
+                          setOcsfPath(e.detail.value);
+                          handleMappingFieldChange();
+                        }}
+                      />
+                    </FormField>
+                    <FormField label="Path Rationale">
+                      <Textarea
+                        value={pathRationale}
+                        onChange={e => {
+                          setPathRationale(e.detail.value);
+                          handleMappingFieldChange();
+                        }}
+                        rows={4}
+                      />
+                    </FormField>
+                  </SpaceBetween>
                 </Container>
 
             </SpaceBetween>

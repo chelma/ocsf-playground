@@ -91,6 +91,29 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
     setLocalPatterns(updatedPatterns);
   };
 
+  // Handle updating a mapping
+  const handleUpdateMapping = (mappingId: string, updatedMapping: Partial<EntityMapping>) => {
+    // Find the mapping in localMappings
+    const updatedMappings = localMappings.map(mapping => 
+      mapping.id === mappingId ? {...mapping, ...updatedMapping} : mapping
+    );
+    
+    // Also update any associated extraction pattern's mapping
+    const updatedPatterns = localPatterns.map(pattern => {
+      if (pattern.id === mappingId && pattern.mapping) {
+        return {
+          ...pattern,
+          mapping: {...pattern.mapping, ...updatedMapping}
+        };
+      }
+      return pattern;
+    });
+    
+    // Update local state
+    setLocalMappings(updatedMappings);
+    setLocalPatterns(updatedPatterns);
+  };
+
   // Column IDs in order
   const columnIds = ["details", "ocsfPath", "entityValue", "extractedValue", "transformedValue", "validationStatus"];
 
@@ -318,6 +341,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
         selectedLog={selectedLog}
         onTestPattern={testPattern}
         onDeleteMapping={handleDeleteMapping}
+        onUpdateMapping={handleUpdateMapping}  
         isTestingPattern={isTestingPattern}
         onClose={() => {
           setIsDetailsModalVisible(false);
