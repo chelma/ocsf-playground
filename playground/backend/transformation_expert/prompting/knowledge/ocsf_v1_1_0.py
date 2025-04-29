@@ -1,3 +1,0 @@
-OCSF_GUIDANCE = """
-
-"""

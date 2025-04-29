@@ -28,6 +28,13 @@ export interface ExtractionPattern {
   validation_report?: ValidationReport;
 }
 
+export interface Transformer {
+  id: string;
+  dependency_setup?: string;
+  transformer_logic: string;
+  validation_report?: ValidationReport;
+}
+
 export interface LogEntry {
   id: string;
   content: string;

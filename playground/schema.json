@@ -840,42 +840,143 @@ components:
           $ref: '#/components/schemas/OcsfCategoryEnum'
         input_entry:
           type: string
-        user_guidance:
-          type: string
+        patterns:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique identifier for the extraction pattern
+              mapping:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Unique identifier for the entity mapping
+                  entity:
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                      description:
+                        type: string
+                    required:
+                    - value
+                    - description
+                  ocsf_path:
+                    type: string
+                    description: Period-delimited path in OCSF schema (e.g., 'http_request.url.port')
+                  path_rationale:
+                    type: string
+                    description: A precise explanation of why the entity was mapped
+                      to the OCSF path
+                required:
+                - id
+                - entity
+                - ocsf_path
+              dependency_setup:
+                type: string
+                description: The logic to set up any dependencies for the extraction/transformation
+                  logic, such as package import statements
+              extract_logic:
+                type: string
+                description: The extraction logic for the entity mapping, such a some
+                  Python or Javascript code
+              transform_logic:
+                type: string
+                description: The transformation logic for the entity mapping, such
+                  a some Python or Javascript code
+              validation_report:
+                type: object
+                description: Validation information for the extraction pattern
+                properties:
+                  input:
+                    type: string
+                    description: Input data that was validated
+                  output:
+                    type: object
+                    additionalProperties:
+                      type: string
+                    description: Output data that was generated
+                  report_entries:
+                    type: array
+                    items:
+                      type: string
+                    description: List of validation messages or details
+                  passed:
+                    type: boolean
+                    description: Whether validation passed (true) or failed (false)
+                required:
+                - input
+                - output
+                - report_entries
+                - passed
+            required:
+            - id
+            - extract_logic
+            - transform_logic
       required:
       - input_entry
       - ocsf_category
+      - patterns
       - transform_language
     TransformerLogicV1_1_0CreateResponse:
       type: object
       properties:
         transform_language:
           $ref: '#/components/schemas/TransformLanguageEnum'
-        transform_logic:
-          type: string
-        transform_output:
-          type: string
         ocsf_version:
           $ref: '#/components/schemas/OcsfVersionEnum'
         ocsf_category:
           $ref: '#/components/schemas/OcsfCategoryEnum'
-        input_entry:
-          type: string
-        validation_report:
-          type: array
-          items:
-            type: string
-        validation_outcome:
-          type: string
+        transformer:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier for the transformer
+            dependency_setup:
+              type: string
+              description: The logic to set up any dependencies for the extraction/transformation
+                logic, such as package import statements
+            transformer_logic:
+              type: string
+              description: The transformation logic, such a some Python or Javascript
+                code
+            validation_report:
+              type: object
+              description: Validation information for the extraction pattern
+              properties:
+                input:
+                  type: string
+                  description: Input data that was validated
+                output:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Output data that was generated
+                report_entries:
+                  type: array
+                  items:
+                    type: string
+                  description: List of validation messages or details
+                passed:
+                  type: boolean
+                  description: Whether validation passed (true) or failed (false)
+              required:
+              - input
+              - output
+              - report_entries
+              - passed
+          required:
+          - id
+          - transformer_logic
       required:
-      - input_entry
       - ocsf_category
       - ocsf_version
       - transform_language
-      - transform_logic
-      - transform_output
-      - validation_outcome
-      - validation_report
+      - transformer
   securitySchemes:
     basicAuth:
       type: http

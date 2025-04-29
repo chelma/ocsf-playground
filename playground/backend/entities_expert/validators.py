@@ -5,7 +5,7 @@ from types import ModuleType
 from typing import Callable
 
 from backend.entities_expert.extraction_pattern import ExtractionPattern
-from backend.entities_expert.validation_report import ValidationReport
+from backend.core.validation_report import ValidationReport
 
 
 logger = logging.getLogger("backend")

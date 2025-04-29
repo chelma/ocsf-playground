@@ -25,9 +25,12 @@ import useLogsState from '../hooks/useLogsState';
 import useRegexState from '../hooks/useRegexState';
 import useCategoryState from '../hooks/useCategoryState';
 import useEntitiesState from '../hooks/useEntitiesState';
+import useTransformerState from '../hooks/useTransformerState';
 import LogsPanel from '../components/LogsPanel';
 import RegexPanel from '../components/RegexPanel';
 import CategoryPanel from '../components/CategoryPanel';
+import TransformerPanel from '../components/TransformerPanel';
+
 // Import EntitiesPanel dynamically to avoid hydration issues
 const EntitiesPanel = dynamic(() => import('../components/EntitiesPanel'), {
   ssr: false,
@@ -58,6 +61,21 @@ const OcsfPlaygroundPage = () => {
     selectedLogIds: logsState.selectedLogIds,
     categoryValue: categoryState.category.value as OcsfCategoryEnum
   });
+  
+  // Use the transformer state hook with access to logs, category, and entities
+  const transformerState = useTransformerState({
+    logs: logsState.logs,
+    selectedLogIds: logsState.selectedLogIds,
+    categoryValue: categoryState.category.value as OcsfCategoryEnum,
+    extractionPatterns: entitiesState.extractionPatterns,
+    language: entitiesState.language
+  });
+
+  // Check if we have all required inputs for transformer creation
+  const hasRequiredInputsForTransformer = 
+    logsState.selectedLogIds.length > 0 &&
+    categoryState.category.value !== "" &&
+    entitiesState.extractionPatterns.length > 0;
 
   return (
     <SplitLayout
@@ -88,6 +106,12 @@ const OcsfPlaygroundPage = () => {
               {...entitiesState} 
               logs={logsState.logs}
               selectedLogIds={logsState.selectedLogIds}
+            />
+            
+            {/* Transformer Panel - enables creation of a transformer from extraction patterns */}
+            <TransformerPanel 
+              {...transformerState}
+              hasRequiredInputs={hasRequiredInputsForTransformer}
             />
           </SpaceBetween>
         </Container>

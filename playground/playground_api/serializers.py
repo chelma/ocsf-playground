@@ -5,7 +5,7 @@ from drf_spectacular.utils import extend_schema_field
 
 from backend.core.ocsf.ocsf_versions import OcsfVersion
 from backend.core.ocsf.ocsf_categories import OcsfCategoriesV1_1_0
-from backend.transformation_expert.parameters import TransformLanguage
+from backend.transformers.parameters import TransformLanguage
 
 class EnumChoiceField(serializers.ChoiceField):
     """
@@ -410,14 +410,96 @@ class TransformerLogicV1_1_0CreateRequestSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)
     ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
     input_entry = serializers.CharField()
-    user_guidance = serializers.CharField(required=False, default=None, allow_blank=True)
+    patterns = serializers.ListField(child=ExtractionPatternField())
+    
+    def validate_patterns(self, patterns):
+        for i, pattern in enumerate(patterns):
+            if not pattern.get('mapping'):
+                raise serializers.ValidationError(
+                    f"Pattern at index {i} must have a 'mapping' field in LogicCreateRequest context"
+                )
+        
+        return patterns
+    
+
+@extend_schema_field({
+    "type": "object",
+    "properties": {
+        "id": {"type": "string", "description": "Unique identifier for the transformer"},
+        "dependency_setup": {"type": "string", "description": "The logic to set up any dependencies for the extraction/transformation logic, such as package import statements"},
+        "transformer_logic": {"type": "string", "description": "The transformation logic, such a some Python or Javascript code"},
+        "validation_report": {
+            "type": "object",
+            "description": "Validation information for the extraction pattern",
+            "properties": {
+                "input": {"type": "string", "description": "Input data that was validated"},
+                "output": {
+                    "type": "object",
+                    "additionalProperties": {"type": "string"},
+                    "description": "Output data that was generated"
+                },
+                "report_entries": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of validation messages or details"
+                },
+                "passed": {"type": "boolean", "description": "Whether validation passed (true) or failed (false)"}
+            },
+            "required": ["input", "output", "report_entries", "passed"]
+        }
+    },
+    "required": ["id", "transformer_logic"],
+})
+class TransformerField(serializers.Field):
+    """Custom serializer field for a transformer"""
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.validation_report_field = ValidationReportField()
+
+    def to_internal_value(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        if not isinstance(data, dict):
+            raise serializers.ValidationError("Must be a JSON object.")
+
+        # Ensure required keys exist
+        required_keys = ["id", "transformer_logic"]
+        missing_keys = [key for key in required_keys if key not in data]
+        if missing_keys:
+            raise serializers.ValidationError(
+                f"Must contain {', '.join(required_keys)} keys."
+            )
+
+        # Validate id
+        if not isinstance(data['id'], str):
+            raise serializers.ValidationError("'id' must be a string.")
+        
+        # Validate dependency_setup
+        if 'dependency_setup' in data and not isinstance(data['dependency_setup'], str):
+            raise serializers.ValidationError("'dependency_setup' must be a string.")
+            
+        # Validate transformer_logic
+        if not isinstance(data['transformer_logic'], str):
+            raise serializers.ValidationError("'transformer_logic' must be a string.")
+        
+        # Validate validation_report if present
+        if 'validation_report' in data:
+            try:
+                validation_report = self.validation_report_field.to_internal_value(data['validation_report'])
+            except serializers.ValidationError as e:
+                raise serializers.ValidationError({"validation_report": e.detail})
+            
+        return {
+            'id': data['id'],
+            'dependency_setup': data['dependency_setup'] if 'dependency_setup' in data else None,
+            'transformer_logic': data['transformer_logic'],
+            'validation_report': validation_report if 'validation_report' in data else None
+        }
+
+    def to_representation(self, value: Dict[str, Any]) -> Dict[str, Any]:
+        return value
 
 class TransformerLogicV1_1_0CreateResponseSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)
-    transform_logic = serializers.CharField()
-    transform_output = serializers.CharField()
     ocsf_version = EnumChoiceField(enum=OcsfVersion)
     ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
-    input_entry = serializers.CharField()
-    validation_report = serializers.ListField(child=serializers.CharField())
-    validation_outcome = serializers.CharField()
+    transformer = TransformerField()

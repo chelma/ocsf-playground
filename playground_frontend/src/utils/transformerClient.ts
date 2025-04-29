@@ -104,28 +104,6 @@ export const extractEntityPatterns = async (
   }
 };
 
-// Get transform logic recommendation
-export const getTransformRecommendation = async (
-  transformLanguage: TransformLanguageEnum,
-  ocsfCategory: OcsfCategoryEnum,
-  logEntry: string,
-  guidance: string
-) => {
-  try {
-    const payload: TransformerLogicV110CreateRequest = {
-      transform_language: transformLanguage,
-      ocsf_category: ocsfCategory,
-      input_entry: logEntry,
-      user_guidance: guidance
-    };
-    
-    const response = await apiClient.transformerLogicV110CreateCreate(payload);
-    return response.data;
-  } catch (error) {
-    return handleApiError(error);
-  }
-};
-
 // Test extraction pattern
 export const testExtractionPattern = async (
   transformLanguage: TransformLanguageEnum,
@@ -142,6 +120,28 @@ export const testExtractionPattern = async (
     };
     
     const response = await apiClient.transformerEntitiesV110TestCreate(payload);
+    return response.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+// Create transformer logic
+export const createTransformerLogic = async (
+  transformLanguage: TransformLanguageEnum,
+  ocsfCategory: OcsfCategoryEnum,
+  logEntry: string,
+  patterns: any[]
+) => {
+  try {
+    const payload = {
+      transform_language: transformLanguage,
+      ocsf_category: ocsfCategory,
+      input_entry: logEntry,
+      patterns: patterns
+    };
+    
+    const response = await apiClient.transformerLogicV110CreateCreate(payload);
     return response.data;
   } catch (error) {
     return handleApiError(error);

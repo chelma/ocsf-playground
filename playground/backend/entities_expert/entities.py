@@ -13,6 +13,13 @@ class Entity:
             "description": self.description
         }
     
+    @classmethod
+    def from_json(cls, json_data: dict) -> 'Entity':
+        return cls(
+            value=json_data['value'],
+            description=json_data['description']
+        )
+    
 @dataclass
 class EntityMapping:
     id: str
@@ -27,6 +34,16 @@ class EntityMapping:
             "ocsf_path": self.ocsf_path,
             "path_rationale": self.path_rationale
         }
+    
+    @classmethod
+    def from_json(cls, json_data: dict) -> 'EntityMapping':
+        entity = Entity.from_json(json_data['entity'])
+        return cls(
+            id=json_data['id'],
+            entity=entity,
+            ocsf_path=json_data['ocsf_path'],
+            path_rationale=json_data['path_rationale']
+        )
     
 @dataclass
 class EntityReport:

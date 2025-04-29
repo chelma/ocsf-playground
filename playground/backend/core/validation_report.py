@@ -16,6 +16,15 @@ class ValidationReport:
             "passed": self.passed
         }
     
+    @classmethod
+    def from_json(cls, json_data: Dict[str, Any]) -> 'ValidationReport':
+        return cls(
+            input=json_data['input'],
+            output=json_data.get('output'),
+            report_entries=json_data.get('report_entries', []),
+            passed=json_data.get('passed', False)
+        )
+    
     def append_entry(self, entry: str, logging_function: Callable[..., None]):
         logging_function(entry)
         self.report_entries.append(entry)

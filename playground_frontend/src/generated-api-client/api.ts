@@ -549,10 +549,10 @@ export interface TransformerLogicV110CreateRequest {
     'input_entry': string;
     /**
      * 
-     * @type {string}
+     * @type {Array<TransformerEntitiesV110ExtractResponsePatternsInner>}
      * @memberof TransformerLogicV110CreateRequest
      */
-    'user_guidance'?: string;
+    'patterns': Array<TransformerEntitiesV110ExtractResponsePatternsInner>;
 }
 
 
@@ -570,18 +570,6 @@ export interface TransformerLogicV110CreateResponse {
     'transform_language': TransformLanguageEnum;
     /**
      * 
-     * @type {string}
-     * @memberof TransformerLogicV110CreateResponse
-     */
-    'transform_logic': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof TransformerLogicV110CreateResponse
-     */
-    'transform_output': string;
-    /**
-     * 
      * @type {OcsfVersionEnum}
      * @memberof TransformerLogicV110CreateResponse
      */
@@ -594,25 +582,44 @@ export interface TransformerLogicV110CreateResponse {
     'ocsf_category': OcsfCategoryEnum;
     /**
      * 
-     * @type {string}
+     * @type {TransformerLogicV110CreateResponseTransformer}
      * @memberof TransformerLogicV110CreateResponse
      */
-    'input_entry': string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof TransformerLogicV110CreateResponse
-     */
-    'validation_report': Array<string>;
-    /**
-     * 
-     * @type {string}
-     * @memberof TransformerLogicV110CreateResponse
-     */
-    'validation_outcome': string;
+    'transformer': TransformerLogicV110CreateResponseTransformer;
 }
 
 
+/**
+ * 
+ * @export
+ * @interface TransformerLogicV110CreateResponseTransformer
+ */
+export interface TransformerLogicV110CreateResponseTransformer {
+    /**
+     * Unique identifier for the transformer
+     * @type {string}
+     * @memberof TransformerLogicV110CreateResponseTransformer
+     */
+    'id': string;
+    /**
+     * The logic to set up any dependencies for the extraction/transformation logic, such as package import statements
+     * @type {string}
+     * @memberof TransformerLogicV110CreateResponseTransformer
+     */
+    'dependency_setup'?: string;
+    /**
+     * The transformation logic, such a some Python or Javascript code
+     * @type {string}
+     * @memberof TransformerLogicV110CreateResponseTransformer
+     */
+    'transformer_logic': string;
+    /**
+     * 
+     * @type {TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport}
+     * @memberof TransformerLogicV110CreateResponseTransformer
+     */
+    'validation_report'?: TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport;
+}
 
 /**
  * ApiApi - axios parameter creator

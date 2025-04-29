@@ -14,6 +14,7 @@ from backend.categorization_expert.expert_def import get_categorization_expert, 
 from backend.categorization_expert.task_def import CategorizationTask
 
 from backend.core.ocsf.ocsf_versions import OcsfVersion
+from backend.core.validation_report import ValidationReport
 
 from backend.entities_expert.entities import EntityMapping, Entity
 from backend.entities_expert.extraction_pattern import ExtractionPattern
@@ -25,11 +26,9 @@ from backend.regex_expert.expert_def import get_regex_expert, invoke_regex_exper
 from backend.regex_expert.task_def import RegexTask
 from backend.regex_expert.parameters import RegexFlavor
 
-from backend.transformation_expert.expert_def import get_transformation_expert, invoke_transformation_expert
-from backend.transformation_expert.parameters import TransformLanguage
-from backend.transformation_expert.task_def import PythonTransformTask, TransformTask
-from backend.transformation_expert.transforms import TransformPython
-from backend.transformation_expert.validation import OcsfV1_1_0TransformValidator, ValidationReportTransform
+from backend.transformers.parameters import TransformLanguage
+from backend.transformers.transformers import Transformer, create_transformer_python
+# from backend.transformers.validators import OcsfV1_1_0TransformValidator, ValidationReportTransform
 
 from .serializers import (TransformerHeuristicCreateRequestSerializer, TransformerHeuristicCreateResponseSerializer,
                           TransformerCategorizeV1_1_0RequestSerializer, TransformerCategorizeV1_1_0ResponseSerializer,
@@ -193,12 +192,12 @@ class TransformerLogicV1_1_0CreateView(APIView):
         # Perform the task
         try:
             # Create the transform
-            result = self._create(task_id, request)
+            transformer = self._create(task_id, request)
             logger.info(f"Transform creation completed")
-            logger.debug(f"Transform value:\n{result.transform.to_json()}")
+            logger.debug(f"Transform value:\n{transformer.to_json()}")
 
             # Validate the transform
-            report = self._validate(result)
+            report = self._validate(transformer, request.validated_data["input_entry"])
             logger.info(f"Transform validation completed")
             logger.debug(f"Validation outcome:\n{report.passed}")
             logger.debug(f"Validation report entries:\n{report.report_entries}")
@@ -213,13 +212,9 @@ class TransformerLogicV1_1_0CreateView(APIView):
         # Serialize and return the response
         response = TransformerLogicV1_1_0CreateResponseSerializer(data={
             "transform_language":  request.validated_data["transform_language"].value,
-            "transform_logic":  result.transform.to_file_format(),
-            "transform_output":  json.dumps(report.output, indent=4),
             "ocsf_version": OcsfVersion.V1_1_0.value,
             "ocsf_category":  request.validated_data["ocsf_category"].value,
-            "input_entry":  request.validated_data["input_entry"],
-            "validation_report": report.report_entries,
-            "validation_outcome": "PASSED" if report.passed else "FAILED"
+            "transformer":  transformer.to_json()
         })
 
         if not response.is_valid():
@@ -228,44 +223,31 @@ class TransformerLogicV1_1_0CreateView(APIView):
         
         return Response(response.data, status=status.HTTP_200_OK)
 
-    def _create(self, task_id: str, request: TransformerLogicV1_1_0CreateRequestSerializer) -> TransformTask:
-            expert = get_transformation_expert(
-                ocsf_version=OcsfVersion.V1_1_0,
-                ocsf_category_name=request.validated_data["ocsf_category"].get_category_name(),
-                transform_language=request.validated_data["transform_language"],
-                is_followup=False
-            )
-
-            system_message = expert.system_prompt_factory(
-                input_entry=request.validated_data["input_entry"],
-                user_guidance=request.validated_data["user_guidance"]
-            )
-            turns = [
-                system_message,
-                HumanMessage(content="Please create the transform.")
-            ]
-
+    def _create(self, task_id: str, request: TransformerLogicV1_1_0CreateRequestSerializer) -> Transformer:
             if request.validated_data["transform_language"] == TransformLanguage.PYTHON:
-                task = PythonTransformTask(
-                    task_id=task_id,
-                    input=request.validated_data["input_entry"],
-                    context=turns,
-                    category_name=request.validated_data["ocsf_category"].get_category_name(),
-                    transform=None
+                patterns = []
+                for raw_pattern in request.validated_data["patterns"]:
+                    patterns.append(ExtractionPattern.from_json(raw_pattern))
+
+                transformer = create_transformer_python(
+                    transformer_id=task_id,
+                    patterns=patterns
                 )
             else:
                 raise UnsupportedTransformLanguageError(f"Unsupported transform language: {request.validated_data['transform_language']}")
 
-            result = invoke_transformation_expert(expert, task)
-
-            return result
+            return transformer
     
-    def _validate(self, transform_taks: TransformTask) -> ValidationReportTransform:
-        # Create the validator
-        validator = OcsfV1_1_0TransformValidator(transform_task=transform_taks)
-
+    def _validate(self, transformer: Transformer, input_entry: str) -> ValidationReport:
         # Validate the transform
-        report = validator.validate()
+        report = ValidationReport(
+            input=input_entry,
+            output={"dummy": "output"},
+            report_entries=["dummy report"],
+            passed=False
+        )
+
+        transformer.validation_report = report
 
         return report
     
