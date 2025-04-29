@@ -4,8 +4,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from playground_api.views import (TransformerHeuristicCreateView, TransformerCategorizeV1_1_0View,
                                   TransformerEntitiesV1_1_0AnalyzeView, TransformerEntitiesV1_1_0ExtractView,
                                   TransformerEntitiesV1_1_0TestView,
-                                  TransformerLogicV1_1_0CreateView, TransformerLogicV1_1_0TestView,
-                                  TransformerLogicV1_1_0IterateView)
+                                  TransformerLogicV1_1_0CreateView)
 
 
 urlpatterns = [
@@ -17,6 +16,4 @@ urlpatterns = [
     path('transformer/entities/v1_1_0/extract/', TransformerEntitiesV1_1_0ExtractView.as_view(), name='transformer_entities_v1_1_0_extract'),
     path('transformer/entities/v1_1_0/test/', TransformerEntitiesV1_1_0TestView.as_view(), name='transformer_entities_v1_1_0_test'),
     path('transformer/logic/v1_1_0/create/', TransformerLogicV1_1_0CreateView.as_view(), name='transformer_logic_v1_1_0_create'),
-    path('transformer/logic/v1_1_0/test/', TransformerLogicV1_1_0TestView.as_view(), name='transformer_logic_v1_1_0_test'),
-    path('transformer/logic/v1_1_0/iterate/', TransformerLogicV1_1_0IterateView.as_view(), name='transformer_logic_v1_1_0_iterate'),
 ]

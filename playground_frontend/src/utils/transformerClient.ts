@@ -4,8 +4,6 @@ import {
   TransformerHeuristicCreateRequest, 
   TransformerCategorizeV110Request, 
   TransformerLogicV110CreateRequest, 
-  TransformerLogicV110TestRequest,
-  TransformerLogicV110IterateRequest,
   OcsfCategoryEnum,
   TransformLanguageEnum
 } from '../generated-api-client';
@@ -122,58 +120,6 @@ export const getTransformRecommendation = async (
     };
     
     const response = await apiClient.transformerLogicV110CreateCreate(payload);
-    return response.data;
-  } catch (error) {
-    return handleApiError(error);
-  }
-};
-
-// Test transform logic
-export const testTransformLogic = async (
-  transformLanguage: TransformLanguageEnum,
-  transformLogic: string,
-  ocsfCategory: OcsfCategoryEnum,
-  logEntry: string
-) => {
-  try {
-    const payload: TransformerLogicV110TestRequest = {
-      transform_language: transformLanguage,
-      transform_logic: transformLogic,
-      ocsf_category: ocsfCategory,
-      input_entry: logEntry,
-    };
-    
-    const response = await apiClient.transformerLogicV110TestCreate(payload);
-    return response.data;
-  } catch (error) {
-    return handleApiError(error);
-  }
-};
-
-// Debug/iterate transform logic
-export const debugTransformLogic = async (
-  transformLanguage: TransformLanguageEnum,
-  transformLogic: string,
-  transformOutput: string | undefined,
-  ocsfCategory: OcsfCategoryEnum,
-  logEntry: string,
-  guidance: string,
-  validationReport: string[],
-  validationOutcome: string
-) => {
-  try {
-    const payload: TransformerLogicV110IterateRequest = {
-      transform_language: transformLanguage,
-      transform_logic: transformLogic,
-      transform_output: transformOutput?.trim() !== '' ? transformOutput : undefined,
-      ocsf_category: ocsfCategory,
-      input_entry: logEntry,
-      user_guidance: guidance,
-      validation_report: validationReport,
-      validation_outcome: validationOutcome || 'FAILED'
-    };
-    
-    const response = await apiClient.transformerLogicV110IterateCreate(payload);
     return response.data;
   } catch (error) {
     return handleApiError(error);
