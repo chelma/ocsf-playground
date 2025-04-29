@@ -25,6 +25,7 @@ export interface EntitiesState {
   onLanguageChange: (option: SelectProps.Option) => void;
   isTestingPattern: boolean;
   testPattern: (patternId: string, editedPattern?: Partial<ExtractionPattern>) => Promise<void>;
+  updateMappings: (updatedMappings: EntityMappingField[]) => void;
 }
 
 interface EntitiesStateProps {
@@ -189,6 +190,10 @@ const useEntitiesState = ({
     setLanguage(option);
   };
 
+  const updateMappings = (updatedMappings: EntityMappingField[]) => {
+    setMappings(updatedMappings);
+  };
+
   return {
     isLoading,
     isExtracting,
@@ -206,6 +211,7 @@ const useEntitiesState = ({
     onLanguageChange: handleLanguageChange,
     isTestingPattern,
     testPattern: handleTestPattern,
+    updateMappings
   };
 };
 

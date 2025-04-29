@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Alert,
   Box, 
@@ -72,15 +72,33 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
   const [pathRationale, setPathRationale] = useState<string>("");
   const [hasMadeMappingEdits, setHasMadeMappingEdits] = useState<boolean>(false);
   
+  // Ref to track if mapping data has been saved
+  const justSaved = useRef<boolean>(false);
+  // Ref to track last saved mapping data to compare with incoming props
+  const lastSavedData = useRef<any>(null);
+  
   // Update local state when mapping or extraction pattern changes
+  // But prevent overriding with prop values immediately after saving
   useEffect(() => {
     if (mapping) {
-      setEntityValue(mapping.entity.value);
-      setEntityDescription(mapping.entity.description);
-      setOcsfPath(mapping.ocsf_path);
-      setPathRationale(mapping.path_rationale || "");
-      setHasMadeMappingEdits(false);
+      // Check if this is the result of our own save operation
+      const isSavedDataUpdate = lastSavedData.current && 
+        lastSavedData.current.id === mapping.id &&
+        lastSavedData.current.entity.value === mapping.entity.value &&
+        lastSavedData.current.entity.description === mapping.entity.description &&
+        lastSavedData.current.ocsf_path === mapping.ocsf_path;
+        
+      // Only reset local state if this wasn't triggered by our own save
+      if (!isSavedDataUpdate && !justSaved.current) {
+        setEntityValue(mapping.entity.value);
+        setEntityDescription(mapping.entity.description);
+        setOcsfPath(mapping.ocsf_path);
+        setPathRationale(mapping.path_rationale || "");
+        setHasMadeMappingEdits(false);
+      }
     }
+    
+    // We no longer need to reset justSaved here - we'll use a separate effect for that
     
     if (extractionPattern) {
       setExtractLogic(extractionPattern.extract_logic);
@@ -88,6 +106,18 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
       setHasMadeEdits(false);
     }
   }, [mapping, extractionPattern]);
+  
+  // Effect to reset the saved flag after component has rendered with saved values
+  useEffect(() => {
+    // If the component just saved, reset the flag after render
+    if (justSaved.current) {
+      const timeoutId = setTimeout(() => {
+        justSaved.current = false;
+      }, 100); // Short delay to ensure rendering is complete
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [mapping]); // Only run when mapping changes
   
   if (!mapping) return null;
 
@@ -133,6 +163,20 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
         ocsf_path: ocsfPath,
         path_rationale: pathRationale || undefined
       };
+      
+      // Store the data we're saving for comparison in the future
+      lastSavedData.current = {
+        id: mapping.id,
+        entity: {
+          value: entityValue,
+          description: entityDescription
+        },
+        ocsf_path: ocsfPath,
+        path_rationale: pathRationale || undefined
+      };
+      
+      // Set the justSaved flag to prevent the useEffect from overriding our values
+      justSaved.current = true;
       
       onUpdateMapping(mapping.id, updatedMapping);
       setHasMadeMappingEdits(false);

@@ -42,6 +42,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
   testPattern,
   clearEntities,
   onLanguageChange,
+  updateMappings,
   logs,
   selectedLogIds
 }) => {
@@ -59,7 +60,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
   const [localMappings, setLocalMappings] = useState<EntityMapping[]>([]);
   const [localPatterns, setLocalPatterns] = useState<any[]>([]);
 
-  // Update local state when props change
+  // Update local state when props change, but keep current state if user has made edits
   React.useEffect(() => {
     setLocalMappings(mappings);
     setLocalPatterns(extractionPatterns);
@@ -112,6 +113,9 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
     // Update local state
     setLocalMappings(updatedMappings);
     setLocalPatterns(updatedPatterns);
+    
+    // Sync back to the parent state
+    updateMappings(updatedMappings);
   };
 
   // Column IDs in order
@@ -224,6 +228,14 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
     }
   ];
 
+  // Custom handler for extract entities that ensures latest mappings are used
+  const handleExtractEntities = () => {
+    // First update mappings in parent state to ensure latest mappings are used
+    updateMappings(localMappings);
+    // Then call the extract function
+    extractEntities();
+  };
+
   return (
     <>
       <Container
@@ -270,7 +282,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
                 iconAlign="left" 
                 iconName="gen-ai"
                 loading={isExtracting}
-                onClick={extractEntities}
+                onClick={handleExtractEntities} // Use custom handler instead
                 disabled={mappings.length === 0}
               >
                 Extract Entities
