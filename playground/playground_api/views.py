@@ -28,7 +28,7 @@ from backend.regex_expert.parameters import RegexFlavor
 
 from backend.transformers.parameters import TransformLanguage
 from backend.transformers.transformers import Transformer, create_transformer_python
-# from backend.transformers.validators import OcsfV1_1_0TransformValidator, ValidationReportTransform
+from backend.transformers.validators import PythonOcsfV1_1_0TransformValidator
 
 from .serializers import (TransformerHeuristicCreateRequestSerializer, TransformerHeuristicCreateResponseSerializer,
                           TransformerCategorizeV1_1_0RequestSerializer, TransformerCategorizeV1_1_0ResponseSerializer,
@@ -197,10 +197,14 @@ class TransformerLogicV1_1_0CreateView(APIView):
             logger.debug(f"Transform value:\n{transformer.to_json()}")
 
             # Validate the transform
-            report = self._validate(transformer, request.validated_data["input_entry"])
+            report = self._validate(
+                request.validated_data["transform_language"],
+                request.validated_data["ocsf_category"].get_category_name(),
+                transformer,
+                request.validated_data["input_entry"]
+            )
             logger.info(f"Transform validation completed")
-            logger.debug(f"Validation outcome:\n{report.passed}")
-            logger.debug(f"Validation report entries:\n{report.report_entries}")
+            logger.debug(f"Validation report:\n{json.dumps(report.to_json(), indent=4)}")
         except UnsupportedTransformLanguageError as e:
             logger.error(f"{str(e)}")
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -238,14 +242,17 @@ class TransformerLogicV1_1_0CreateView(APIView):
 
             return transformer
     
-    def _validate(self, transformer: Transformer, input_entry: str) -> ValidationReport:
+    def _validate(self, language: TransformLanguage, category_name: str, transformer: Transformer, input_entry: str) -> ValidationReport:
         # Validate the transform
-        report = ValidationReport(
-            input=input_entry,
-            output={"dummy": "output"},
-            report_entries=["dummy report"],
-            passed=False
-        )
+        if language == TransformLanguage.PYTHON:
+            validator = PythonOcsfV1_1_0TransformValidator(
+                category_name=category_name,
+                input_entry=input_entry,
+                transformer=transformer
+            )
+            report = validator.validate()
+        else:
+            raise UnsupportedTransformLanguageError(f"Unsupported transform language: {language}")
 
         transformer.validation_report = report
 

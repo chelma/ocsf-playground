@@ -6,6 +6,7 @@ from typing import Callable
 
 from backend.entities_expert.extraction_pattern import ExtractionPattern
 from backend.core.validation_report import ValidationReport
+from backend.core.validators import PythonLogicInvalidSyntaxError, PythonLogicNotInModuleError, PythonLogicNotExecutableError
 
 
 logger = logging.getLogger("backend")
@@ -122,15 +123,6 @@ class ExtractionPatternValidatorBase(ABC):
         logger.debug(f"Extraction pattern testing report:\n{json.dumps(report.to_json(), indent=4)}")
 
         return report
-    
-class PythonLogicInvalidSyntaxError(Exception):
-    pass
-
-class PythonLogicNotInModuleError(Exception):
-    pass
-
-class PythonLogicNotExecutableError(Exception):
-    pass
 
 class PythonExtractionPatternValidator(ExtractionPatternValidatorBase):
     def _load_extract_logic(self, pattern: ExtractionPattern) -> Callable[[str], str]:

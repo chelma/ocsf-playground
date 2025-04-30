@@ -66,7 +66,7 @@ def _get_transformer_wrapper_code(patterns: List[ExtractionPattern]) -> str:
     for pattern in patterns:
         pattern_path = pattern.mapping.ocsf_path
         function_name = _get_pattern_function_name(pattern)
-        wrapper_code += f"    {function_name}_result] = {function_name}(input_data)\n"
+        wrapper_code += f"    {function_name}_result = {function_name}(input_data)\n"
         wrapper_code += f"    set_path(output, '{pattern_path}', {function_name}_result)\n"
         wrapper_code += "\n"
     

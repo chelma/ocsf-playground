@@ -20,7 +20,7 @@ class ValidationReport:
     def from_json(cls, json_data: Dict[str, Any]) -> 'ValidationReport':
         return cls(
             input=json_data['input'],
-            output=json_data.get('output'),
+            output=json_data.get('output', {}),
             report_entries=json_data.get('report_entries', []),
             passed=json_data.get('passed', False)
         )
