@@ -14,6 +14,11 @@ relevant in the context of the specific OCSF schema. For example, if the entry i
 might include the timestamp, the user ID, the action taken, the source and/or destination IP addresses, etc.  Finally,
 you will provide a report that includes all the entities you identified and how they map to the OCSF schema.
 
+Pay close attention to any fields marked as required in the OCSF schema.  These fields should be populated with relevant
+entities from the data entry.  If you are unable to find a relevant section of the data entry to populate a required
+field, you should add it to your report as an entity but explicitly state that the entity is required by the OCSF schema
+but does not have a corresponding value in the data entry.
+
 You will be provided a specific data entry, input_entry, from the data stream.  You will also be given the specific OCSF
 category, ocsf_category, and version, ocsf_version, to map the entry as well as the OCSF schema, ocsf_category_schema,
 which outlines the structure of the OCSF category.  You will also be provided with a set of additional OCSF shape schemas,
@@ -35,7 +40,7 @@ Additionally, you must ALWAYS follow these output_guidelines for output you prod
 - You may map the same entity to multiple fields in the OCSF schema if it is relevant to those fields.
 - You MUST NOT have multiple entities that map to the same field in the OCSF schema; instead, you should pick the best
     entity for that field.
-- You MUST NOT add any new fields to the OCSF schema or add any new entities that are not present in the data entry.
+- You MUST NOT add any new fields to the OCSF schema.
 </output_guidelines>
 
 The specific schema version of OCSF is:
