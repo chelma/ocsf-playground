@@ -47,7 +47,7 @@ const TransformerPanel: React.FC<TransformerPanelProps> = ({
   return (
       <Container
         header={
-          <Header variant="h2">Transformer Creation</Header>
+          <Header variant="h2">Finalized Transformer</Header>
         }
       >
         <SpaceBetween size="m">
@@ -61,7 +61,7 @@ const TransformerPanel: React.FC<TransformerPanelProps> = ({
                 onClick={createTransformer}
                 disabled={!hasRequiredInputs}
               >
-                Create Transformer
+                Generate
               </Button>
               <Button
                 onClick={clearTransformer}
@@ -93,7 +93,7 @@ const TransformerPanel: React.FC<TransformerPanelProps> = ({
                 {/* Left Column: Transformer Logic */}
                 <div style={columnStyle}>
                   <Container
-                    header={<Header variant="h3">Generated Transformer Logic</Header>}
+                    header={<Header variant="h3">Transformer Logic</Header>}
                   >
                     <Textarea
                       value={transformer.dependency_setup ? `${transformer.dependency_setup}\n\n${transformer.transformer_logic}` : transformer.transformer_logic}
@@ -116,7 +116,7 @@ const TransformerPanel: React.FC<TransformerPanelProps> = ({
                             <Textarea
                               value={JSON.stringify(transformer.validation_report.output, null, 4) || 'N/A'}
                               readOnly
-                              rows={8}
+                              rows={25}
                             />
                           </div>
                           
