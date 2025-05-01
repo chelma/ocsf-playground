@@ -12,14 +12,16 @@ import {
   CodeEditorProps,
   Button,
   Input,
-  FormField
+  FormField,
+  ExpandableSection,
+  Icon
 } from '@cloudscape-design/components';
 import CodeEditorWrapper from '../common/CodeEditorWrapper';
 import SplitLayout from '../common/SplitLayout';
 import ValidationReport from '../common/ValidationReport';
 import FullPageDialog from '../common/FullPageDialog';
 import { splitStyles, logBlockStyle } from '../../utils/styles';
-import { EntityMapping, ExtractionPattern } from '../../utils/types';
+import { Entity, EntityMapping, ExtractionPattern } from '../../utils/types';
 import ace from 'ace-builds';
 import 'ace-builds/src-noconflict/mode-python';
 import 'ace-builds/src-noconflict/mode-json';
@@ -65,9 +67,8 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
   const [transformLogic, setTransformLogic] = useState<string>("");
   const [hasMadeEdits, setHasMadeEdits] = useState<boolean>(false);
   
-  // State to track edited entity fields
-  const [entityValue, setEntityValue] = useState<string>("");
-  const [entityDescription, setEntityDescription] = useState<string>("");
+  // State to track edited entity fields - now an array
+  const [entities, setEntities] = useState<Entity[]>([]);
   const [ocsfPath, setOcsfPath] = useState<string>("");
   const [pathRationale, setPathRationale] = useState<string>("");
   const [hasMadeMappingEdits, setHasMadeMappingEdits] = useState<boolean>(false);
@@ -81,24 +82,12 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
   // But prevent overriding with prop values immediately after saving
   useEffect(() => {
     if (mapping) {
-      // Check if this is the result of our own save operation
-      const isSavedDataUpdate = lastSavedData.current && 
-        lastSavedData.current.id === mapping.id &&
-        lastSavedData.current.entity.value === mapping.entity.value &&
-        lastSavedData.current.entity.description === mapping.entity.description &&
-        lastSavedData.current.ocsf_path === mapping.ocsf_path;
-        
-      // Only reset local state if this wasn't triggered by our own save
-      if (!isSavedDataUpdate && !justSaved.current) {
-        setEntityValue(mapping.entity.value);
-        setEntityDescription(mapping.entity.description);
-        setOcsfPath(mapping.ocsf_path);
-        setPathRationale(mapping.path_rationale || "");
-        setHasMadeMappingEdits(false);
-      }
+      // Initialize entity array from mapping
+      setEntities(mapping.entities || []);
+      setOcsfPath(mapping.ocsf_path);
+      setPathRationale(mapping.path_rationale || "");
+      setHasMadeMappingEdits(false);
     }
-    
-    // We no longer need to reset justSaved here - we'll use a separate effect for that
     
     if (extractionPattern) {
       setExtractLogic(extractionPattern.extract_logic);
@@ -156,10 +145,7 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
     if (onUpdateMapping && mapping) {
       const updatedMapping: Partial<EntityMapping> = {
         id: mapping.id,
-        entity: {
-          value: entityValue,
-          description: entityDescription
-        },
+        entities: entities,
         ocsf_path: ocsfPath,
         path_rationale: pathRationale || undefined
       };
@@ -167,10 +153,7 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
       // Store the data we're saving for comparison in the future
       lastSavedData.current = {
         id: mapping.id,
-        entity: {
-          value: entityValue,
-          description: entityDescription
-        },
+        entities: [...entities],
         ocsf_path: ocsfPath,
         path_rationale: pathRationale || undefined
       };
@@ -186,6 +169,28 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
   // Track changes to mapping fields
   const handleMappingFieldChange = () => {
     setHasMadeMappingEdits(true);
+  };
+
+  // Handle adding a new entity
+  const handleAddEntity = () => {
+    setEntities([...entities, { value: "", description: "" }]);
+    handleMappingFieldChange();
+  };
+  
+  // Handle removing an entity
+  const handleRemoveEntity = (index: number) => {
+    const newEntities = [...entities];
+    newEntities.splice(index, 1);
+    setEntities(newEntities);
+    handleMappingFieldChange();
+  };
+  
+  // Handle updating an entity field
+  const handleEntityChange = (index: number, field: keyof Entity, value: string) => {
+    const newEntities = [...entities];
+    newEntities[index] = { ...newEntities[index], [field]: value };
+    setEntities(newEntities);
+    handleMappingFieldChange();
   };
 
   return (
@@ -248,31 +253,61 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
                   <Box variant="code">{mapping.id}</Box>
                 </Container>
                 
-                {/* Entity Section - Now Editable */}
+                {/* Entities Section */}
                 <Container
-                  header={<Header variant="h3">Entity</Header>}
+                  header={
+                    <Header 
+                      variant="h3" 
+                      actions={
+                        <Button 
+                          iconName="add-plus" 
+                          onClick={handleAddEntity}
+                        >
+                          Add Entity
+                        </Button>
+                      }
+                    >
+                      Entities ({entities.length})
+                    </Header>
+                  }
                 >
-                  <SpaceBetween size="m">
-                    <FormField label="Value">
-                      <Input
-                        value={entityValue}
-                        onChange={e => {
-                          setEntityValue(e.detail.value);
-                          handleMappingFieldChange();
-                        }}
-                      />
-                    </FormField>
-                    <FormField label="Description">
-                      <Textarea
-                        value={entityDescription}
-                        onChange={e => {
-                          setEntityDescription(e.detail.value);
-                          handleMappingFieldChange();
-                        }}
-                        rows={3}
-                      />
-                    </FormField>
-                  </SpaceBetween>
+                  {entities.length === 0 ? (
+                    <Box variant="p">No entities defined for this mapping</Box>
+                  ) : (
+                    <SpaceBetween size="m">
+                      {entities.map((entity, index) => (
+                        <ExpandableSection
+                          key={index}
+                          headerText={`Entity ${index + 1}${entity.value ? `: ${entity.value.substring(0, 30)}${entity.value.length > 30 ? '...' : ''}` : ''}`}
+                          variant="container"
+                        >
+                          <SpaceBetween size="m">
+                            <FormField label="Value">
+                              <Input
+                                value={entity.value}
+                                onChange={e => handleEntityChange(index, 'value', e.detail.value)}
+                              />
+                            </FormField>
+                            <FormField label="Description">
+                              <Textarea
+                                value={entity.description}
+                                onChange={e => handleEntityChange(index, 'description', e.detail.value)}
+                                rows={3}
+                              />
+                            </FormField>
+                            <div style={{ textAlign: 'right' }}>
+                              <Button
+                                iconName="remove"
+                                onClick={() => handleRemoveEntity(index)}
+                              >
+                                Remove Entity
+                              </Button>
+                            </div>
+                          </SpaceBetween>
+                        </ExpandableSection>
+                      ))}
+                    </SpaceBetween>
+                  )}
                 </Container>
 
                 {/* OCSF Mapping Section - Now Editable */}

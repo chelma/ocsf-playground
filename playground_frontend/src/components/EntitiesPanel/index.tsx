@@ -18,7 +18,7 @@ import { EntitiesState } from "../../hooks/useEntitiesState";
 import EntitiesRationaleModal from "./EntitiesRationaleModal";
 import MappingDetailsModal from "./MappingDetailsModal";
 import ExtractionVisualization from "./ExtractionVisualization";
-import { EntityMapping } from "../../utils/types";
+import { Entity, EntityMapping } from "../../utils/types";
 
 interface EntitiesPanelProps extends EntitiesState {
   logs: string[];
@@ -144,9 +144,19 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
   const getExtractedValue = (mappingId: string) => {
     const pattern = getExtractionPatternForMapping(mappingId);
     if (!pattern || !pattern.validation_report || !pattern.validation_report.output) {
-      return "N/A";
+      return null; // Return null instead of string to indicate no data
     }
-    return pattern.validation_report.output.extract_output || "N/A";
+    
+    const extractOutput = pattern.validation_report.output.extract_output;
+    
+    // Handle the case where extract_output could be an array or a single value
+    if (Array.isArray(extractOutput)) {
+      return extractOutput; // Return the array directly
+    } else if (extractOutput) {
+      return [String(extractOutput)]; // Convert single value to array with one item
+    }
+    
+    return null; // No extract output
   };
 
   // Helper to get transform output for a mapping
@@ -195,16 +205,56 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
     },
     {
       id: "entityValue",
-      header: "Raw Entity Value",
-      cell: item => item.entity.value,
-      sortingField: "entity.value",
+      header: "Raw Entity Values",
+      cell: item => {
+        if (!item.entities || item.entities.length === 0) {
+          return "N/A";
+        }
+        
+        // Return stacked components for each entity value
+        return (
+          <SpaceBetween size="xs">
+            {item.entities.map((entity: Entity, index: number) => (
+              <Box 
+                key={index} 
+                padding="xxs"
+                variant="p"
+              >
+                {entity.value}
+              </Box>
+            ))}
+          </SpaceBetween>
+        );
+      },
+      sortingField: "entityValue",
       minWidth: 250,
       width: columnWidths.find(col => col.id === "entityValue")?.width
     },
     {
       id: "extractedValue",
-      header: "Extracted Value",
-      cell: item => getExtractedValue(item.id),
+      header: "Extracted Values",
+      cell: item => {
+        const extractedValues = getExtractedValue(item.id);
+        
+        if (!extractedValues || extractedValues.length === 0) {
+          return "N/A";
+        }
+        
+        // Return stacked components for each extracted value
+        return (
+          <SpaceBetween size="xs">
+            {extractedValues.map((value: string, index: number) => (
+              <Box 
+                key={index} 
+                padding="xxs"
+                variant="p"
+              >
+                {value}
+              </Box>
+            ))}
+          </SpaceBetween>
+        );
+      },
       minWidth: 150,
       width: columnWidths.find(col => col.id === "extractedValue")?.width
     },

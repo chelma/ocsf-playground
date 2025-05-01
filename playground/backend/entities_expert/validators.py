@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import json
 import logging
 from types import ModuleType
-from typing import Callable
+from typing import Callable, List
 
 from backend.entities_expert.extraction_pattern import ExtractionPattern
 from backend.core.validation_report import ValidationReport
@@ -44,14 +44,17 @@ class ExtractionPatternValidatorBase(ABC):
 
         return output
     
-    def _try_validate_extract_output(self, input_entry: str, pattern: ExtractionPattern, extract_output: str, report: ValidationReport):
+    def _try_validate_extract_output(self, input_entry: str, pattern: ExtractionPattern, extract_output: List[str], report: ValidationReport):
         try:
             report.append_entry("Validating the extract output...", logger.info)
-            if extract_output == pattern.mapping.entity.value:
-                report.append_entry(f"The extract output matches the entity value: '{pattern.mapping.entity.value}'", logger.info)
+            if isinstance(extract_output, list):
+                report.append_entry(f"The extract output matches the expected type: 'list'", logger.info)
             else:
-                report.append_entry(f"The extract output does NOT match the entity value: '{pattern.mapping.entity.value}'", logger.warning)
-                raise ValueError(f"The extract output does NOT match the entity value: '{pattern.mapping.entity.value}'")
+                report.append_entry(f"The extract output does NOT match the expected type: 'list'", logger.warning)
+                raise ValueError(f"The extract output does NOT match the expected type: 'list'")
+            if len(extract_output) == 0:
+                report.append_entry(f"The extract output is empty", logger.warning)
+                raise ValueError(f"The extract output is empty")
             report.append_entry("Extract output is valid", logger.info)
         except Exception as e:
             report.append_entry("The extract output is not valid", logger.error)

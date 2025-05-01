@@ -224,11 +224,11 @@ export interface TransformerEntitiesV110AnalyzeResponseMappingsInner {
      */
     'id': string;
     /**
-     * 
-     * @type {TransformerEntitiesV110AnalyzeResponseMappingsInnerEntity}
+     * List of entities associated with this mapping
+     * @type {Array<TransformerEntitiesV110AnalyzeResponseMappingsInnerEntitiesInner>}
      * @memberof TransformerEntitiesV110AnalyzeResponseMappingsInner
      */
-    'entity': TransformerEntitiesV110AnalyzeResponseMappingsInnerEntity;
+    'entities'?: Array<TransformerEntitiesV110AnalyzeResponseMappingsInnerEntitiesInner>;
     /**
      * Period-delimited path in OCSF schema (e.g., \'http_request.url.port\')
      * @type {string}
@@ -245,19 +245,19 @@ export interface TransformerEntitiesV110AnalyzeResponseMappingsInner {
 /**
  * 
  * @export
- * @interface TransformerEntitiesV110AnalyzeResponseMappingsInnerEntity
+ * @interface TransformerEntitiesV110AnalyzeResponseMappingsInnerEntitiesInner
  */
-export interface TransformerEntitiesV110AnalyzeResponseMappingsInnerEntity {
+export interface TransformerEntitiesV110AnalyzeResponseMappingsInnerEntitiesInner {
     /**
      * 
      * @type {string}
-     * @memberof TransformerEntitiesV110AnalyzeResponseMappingsInnerEntity
+     * @memberof TransformerEntitiesV110AnalyzeResponseMappingsInnerEntitiesInner
      */
     'value': string;
     /**
      * 
      * @type {string}
-     * @memberof TransformerEntitiesV110AnalyzeResponseMappingsInnerEntity
+     * @memberof TransformerEntitiesV110AnalyzeResponseMappingsInnerEntitiesInner
      */
     'description': string;
 }
@@ -347,10 +347,10 @@ export interface TransformerEntitiesV110ExtractResponsePatternsInner {
     'id': string;
     /**
      * 
-     * @type {TransformerEntitiesV110AnalyzeResponseMappingsInner}
+     * @type {TransformerEntitiesV110ExtractResponsePatternsInnerMapping}
      * @memberof TransformerEntitiesV110ExtractResponsePatternsInner
      */
-    'mapping'?: TransformerEntitiesV110AnalyzeResponseMappingsInner;
+    'mapping'?: TransformerEntitiesV110ExtractResponsePatternsInnerMapping;
     /**
      * The logic to set up any dependencies for the extraction/transformation logic, such as package import statements
      * @type {string}
@@ -375,6 +375,37 @@ export interface TransformerEntitiesV110ExtractResponsePatternsInner {
      * @memberof TransformerEntitiesV110ExtractResponsePatternsInner
      */
     'validation_report'?: TransformerEntitiesV110ExtractResponsePatternsInnerValidationReport;
+}
+/**
+ * 
+ * @export
+ * @interface TransformerEntitiesV110ExtractResponsePatternsInnerMapping
+ */
+export interface TransformerEntitiesV110ExtractResponsePatternsInnerMapping {
+    /**
+     * Unique identifier for the entity mapping
+     * @type {string}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInnerMapping
+     */
+    'id': string;
+    /**
+     * 
+     * @type {TransformerEntitiesV110AnalyzeResponseMappingsInnerEntitiesInner}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInnerMapping
+     */
+    'entity': TransformerEntitiesV110AnalyzeResponseMappingsInnerEntitiesInner;
+    /**
+     * Period-delimited path in OCSF schema (e.g., \'http_request.url.port\')
+     * @type {string}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInnerMapping
+     */
+    'ocsf_path': string;
+    /**
+     * A precise explanation of why the entity was mapped to the OCSF path
+     * @type {string}
+     * @memberof TransformerEntitiesV110ExtractResponsePatternsInnerMapping
+     */
+    'path_rationale'?: string;
 }
 /**
  * Validation information for the extraction pattern

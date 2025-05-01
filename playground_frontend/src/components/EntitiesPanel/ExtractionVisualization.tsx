@@ -34,16 +34,37 @@ const ExtractionVisualization: React.FC<ExtractionVisualizationProps> = ({
       // Skip patterns without validation reports or outputs
       if (!pattern.validation_report?.output?.extract_output) return;
       
-      const extractedValue = String(pattern.validation_report.output.extract_output);
-      if (!extractedValue || extractedValue === "N/A") return;
+      const extractOutput = pattern.validation_report.output.extract_output;
       
-      // Find the occurrence of the extracted value in the log
-      const index = log.indexOf(extractedValue);
-      if (index !== -1) {
-        positions.push({
-          start: index,
-          end: index + extractedValue.length
+      // Handle both single values and arrays of values
+      if (Array.isArray(extractOutput)) {
+        // Handle multiple extracted values
+        extractOutput.forEach(value => {
+          if (!value || value === "N/A") return;
+          
+          const extractedValue = String(value);
+          // Find the occurrence of the extracted value in the log
+          const index = log.indexOf(extractedValue);
+          if (index !== -1) {
+            positions.push({
+              start: index,
+              end: index + extractedValue.length
+            });
+          }
         });
+      } else {
+        // Handle single extracted value (for backward compatibility)
+        const extractedValue = String(extractOutput);
+        if (!extractedValue || extractedValue === "N/A") return;
+        
+        // Find the occurrence of the extracted value in the log
+        const index = log.indexOf(extractedValue);
+        if (index !== -1) {
+          positions.push({
+            start: index,
+            end: index + extractedValue.length
+          });
+        }
       }
     });
     

@@ -22,16 +22,16 @@ def get_analyze_tool_bundle(ocsf_version: OcsfVersion) -> ToolBundle:
 class EntityInput(BaseModel):
     """A single entity extracted from the data entry"""
     value: str = Field(description="The raw value extracted from the input data.  It MUST have the exact value as it appears in the input entry.")
-    description: str = Field(description="A precise, but succinct, explanation of what the value represents in the context of the entry. For example, 'Source IP address' is much better than 'IP address' or 'source address'.  Similarly, 'Event creation timestamp' is much better than 'timestamp' or 'time'.")
+    description: str = Field(description="A precise explanation of what the value represents in the context of the entry. For example, 'Source IP address' is much better than 'IP address' or 'source address'.  Similarly, 'Event creation timestamp' is much better than 'timestamp' or 'time'.")
 
 class EntityMappingInput(BaseModel):
-    """A mapping for a single entity extracted from the data entry to a specific OCSF path"""
-    entity: EntityInput = Field(description="The entity extracted from the input data")
+    """A flexible mapping from the data entry to an OCSF path.  It can handle three cases: 1) the OCSF path is known and the entities are known, 2) the OCSF path is known but the entities are not, and 3) the OCSF path is unknown but the entities are known."""
+    entities: List[EntityInput] = Field(description="The list of entities extracted from the input data.  Might be empty if the OCSF path is known but the entities are not.")
     ocsf_path: str = Field(description="Period-delimited path through the OCSF schema to a specific leaf field (e.g., 'http_request.url.port').  If you do not know which path to map the entity to, you can use 'unknown' as a placeholder.")
-    path_rationale: str = Field(description="A precise, but succinct, explanation of why the entity is mapped to the specified OCSF path")
+    path_rationale: str = Field(description="A precise explanation of how the mapping relates to the specified OCSF path.  If you know the entities are are relevant but the correct OCSF path, you can just explain their significance in the context of the schema.  If you know you need a mapping to the specific OCSF path but there are no matching entities, you can explain why you need the mapping, what its value should be, and what the OCSF path represents in the context of the entry.")
 
 class CreateEntitiesReport(BaseModel):
-    """Create a list of entities extracted from a data entry"""
+    """Create a list of mappings for entities extracted from a data entry"""
     data_type: str = Field(description="A brief, but precise, explanation of the data entry's type, such as: 'SSH Auth log line from a RHEL host' or 'Active Directory Login event'")
     type_rationale: str = Field(description="A detailed and precise justification for your selection of the entry type.  It should also include any other options you considered and why you rejected them.")
     mappings: List[EntityMappingInput] = Field(
@@ -45,14 +45,17 @@ def create_entities_report(data_type: str, type_rationale: str, mappings: List[E
         mappings=[
             EntityMapping(
                 id=str(uuid.uuid4()),
-                entity=Entity(
-                    value=entity_mapping.entity.value,
-                    description=entity_mapping.entity.description
-                ),
-                ocsf_path=entity_mapping.ocsf_path,
-                path_rationale=entity_mapping.path_rationale
+                entities=[
+                    Entity(
+                        value=entity.value,
+                        description=entity.description
+                    )
+                    for entity in mapping.entities
+                ],
+                ocsf_path=mapping.ocsf_path,
+                path_rationale=mapping.path_rationale
             )
-            for entity_mapping in mappings
+            for mapping in mappings
         ]
     )
 

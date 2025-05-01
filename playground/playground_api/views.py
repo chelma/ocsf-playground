@@ -414,10 +414,13 @@ class TransformerEntitiesV1_1_0ExtractView(APIView):
                     )
                     pattern.mapping = EntityMapping(
                         id=raw_mapping["id"],
-                        entity=Entity(
-                            value=raw_mapping["entity"]["value"],
-                            description=raw_mapping["entity"]["description"]
-                        ),
+                        entities=[
+                            Entity(
+                                value=entity["value"],
+                                description=entity["description"]
+                            )
+                            for entity in raw_mapping["entities"]
+                        ],
                         ocsf_path=raw_mapping["ocsf_path"],
                         path_rationale=raw_mapping["path_rationale"]
                     )
@@ -465,10 +468,13 @@ class TransformerEntitiesV1_1_0TestView(APIView):
                     transform_logic=raw_pattern["transform_logic"],
                     mapping=EntityMapping(
                         id=raw_pattern["mapping"]["id"],
-                        entity=Entity(
-                            value=raw_pattern["mapping"]["entity"]["value"],
-                            description=raw_pattern["mapping"]["entity"]["description"]
-                        ),
+                        entities=[
+                            Entity(
+                                value=entity["value"],
+                                description=entity["description"]
+                            )
+                            for entity in raw_pattern["mapping"]["entities"]
+                        ],
                         ocsf_path=raw_pattern["mapping"]["ocsf_path"],
                         path_rationale=raw_pattern["mapping"]["path_rationale"]
                     ) if raw_pattern["mapping"] else None,

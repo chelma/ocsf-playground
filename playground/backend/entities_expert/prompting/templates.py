@@ -14,10 +14,13 @@ relevant in the context of the specific OCSF schema. For example, if the entry i
 might include the timestamp, the user ID, the action taken, the source and/or destination IP addresses, etc.  Finally,
 you will provide a report that includes all the entities you identified and how they map to the OCSF schema.
 
+A given OCSF schema field may be informed by multiple entities in the data entry.  In this case, you should associate
+each entity with the field it is relevant to.
+
 Pay close attention to any fields marked as required in the OCSF schema.  These fields should be populated with relevant
-entities from the data entry.  If you are unable to find a relevant section of the data entry to populate a required
-field, you should add it to your report as an entity but explicitly state that the entity is required by the OCSF schema
-but does not have a corresponding value in the data entry.
+entities from the data entry if possible.  If you are unable to find a relevant section of the data entry to populate a
+required field, you should add it to your report as mapping without any entities but explicitly explicitly state that
+it is required by the OCSF schema but does not have a corresponding value in the data entry.
 
 You will be provided a specific data entry, input_entry, from the data stream.  You will also be given the specific OCSF
 category, ocsf_category, and version, ocsf_version, to map the entry as well as the OCSF schema, ocsf_category_schema,
@@ -38,8 +41,8 @@ Additionally, you must ALWAYS follow these output_guidelines for output you prod
 <output_guidelines>
 - When selecting entities, your goal is to fill out the OCSF schema as completely as possible.
 - You may map the same entity to multiple fields in the OCSF schema if it is relevant to those fields.
-- You MUST NOT have multiple entities that map to the same field in the OCSF schema; instead, you should pick the best
-    entity for that field.
+- You MUST NOT create multiple mappings for a given OCSF schema field; instead, associate all relevant entities with
+    that field in a single mapping.
 - You MUST NOT add any new fields to the OCSF schema.
 </output_guidelines>
 
@@ -113,9 +116,9 @@ For the extraction logic you create, you MUST follow these additional guidelines
 - The extraction logic's purpose is to extract the specified portion of the input_entry and return it as a string. Do
     not change the value of the extracted portion in any way.
 - You MUST structure your extraction logic as a single, invocable function.  It MUST have the following signature:
-    `def extract(input_entry: str) -> str:`.  Your extraction logic will be consumed by outside mechanisms that will
+    `def extract(input_entry: str) -> typing.List[str]:`.  Your extraction logic will be consumed by outside mechanisms that will
     rely on the function signature being exactly as specified.
-- The output of the `extract()` function you create will ALWAYS a string, which will later may be transformed into the
+- The output of the `extract()` function you create will ALWAYS a list of strings, which will later may be transformed into the
     value expected by the specific OCSF schema field by the transform logic.
 </extraction_guidelines>
 
@@ -125,7 +128,7 @@ For the transformation logic you create, you MUST follow these additional guidel
     that will be used in the OCSF schema.  This may include converting the value to a different type, formatting it,
     or performing any other necessary transformations.
 - You MUST structure your transformation logic as a single, invocable function.  It MUST have the following signature:
-    `def transform(extracted_value: str) -> str:`.  Your transform logic will be consumed by outside mechanisms that
+    `def transform(extracted_values: List[str]) -> str:`.  Your transform logic will be consumed by outside mechanisms that
     will rely on the function signature being exactly as specified.
 - The output of the `transform()` function you create will ALWAYS a string, which may later be type-cast into the
     type expected by the specific OCSF schema field by an outside mechanism.  For example, if the OCSF schema field

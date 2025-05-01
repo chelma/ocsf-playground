@@ -23,24 +23,24 @@ class Entity:
 @dataclass
 class EntityMapping:
     id: str
-    entity: Entity
+    entities: List[Entity]
     ocsf_path: str
     path_rationale: str
 
     def to_json(self) -> dict:
         return {
             "id": self.id,
-            "entity": self.entity.to_json(),
+            "entities": [entity.to_json() for entity in self.entities],
             "ocsf_path": self.ocsf_path,
             "path_rationale": self.path_rationale
         }
     
     @classmethod
     def from_json(cls, json_data: dict) -> 'EntityMapping':
-        entity = Entity.from_json(json_data['entity'])
+        entities = [Entity.from_json(entity) for entity in json_data['entities']]
         return cls(
             id=json_data['id'],
-            entity=entity,
+            entities=entities,
             ocsf_path=json_data['ocsf_path'],
             path_rationale=json_data['path_rationale']
         )

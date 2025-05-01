@@ -7,7 +7,7 @@ export interface Entity {
 
 export interface EntityMapping {
   id: string;
-  entity: Entity;
+  entities?: Entity[];
   ocsf_path: string;
   path_rationale?: string;
 }

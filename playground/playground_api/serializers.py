@@ -96,18 +96,22 @@ class EntityField(serializers.Field):
     "type": "object",
     "properties": {
         "id": {"type": "string", "description": "Unique identifier for the entity mapping"},
-        "entity": {
-            "type": "object",
-            "properties": {
-                "value": {"type": "string"},
-                "description": {"type": "string"},
+        "entities": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "value": {"type": "string"},
+                    "description": {"type": "string"},
+                },
+                "required": ["value", "description"]
             },
-            "required": ["value", "description"]
+            "description": "List of entities associated with this mapping"
         },
         "ocsf_path": {"type": "string", "description": "Period-delimited path in OCSF schema (e.g., 'http_request.url.port')"},
         "path_rationale": {"type": "string", "description": "A precise explanation of why the entity was mapped to the OCSF path"},
     },
-    "required": ["id", "entity", "ocsf_path"],
+    "required": ["id", "ocsf_path"],
 })
 class EntityMappingField(serializers.Field):
     """Custom serializer field for entity mapping data with OCSF path"""
@@ -121,7 +125,7 @@ class EntityMappingField(serializers.Field):
             raise serializers.ValidationError("Must be a JSON object.")
 
         # Ensure required keys exist
-        required_keys = ['id', 'entity', 'ocsf_path']
+        required_keys = ['id', 'ocsf_path']
         missing_keys = [key for key in required_keys if key not in data]
         if missing_keys:
             raise serializers.ValidationError(
@@ -132,12 +136,16 @@ class EntityMappingField(serializers.Field):
         if not isinstance(data['id'], str):
             raise serializers.ValidationError("'id' must be a string.")
             
-        # Validate entity using the existing EntityField
-        try:
-            entity = self.entity_field.to_internal_value(data['entity'])
-        except serializers.ValidationError as e:
-            raise serializers.ValidationError({"entity": e.detail})
-            
+        # Validate entities using the existing EntityField
+        if 'entities' in data:
+            if not isinstance(data['entities'], list):
+                raise serializers.ValidationError("'entities' must be a list.")
+            for entity in data['entities']:
+                try:
+                    self.entity_field.to_internal_value(entity)
+                except serializers.ValidationError as e:
+                    raise serializers.ValidationError({"entities": e.detail})
+        
         # Validate ocsf_path
         if not isinstance(data['ocsf_path'], str):
             raise serializers.ValidationError("'ocsf_path' must be a string.")
@@ -148,7 +156,7 @@ class EntityMappingField(serializers.Field):
             
         return {
             'id': data['id'],
-            'entity': entity,
+            'entities': data.get('entities', None),
             'ocsf_path': data['ocsf_path'],
             'path_rationale': data.get('path_rationale', None)
         }
@@ -248,13 +256,17 @@ class ValidationReportField(serializers.Field):
             "type": "object",
             "properties": {
                 "id": {"type": "string", "description": "Unique identifier for the entity mapping"},
-                "entity": {
-                    "type": "object",
-                    "properties": {
-                        "value": {"type": "string"},
-                        "description": {"type": "string"},
+                "entities": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "value": {"type": "string"},
+                            "description": {"type": "string"},
+                        },
+                        "required": ["value", "description"]
                     },
-                    "required": ["value", "description"]
+                    "description": "List of entities associated with this mapping"
                 },
                 "ocsf_path": {"type": "string", "description": "Period-delimited path in OCSF schema (e.g., 'http_request.url.port')"},
                 "path_rationale": {"type": "string", "description": "A precise explanation of why the entity was mapped to the OCSF path"},
