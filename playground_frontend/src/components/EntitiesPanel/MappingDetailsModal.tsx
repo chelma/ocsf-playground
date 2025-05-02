@@ -43,7 +43,9 @@ export interface MappingDetailsModalProps {
   onTestPattern?: (patternId: string, editedPattern?: Partial<ExtractionPattern>) => void;
   onDeleteMapping?: (mappingId: string) => void;
   onUpdateMapping?: (mappingId: string, updatedMapping: Partial<EntityMapping>) => void;
+  onExtractSingleMapping?: (mappingId: string) => Promise<void>; // New prop
   isTestingPattern?: boolean;
+  isExtractingSingleMapping?: boolean; // New prop
 }
 
 const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
@@ -55,7 +57,9 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
   onTestPattern,
   onDeleteMapping,
   onUpdateMapping,
-  isTestingPattern = false
+  onExtractSingleMapping,
+  isTestingPattern = false,
+  isExtractingSingleMapping = false
 }) => {
   const [editorPreferences, setEditorPreferences] = useState<CodeEditorProps.Preferences>({
      theme: 'dawn',
@@ -346,11 +350,23 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
               header={<Header variant="h1">Extraction Pattern</Header>}
               fitHeight={true}
             >
-            {!hasExtractionData ? (
-              <Box variant="p">No extraction pattern available. Click the "Extract Entities" button to generate.</Box>
-            ) : (
+            <SpaceBetween size="s">
+              {/* Extract Entity Mapping button - always displayed */}
+              <Button
+                variant="primary"
+                iconAlign="left"
+                iconName="gen-ai"
+                loading={isExtractingSingleMapping}
+                onClick={() => mapping && onExtractSingleMapping && onExtractSingleMapping(mapping.id)}
+                disabled={!mapping || !onExtractSingleMapping}
+              >
+                Extract Entity Mapping
+              </Button>
+              
+              {!hasExtractionData ? (
+                <Box variant="p">No extraction pattern available yet.</Box>
+              ) : (
                 <SpaceBetween size="s">
-
                   <Container
                     header={<Header variant="h3">Dependency Setup</Header>}
                   >
@@ -403,7 +419,8 @@ const MappingDetailsModal: React.FC<MappingDetailsModalProps> = ({
                     </div>
                   </Container>
                 </SpaceBetween>
-            )}
+              )}
+            </SpaceBetween>
             </Container>
           </div>
 

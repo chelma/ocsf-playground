@@ -19,6 +19,7 @@ import EntitiesRationaleModal from "./EntitiesRationaleModal";
 import MappingDetailsModal from "./MappingDetailsModal";
 import ExtractionVisualization from "./ExtractionVisualization";
 import { Entity, EntityMapping } from "../../utils/types";
+import { OcsfCategoryEnum, TransformLanguageEnum } from "../../generated-api-client";
 
 interface EntitiesPanelProps extends EntitiesState {
   logs: string[];
@@ -28,6 +29,7 @@ interface EntitiesPanelProps extends EntitiesState {
 const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
   isLoading,
   isExtracting,
+  isExtractingSingleMapping,
   isTestingPattern,
   error,
   mappings,
@@ -44,7 +46,8 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
   onLanguageChange,
   updateMappings,
   logs,
-  selectedLogIds
+  selectedLogIds,
+  updatePatterns
 }) => {
   // Track column widths state
   const [columnWidths, setColumnWidths] = useState([
@@ -278,11 +281,11 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
     }
   ];
 
-  // Custom handler for extract entities that ensures latest mappings are used
-  const handleExtractEntities = () => {
+  // Simple handler for the "Extract Entity Mappings" button
+  const handleExtractAllEntities = () => {
     // First update mappings in parent state to ensure latest mappings are used
     updateMappings(localMappings);
-    // Then call the extract function
+    // Then call the extract function without a mapping ID
     extractEntities();
   };
 
@@ -353,7 +356,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
                 iconAlign="left" 
                 iconName="gen-ai"
                 loading={isExtracting}
-                onClick={handleExtractEntities} // Use custom handler instead
+                onClick={handleExtractAllEntities} // Updated to use the new handler
                 disabled={mappings.length === 0}
               >
                 Extract Entity Mappings
@@ -437,7 +440,9 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
         selectedLog={selectedLog}
         onTestPattern={testPattern}
         onDeleteMapping={handleDeleteMapping}
-        onUpdateMapping={handleUpdateMapping}  
+        onUpdateMapping={handleUpdateMapping}
+        onExtractSingleMapping={extractEntities} // Now uses the hook's function directly
+        isExtractingSingleMapping={isExtractingSingleMapping}  
         isTestingPattern={isTestingPattern}
         onClose={() => {
           setIsDetailsModalVisible(false);

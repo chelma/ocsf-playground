@@ -14,18 +14,20 @@ export interface EntitiesState {
   mappings: EntityMappingField[];
   extractionPatterns: ExtractionPattern[];
   isExtracting: boolean;
+  isExtractingSingleMapping: boolean; // Add state for single mapping extraction
   dataType: string;
   typeRationale: string;
   hasRationale: boolean;
   language: SelectProps.Option;
   languageOptions: SelectProps.Options;
   analyzeEntities: () => Promise<void>;
-  extractEntities: () => Promise<void>;
+  extractEntities: (mappingId?: string) => Promise<void>; // Updated to accept optional mapping ID
   clearEntities: () => void;
   onLanguageChange: (option: SelectProps.Option) => void;
   isTestingPattern: boolean;
   testPattern: (patternId: string, editedPattern?: Partial<ExtractionPattern>) => Promise<void>;
   updateMappings: (updatedMappings: EntityMappingField[]) => void;
+  updatePatterns?: (updatedPatterns: ExtractionPattern[]) => void;
 }
 
 interface EntitiesStateProps {
@@ -41,6 +43,7 @@ const useEntitiesState = ({
 }: EntitiesStateProps): EntitiesState => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
+  const [isExtractingSingleMapping, setIsExtractingSingleMapping] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [mappings, setMappings] = useState<EntityMappingField[]>([]);
   const [extractionPatterns, setExtractionPatterns] = useState<ExtractionPattern[]>([]);
@@ -82,19 +85,30 @@ const useEntitiesState = ({
     }
   };
 
-  const handleExtractEntities = async () => {
+  // Updated to handle both single and bulk extraction
+  const handleExtractEntities = async (mappingId?: string) => {
     if (!selectedLogIds.length || !categoryValue) {
       setError("Please select a log entry and category before extracting entities");
       return;
     }
 
-    if (mappings.length === 0) {
-      setError("Please analyze entities first to get mappings for extraction");
+    // Determine which mappings to extract
+    const mappingsToExtract = mappingId 
+      ? [mappings.find(m => m.id === mappingId)].filter(Boolean) 
+      : mappings;
+
+    if (mappingsToExtract.length === 0) {
+      setError("No mappings to extract");
       return;
     }
 
     try {
-      setIsExtracting(true);
+      // Set appropriate loading state
+      if (mappingId) {
+        setIsExtractingSingleMapping(true);
+      } else {
+        setIsExtracting(true);
+      }
       setError(null);
       
       // Get the selected log entry
@@ -108,16 +122,32 @@ const useEntitiesState = ({
         transformLanguage, 
         categoryValue, 
         selectedLogEntry,
-        mappings
+        mappingsToExtract
       );
       
-      // Update state with the response
-      setExtractionPatterns(response.patterns);
+      if (mappingId) {
+        // For single pattern, preserve other patterns and merge in the new one
+        setExtractionPatterns(prevPatterns => {
+          const updatedPatterns = [
+            ...prevPatterns.filter(p => p.id !== mappingId),
+            ...response.patterns
+          ];
+          return updatedPatterns;
+        });
+      } else {
+        // For bulk extraction, replace all patterns
+        setExtractionPatterns(response.patterns);
+      }
     } catch (error) {
       console.error('Error extracting entity patterns:', error);
       setError('Failed to extract entity patterns. Please try again.');
     } finally {
-      setIsExtracting(false);
+      // Reset appropriate loading state
+      if (mappingId) {
+        setIsExtractingSingleMapping(false);
+      } else {
+        setIsExtracting(false);
+      }
     }
   };
 
@@ -194,9 +224,14 @@ const useEntitiesState = ({
     setMappings(updatedMappings);
   };
 
+  const updatePatterns = (updatedPatterns: ExtractionPattern[]) => {
+    setExtractionPatterns(updatedPatterns);
+  };
+
   return {
     isLoading,
     isExtracting,
+    isExtractingSingleMapping, // Add to return value
     error,
     mappings,
     extractionPatterns,
@@ -211,7 +246,8 @@ const useEntitiesState = ({
     onLanguageChange: handleLanguageChange,
     isTestingPattern,
     testPattern: handleTestPattern,
-    updateMappings
+    updateMappings,
+    updatePatterns
   };
 };
 
