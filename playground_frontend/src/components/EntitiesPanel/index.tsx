@@ -286,11 +286,32 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
     extractEntities();
   };
 
+  // Handle creating a new mapping manually
+  const handleCreateMapping = () => {
+    // Generate a UUID for the new mapping
+    const newId = crypto.randomUUID();
+    
+    // Create a new mapping with no entities
+    const newMapping: EntityMapping = {
+      id: newId,
+      entities: [],
+      ocsf_path: "unknown",
+      path_rationale: "N/A"
+    };
+    
+    // Add the new mapping to localMappings
+    const updatedMappings = [...localMappings, newMapping];
+    setLocalMappings(updatedMappings);
+    
+    // Sync back to the parent state
+    updateMappings(updatedMappings);
+  };
+
   return (
     <>
       <Container
         header={
-          <Header variant="h2">Entities Analysis</Header>
+          <Header variant="h2">Entity Mappings</Header>
         }
       >
         <SpaceBetween size="m">          
@@ -335,7 +356,20 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
                 onClick={handleExtractEntities} // Use custom handler instead
                 disabled={mappings.length === 0}
               >
-                Extract Entities
+                Extract Entity Mappings
+              </Button>
+            </SpaceBetween>
+          </Box>
+          
+          {/* Manual entity mapping creation and clear buttons */}
+          <Box>
+            <SpaceBetween direction="horizontal" size="s">
+              <Button
+                iconAlign="left"
+                iconName="add-plus"
+                onClick={handleCreateMapping}
+              >
+                Create Entity Mapping
               </Button>
               <Button
                 onClick={clearEntities}
@@ -364,7 +398,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
             columnDefinitions={columnDefinitions}
             items={localMappings}
             loading={isLoading || isExtracting}
-            loadingText={isExtracting ? "Extracting entities" : "Analyzing entities"}
+            loadingText={isExtracting ? "Extracting entity mappings" : "Analyzing entities"}
             sortingDisabled
             resizableColumns
             onColumnWidthsChange={handleColumnWidthChange}
@@ -380,7 +414,7 @@ const EntitiesPanel: React.FC<EntitiesPanelProps> = ({
               <Header 
                 counter={localMappings.length > 0 ? `(${localMappings.length})` : undefined}
               >
-                Entities Table
+                Entity Mappings Table
               </Header>
             }
           />
