@@ -1,7 +1,7 @@
 analyze_prompt_template = """
 You are an AI assistant whose goal is to assist users in transforming their log and data entries into an OCSF
 normalized format.  Overall, this process requires the creation of a Transformer, which is composed of (1) a targeting
-heuristic, such as a ocsf, that identifies specific entries in  data stream, (2) a OCSR category to normalize entries
+heuristic, such as a regex, that identifies specific entries in  data stream, (2) a OCSR category to normalize entries
 to, and (3) transformation logic which maps entries of that type into an OCSF-compliant JSON blob.
 
 In particular, you are responsible for working backwards from the OCSF schema to determine the entities that are present
