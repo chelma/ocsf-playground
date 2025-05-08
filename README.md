@@ -187,6 +187,14 @@ Here's some example web server logs:
 176.212.0.44 - - [12/Mar/2025:19:12:27] "GET /product.screen?productId=CU-PG-G06&JSESSIONID=SD9SL8FF10ADFF5186 HTTP 1.1" 200 1905 "http://www.buttercupgames.com" "Mozilla/5.0 (iPad; CPU OS 5_1_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B206 Safari/7534.48.3" 748
 ```
 
+### Generating the OCSF schemas
+
+The OCSF schemas used to power this app are created by the [ocsf-lib-py package](https://github.com/ocsf/ocsf-lib-py).  This package is installed when you set up your Python Virtual Environment for this app.  You can generate a schema for a specific version like so:
+
+```python
+python3 -m ocsf.schema 1.5.0 > schema.json
+```
+
 ### Dependencies
 `pipenv` is used to managed dependencies within the project.  The `Pipefile` and `Pipefile.lock` handle the local environment.  You can add dependencies like so:
 

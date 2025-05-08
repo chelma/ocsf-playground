@@ -4,9 +4,11 @@ import logging
 from types import ModuleType
 from typing import Any, Callable, Dict
 
+from ocsf.schema import OcsfSchema
 
+from backend.core.ocsf.ocsf_schema_v1_1_0 import OCSF_SCHEMA as OCSF_SCHEMA_V1_1_0
+from backend.core.ocsf.ocsf_schemas import make_get_ocsf_event_schema, make_get_ocsf_object_schemas, PrintableOcsfObject
 from backend.core.ocsf.ocsf_versions import OcsfVersion
-from backend.core.ocsf.ocsf_v1_1_0 import OCSF_CATEGORY_SCHEMAS as CATEGORY_SCHEMAS_V1_1_0, OCSF_SHAPE_SCHEMAS as SHAPE_SCHEMAS_V1_1_0
 from backend.core.validation_report import ValidationReport
 from backend.core.validators import PythonLogicInvalidSyntaxError, PythonLogicNotInModuleError, PythonLogicNotExecutableError
 
@@ -17,8 +19,8 @@ logger = logging.getLogger("backend")
 
 
 class TransformerValidatorBase(ABC):
-    def __init__(self, category_name: str, input_entry: str, transformer: Transformer):
-        self.category_name = category_name
+    def __init__(self, event_name: str, input_entry: str, transformer: Transformer):
+        self.event_name = event_name
         self.input_entry = input_entry
         self.transformer = transformer
 
@@ -72,11 +74,8 @@ class TransformerValidatorBase(ABC):
             passed=False
         )
         try:
-            logger.debug(f"report 0:\n{report.to_json()}")
             transformer_logic = self._try_load_transformer_logic(report, self.transformer)
-            logger.debug(f"report 1:\n{json.dumps(report.to_json(), indent=4)}")
             transformer_output = self._try_invoke_transformer_logic(transformer_logic, report)
-            logger.debug(f"report 2:\n{json.dumps(report.to_json(), indent=4)}")
             self._try_validate_transformer_output(self.input_entry, self.transformer, transformer_output, report)
             report.passed = True
         except Exception as e:
@@ -89,54 +88,94 @@ class TransformerValidatorBase(ABC):
         return report
     
 class OcsfV1_1_0TransformValidator(TransformerValidatorBase):
+    def _validate_object(self, object_schemas_by_name: Dict[str, PrintableOcsfObject], obj_data: Dict[str, Any], schema_obj: PrintableOcsfObject, report: ValidationReport, path: str=""):
+        logger.debug(f"Validating object at path: {path}")
+        logger.debug(f"Object data: {json.dumps(obj_data, indent=4)}")
+
+        valid = True
+        
+        # Check that all keys in obj_data are valid attributes in the schema
+        for key in obj_data:
+            full_key_path = f"{path}.{key}" if path else key
+
+            logger.debug(f"Validating key: {key}")
+            logger.debug(f"Schema keys: {schema_obj.attributes.keys()}")
+
+            if key not in schema_obj.attributes:
+                report.append_entry(f"Field '{full_key_path}' present in transform output but not found in event class", logger.warning)
+                valid = False
+                continue
+            
+            attr = schema_obj.attributes[key]
+            
+            # Skip validation if value is None
+            if obj_data[key] is None:
+                continue
+                
+            # If the attribute is an object, validate the nested object recursively
+            if attr.is_object() and obj_data[key] is not None:
+                obj_type = attr.object_type
+                if obj_type not in object_schemas_by_name:
+                    report.append_entry(f"Object type '{obj_type}' referenced but not found in object schemas", logger.error)
+                    valid = False
+                    continue
+                
+                obj_schema = object_schemas_by_name[obj_type]
+                
+                # Handle array of objects
+                if attr.is_array:
+                    if not isinstance(obj_data[key], list):
+                        report.append_entry(f"Field '{full_key_path}' should be an array but is not", logger.warning)
+                        valid = False
+                    else:
+                        for i, item in enumerate(obj_data[key]):
+                            if item is not None:  # Skip None values in arrays
+                                full_array_key_path = f"{full_key_path}[{i}]"
+                                if not self._validate_object(object_schemas_by_name, item, obj_schema, report, f"{full_array_key_path}"):
+                                    valid = False
+                else:  # Single object
+                    logger.debug(f"Validating nested single object at path: {path}{key}")
+                    if not self._validate_object(object_schemas_by_name, obj_data[key], obj_schema, report, f"{full_key_path}"):
+                        valid = False
+
+        report.append_entry(f"All keys in object at path '{path}' present in OCSF schema", logger.debug)
+        
+        # Check that all required attributes in the schema are in obj_data
+        for attr_name, attr in schema_obj.attributes.items():
+            if attr.requirement == "Required" and attr_name not in obj_data:
+                report.append_entry(f"Required field '{path + attr_name}' not found in transform output", logger.warning)
+                valid = False
+
+        report.append_entry(f"All required keys for object at path '{path}' are present", logger.debug)
+        
+        return valid
+
     def _try_validate_schema(self, input_entry: str, transformer: Transformer, transformer_output: Dict[str, Any], report: ValidationReport):
         ocsf_version = OcsfVersion.V1_1_0
-        category_name = self.category_name
-        category_schemas = CATEGORY_SCHEMAS_V1_1_0
-        shape_schemas = SHAPE_SCHEMAS_V1_1_0
-
-        report.append_entry(f"Validating the transform output against the OCSF Schema for version {ocsf_version.value} and category {category_name}...", logger.info)
-
-        # Pull the category schema
-        used_category_schema = next((schema for schema in category_schemas if schema["name"] == category_name), None)
-        if not used_category_schema:
-            report.append_entry(f"Category schema for category {category_name} not found", logger.error)
-            raise ValueError(f"Category schema for category {category_name} not found")
-
-        # Confirm that all top level keys in the output are present in the category schema; log any that aren't in the
-        # report
-        category_fields = [field["name"] for field in used_category_schema["fields"]]
-        only_expected_keys_present = True
-        for key in transformer_output.keys():
-            if key not in category_fields:
-                report.append_entry(f"Top level field '{key}' present in transform output but not found in category schema", logger.warning)
-                only_expected_keys_present = False
-        if only_expected_keys_present:
-            report.append_entry("All top level fields present in transform output are found in the category schema", logger.debug)
-
-        # TODO: Confirm that all top level keys in the output have expected types; log any that don't in the report
-
-        # Confirm that all keys marked as required in the category schema are present in the output; log any that
-        # aren't in the report
-        required_category_fields = [field["name"] for field in used_category_schema["fields"] if field.get("requirement") == "Required"]
-        all_required_keys_present = True
-        for key in required_category_fields:
-            if key not in transformer_output.keys():
-                report.append_entry(f"Top level field '{key}' marked as required in category schema but not present in transform output", logger.warning)
-                all_required_keys_present = False
-
-        if all_required_keys_present:
-            report.append_entry("All required top level fields present in category schema are found in transform output", logger.debug)
-
-        # TODO: Recursively, for each nested shape in the output, confirm and log in the report deviance on the following:
-        # * All keys in the shape are present in the shape schema
-        # * All keys in the shape have expected types
-        # * All keys marked as required in the shape schema are present in the output
-
-        if not only_expected_keys_present or not all_required_keys_present:
+        schema = OCSF_SCHEMA_V1_1_0
+        
+        report.append_entry(f"Validating the transform output against the OCSF Schema for version {ocsf_version.value} and category {self.event_name}...", logger.info)
+        
+        # Get the specific schemas in use for the event class
+        try:
+            event_schema = make_get_ocsf_event_schema(schema)(self.event_name)
+            object_schemas = make_get_ocsf_object_schemas(schema)(self.event_name)
+        except ValueError as e:
+            report.append_entry(f"Schema validation error: {str(e)}", logger.error)
+            raise
+        
+        # Create a dictionary of object schemas by name for quick lookup
+        object_schemas_by_name = {obj.name: obj for obj in object_schemas}
+        
+        # Validate the top level object
+        is_valid = self._validate_object(object_schemas_by_name, transformer_output, event_schema, report)
+        
+        if is_valid:
+            report.append_entry("Transform output conforms to the OCSF schema", logger.info)
+        else:
             report.append_entry("Transform output does not conform to the OCSF schema", logger.error)
             raise ValueError("Transform output does not conform to the OCSF schema")
-
+        
 class PythonOcsfV1_1_0TransformValidator(OcsfV1_1_0TransformValidator):
     def _load_transformer_logic(self, transformer: Transformer) -> Callable[[str], str]:
         # Take the raw logic and attempt to load it into an executable form

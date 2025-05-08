@@ -329,6 +329,10 @@ components:
       - Module Activity (1005)
       - Scheduled Job Activity (1006)
       - Process Activity (1007)
+      - Vulnerability Finding (2002)
+      - Compliance Finding (2003)
+      - Detection Finding (2004)
+      - Incident Finding (2005)
       - Account Change (3001)
       - Authentication (3002)
       - Authorize Session (3003)
@@ -369,6 +373,10 @@ components:
         * `Module Activity (1005)` - MODULE_ACTIVITY_1005
         * `Scheduled Job Activity (1006)` - SCHEDULED_JOB_ACTIVITY_1006
         * `Process Activity (1007)` - PROCESS_ACTIVITY_1007
+        * `Vulnerability Finding (2002)` - VULNERABILITY_FINDING_2002
+        * `Compliance Finding (2003)` - COMPLIANCE_FINDING_2003
+        * `Detection Finding (2004)` - DETECTION_FINDING_2004
+        * `Incident Finding (2005)` - INCIDENT_FINDING_2005
         * `Account Change (3001)` - ACCOUNT_CHANGE_3001
         * `Authentication (3002)` - AUTHENTICATION_3002
         * `Authorize Session (3003)` - AUTHORIZE_SESSION_3003
@@ -563,16 +571,19 @@ components:
                   id:
                     type: string
                     description: Unique identifier for the entity mapping
-                  entity:
-                    type: object
-                    properties:
-                      value:
-                        type: string
-                      description:
-                        type: string
-                    required:
-                    - value
-                    - description
+                  entities:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                        description:
+                          type: string
+                      required:
+                      - value
+                      - description
+                    description: List of entities associated with this mapping
                   ocsf_path:
                     type: string
                     description: Period-delimited path in OCSF schema (e.g., 'http_request.url.port')
@@ -654,16 +665,19 @@ components:
                   id:
                     type: string
                     description: Unique identifier for the entity mapping
-                  entity:
-                    type: object
-                    properties:
-                      value:
-                        type: string
-                      description:
-                        type: string
-                    required:
-                    - value
-                    - description
+                  entities:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                        description:
+                          type: string
+                      required:
+                      - value
+                      - description
+                    description: List of entities associated with this mapping
                   ocsf_path:
                     type: string
                     description: Period-delimited path in OCSF schema (e.g., 'http_request.url.port')
@@ -746,16 +760,19 @@ components:
                   id:
                     type: string
                     description: Unique identifier for the entity mapping
-                  entity:
-                    type: object
-                    properties:
-                      value:
-                        type: string
-                      description:
-                        type: string
-                    required:
-                    - value
-                    - description
+                  entities:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                        description:
+                          type: string
+                      required:
+                      - value
+                      - description
+                    description: List of entities associated with this mapping
                   ocsf_path:
                     type: string
                     description: Period-delimited path in OCSF schema (e.g., 'http_request.url.port')
@@ -858,16 +875,19 @@ components:
                   id:
                     type: string
                     description: Unique identifier for the entity mapping
-                  entity:
-                    type: object
-                    properties:
-                      value:
-                        type: string
-                      description:
-                        type: string
-                    required:
-                    - value
-                    - description
+                  entities:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                        description:
+                          type: string
+                      required:
+                      - value
+                      - description
+                    description: List of entities associated with this mapping
                   ocsf_path:
                     type: string
                     description: Period-delimited path in OCSF schema (e.g., 'http_request.url.port')

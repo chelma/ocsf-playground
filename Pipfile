@@ -13,6 +13,7 @@ langchain-aws = "*"
 requests = "*"
 django-cors-headers = "*"
 drf-spectacular = "*"
+ocsf-lib = "*"
 
 [dev-packages]
 

@@ -89,14 +89,12 @@ class ExtractionPatternValidatorBase(ABC):
     
     def _try_validate_transform_output(self, input_entry: str, pattern: ExtractionPattern, extract_output: str, transform_output: str, report: ValidationReport):
         try:
-
-            # TODO: Actually validate against the OCSF schema
             report.append_entry("Validating the transform output...", logger.info)
-            if isinstance(transform_output, str):
-                report.append_entry(f"The transform output matches the expected type: 'string'", logger.info)
-            else:
-                report.append_entry(f"The transform output does NOT match the expected type: 'string'", logger.warning)
-                raise ValueError(f"The transform output does NOT match the expected type: 'string'")
+            
+            # TODO - Pull the types field from the OcsfSchema and use that to perform validation of the output
+            # See: https://github.com/ocsf/ocsf-lib-py/blob/main/src/ocsf/schema/model.py#L153
+            report.append_entry("TODO - Implement behavior to confirm the transform output value matches the type expected by the OCSF Schema for the field", logger.info)            
+
             report.append_entry("Transform output is valid", logger.info)
         except Exception as e:
             report.append_entry("The transform output is not valid", logger.error)

@@ -1,7 +1,7 @@
 analyze_prompt_template = """
 You are an AI assistant whose goal is to assist users in transforming their log and data entries into an OCSF
 normalized format.  Overall, this process requires the creation of a Transformer, which is composed of (1) a targeting
-heuristic, such as a regex, that identifies specific entries in  data stream, (2) a OCSR category to normalize entries
+heuristic, such as a regex, that identifies specific entries in  data stream, (2) a OCSF event class to normalize entries
 to, and (3) transformation logic which maps entries of that type into an OCSF-compliant JSON blob.
 
 In particular, you are responsible for working backwards from the OCSF schema to determine the entities that are present
@@ -17,15 +17,19 @@ you will provide a report that includes all the entities you identified and how 
 A given OCSF schema field may be informed by multiple entities in the data entry.  In this case, you should associate
 each entity with the field it is relevant to.
 
+Try to create entity mappings that target the leaf nodes of the OCSF schema.  For example, if the OCSF schema has a field
+`metadata.product`, you should create an entity mapping for `metadata.product` rather than `metadata`.  This will help ensure that the
+mappings are as specific as possible and that the data is structured in a way that is easy to understand and use.
+
 Pay close attention to any fields marked as required in the OCSF schema.  These fields should be populated with relevant
 entities from the data entry if possible.  If you are unable to find a relevant section of the data entry to populate a
 required field, you should add it to your report as mapping without any entities but explicitly explicitly state that
 it is required by the OCSF schema but does not have a corresponding value in the data entry.
 
 You will be provided a specific data entry, input_entry, from the data stream.  You will also be given the specific OCSF
-category, ocsf_category, and version, ocsf_version, to map the entry as well as the OCSF schema, ocsf_category_schema,
-which outlines the structure of the OCSF category.  You will also be provided with a set of additional OCSF shape schemas,
-ocsf_shape_schemas, which may be used to fully define the category schema.
+event class, ocsf_event_class, and version, ocsf_version, to map the entry as well as the OCSF schema, ocsf_event_class_schema,
+which outlines the structure of the OCSF event class.  You will also be provided with a set of additional OCSF object schemas,
+ocsf_object_schemas, which may be used to fully define the event class schema.
 
 You will use these inputs to perform your task.
 
@@ -49,14 +53,14 @@ Additionally, you must ALWAYS follow these output_guidelines for output you prod
 The specific schema version of OCSF is:
 <ocsf_version>{ocsf_version}</ocsf_version>
 
-If there is any grounded knowledge on this ocsf_category, it will be provided here:
-<ocsf_category>{ocsf_category}</ocsf_category>
+If there is any grounded knowledge on this ocsf_event_class, it will be provided here:
+<ocsf_event_class>{ocsf_event_class}</ocsf_event_class>
 
-If there is any grounded knowledge on this ocsf_category_schema, it will be provided here:
-<ocsf_category_schema>{ocsf_category_schema}</ocsf_category_schema>
+If there is any grounded knowledge on this ocsf_event_class_schema, it will be provided here:
+<ocsf_event_class_schema>{ocsf_event_class_schema}</ocsf_event_class_schema>
 
-If there is any grounded knowledge on this ocsf_shape_schemas, it will be provided here:
-<ocsf_shape_schemas>{ocsf_shape_schemas}</ocsf_shape_schemas>
+If there is any grounded knowledge on this ocsf_object_schemas, it will be provided here:
+<ocsf_object_schemas>{ocsf_object_schemas}</ocsf_object_schemas>
 
 The input entry is:
 <input_entry>{input_entry}</input_entry>
@@ -65,7 +69,7 @@ The input entry is:
 extract_prompt_template = """
 You are an AI assistant whose goal is to assist users in transforming their log and data entries into an OCSF
 normalized format.  Overall, this process requires the creation of a Transformer, which is composed of (1) a targeting
-heuristic, such as a ocsf, that identifies specific entries in  data stream, (2) a OCSR category to normalize entries
+heuristic, such as a ocsf, that identifies specific entries in  data stream, (2) a OCSF event class to normalize entries
 to, and (3) transformation logic which maps entries of that type into an OCSF-compliant JSON blob.
 
 In particular, you are reponsible for taking an input data entry and a list of mappings that map specific portions of
@@ -76,9 +80,9 @@ transformation for each mapping in two separate and independent steps - extract 
 
 You will be given a specific data entry, input_entry, and a list of mappings, mapping_list, that defines what portions
 of the of the input_entry should be extracted and what OCSF field they should be mapped to.  You will also be given the
-specific OCSF category, ocsf_category, and version, ocsf_version, to map the entry as well as the OCSF schema,
-ocsf_category_schema, which outlines the structure of the OCSF category.  You will also be provided with a set of
-additional OCSF shape schemas, ocsf_shape_schemas, which may be used to fully define the category schema.
+specific OCSF event class, ocsf_event_class, and version, ocsf_version, to map the entry as well as the OCSF schema,
+ocsf_event_class_schema, which outlines the structure of the OCSF event class.  You will also be provided with a set of
+additional OCSF object schemas, ocsf_object_schemas, which may be used to fully define the event class schema.
 
 You will use these inputs to perform your task.
 
@@ -141,20 +145,20 @@ The specific schema version of OCSF is:
 {ocsf_version}
 </ocsf_version>
 
-If there is any grounded knowledge on this ocsf_category, it will be provided here:
-<ocsf_category>
-{ocsf_category}
-</ocsf_category>
+If there is any grounded knowledge on this ocsf_event_class, it will be provided here:
+<ocsf_event_class>
+{ocsf_event_class}
+</ocsf_event_class>
 
-If there is any grounded knowledge on this ocsf_category_schema, it will be provided here:
-<ocsf_category_schema>
-{ocsf_category_schema}
-</ocsf_category_schema>
+If there is any grounded knowledge on this ocsf_event_class_schema, it will be provided here:
+<ocsf_event_class_schema>
+{ocsf_event_class_schema}
+</ocsf_event_class_schema>
 
-If there is any grounded knowledge on this ocsf_shape_schemas, it will be provided here:
-<ocsf_shape_schemas>
-{ocsf_shape_schemas}
-</ocsf_shape_schemas>
+If there is any grounded knowledge on this ocsf_object_schemas, it will be provided here:
+<ocsf_object_schemas>
+{ocsf_object_schemas}
+</ocsf_object_schemas>
 
 The input entry is:
 <input_entry>

@@ -1,27 +1,29 @@
 import json
 
-from backend.core.ocsf.ocsf_schemas import make_get_ocsf_category_schema, make_get_ocsf_shape_schemas
+from typing import List
+
+from backend.core.ocsf.ocsf_schemas import make_get_ocsf_event_schema, make_get_ocsf_object_schemas, PrintableOcsfEvent, PrintableOcsfObject
 from backend.core.ocsf.ocsf_versions import OcsfVersion
-from backend.core.ocsf.ocsf_v1_1_0 import OCSF_CATEGORIES as ocsf_categories_V1_1_0, OCSF_CATEGORY_SCHEMAS as v1_1_0_categories, OCSF_SHAPE_SCHEMAS as v1_1_0_shapes
+from backend.core.ocsf.ocsf_schema_v1_1_0 import OCSF_EVENT_CLASSES as ocsf_events_V1_1_0, OCSF_SCHEMA as v1_1_0_schema
 
 
-def get_ocsf_category_knowledge(ocsf_version: OcsfVersion, ocsf_category_name: str) -> str:
+def get_ocsf_event_class_knowledge(ocsf_version: OcsfVersion, ocsf_event_name: str) -> str:
     if ocsf_version == OcsfVersion.V1_1_0:
-        category_details = next(
-            category for category in ocsf_categories_V1_1_0 if category["category_name"] == ocsf_category_name
+        event_details = next(
+            event for event in ocsf_events_V1_1_0 if event["event_name"] == ocsf_event_name
         )
-        return json.dumps(category_details, indent=4)
+        return json.dumps(event_details, indent=4)
     
     return ""
 
-def get_ocsf_category_schema(ocsf_version: OcsfVersion, category_name: str) -> str:
+def get_ocsf_event_schema(ocsf_version: OcsfVersion, event_name: str) -> PrintableOcsfEvent:
     if ocsf_version == OcsfVersion.V1_1_0:
-        return make_get_ocsf_category_schema(v1_1_0_categories)(category_name)
+        return make_get_ocsf_event_schema(v1_1_0_schema)(event_name)
     
-    return ""
+    return None
 
-def get_ocsf_shape_schemas(ocsf_version: OcsfVersion, category_name: str) -> str:
+def get_ocsf_shape_schemas(ocsf_version: OcsfVersion, category_name: str) -> List[PrintableOcsfObject]:
     if ocsf_version == OcsfVersion.V1_1_0:
-        return make_get_ocsf_shape_schemas(v1_1_0_categories, v1_1_0_shapes)(category_name)
+        return make_get_ocsf_object_schemas(v1_1_0_schema)(category_name)
     
-    return ""
+    return []

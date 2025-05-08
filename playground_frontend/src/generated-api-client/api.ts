@@ -24,7 +24,7 @@ import type { RequestArgs } from './base';
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
 /**
- * * `File System Activity (1001)` - FILE_SYSTEM_ACTIVITY_1001 * `Kernel Extension Activity (1002)` - KERNEL_EXTENSION_ACTIVITY_1002 * `Kernel Activity (1003)` - KERNEL_ACTIVITY_1003 * `Memory Activity (1004)` - MEMORY_ACTIVITY_1004 * `Module Activity (1005)` - MODULE_ACTIVITY_1005 * `Scheduled Job Activity (1006)` - SCHEDULED_JOB_ACTIVITY_1006 * `Process Activity (1007)` - PROCESS_ACTIVITY_1007 * `Account Change (3001)` - ACCOUNT_CHANGE_3001 * `Authentication (3002)` - AUTHENTICATION_3002 * `Authorize Session (3003)` - AUTHORIZE_SESSION_3003 * `Entity Management (3004)` - ENTITY_MANAGEMENT_3004 * `User Access Management (3005)` - USER_ACCESS_MANAGEMENT_3005 * `Group Management (3006)` - GROUP_MANAGEMENT_3006 * `Network Activity (4001)` - NETWORK_ACTIVITY_4001 * `HTTP Activity (4002)` - HTTP_ACTIVITY_4002 * `DNS Activity (4003)` - DNS_ACTIVITY_4003 * `DHCP Activity (4004)` - DHCP_ACTIVITY_4004 * `RDP Activity (4005)` - RDP_ACTIVITY_4005 * `SMB Activity (4006)` - SMB_ACTIVITY_4006 * `SSH Activity (4007)` - SSH_ACTIVITY_4007 * `FTP Activity (4008)` - FTP_ACTIVITY_4008 * `Email Activity (4009)` - EMAIL_ACTIVITY_4009 * `Network File Activity (4010)` - NETWORK_FILE_ACTIVITY_4010 * `Email File Activity (4011)` - EMAIL_FILE_ACTIVITY_4011 * `Email URL Activity (4012)` - EMAIL_URL_ACTIVITY_4012 * `NTP Activity (4013)` - NTP_ACTIVITY_4013 * `Device Inventory Info (5001)` - DEVICE_INVENTORY_INFO_5001 * `Device Config State (5002)` - DEVICE_CONFIG_STATE_5002 * `User Inventory Info (5003)` - USER_INVENTORY_INFO_5003 * `Operating System Patch State (5004)` - OPERATING_SYSTEM_PATCH_STATE_5004 * `Device Config State Change (5019)` - DEVICE_CONFIG_STATE_CHANGE_5019 * `Web Resources Activity (6001)` - WEB_RESOURCES_ACTIVITY_6001 * `Application Lifecycle (6002)` - APPLICATION_LIFECYCLE_6002 * `API Activity (6003)` - API_ACTIVITY_6003 * `Web Resource Access Activity (6004)` - WEB_RESOURCE_ACCESS_ACTIVITY_6004 * `Datastore Activity (6005)` - DATASTORE_ACTIVITY_6005 * `File Hosting Activity (6006)` - FILE_HOSTING_ACTIVITY_6006 * `Scan Activity (6007)` - SCAN_ACTIVITY_6007
+ * * `File System Activity (1001)` - FILE_SYSTEM_ACTIVITY_1001 * `Kernel Extension Activity (1002)` - KERNEL_EXTENSION_ACTIVITY_1002 * `Kernel Activity (1003)` - KERNEL_ACTIVITY_1003 * `Memory Activity (1004)` - MEMORY_ACTIVITY_1004 * `Module Activity (1005)` - MODULE_ACTIVITY_1005 * `Scheduled Job Activity (1006)` - SCHEDULED_JOB_ACTIVITY_1006 * `Process Activity (1007)` - PROCESS_ACTIVITY_1007 * `Vulnerability Finding (2002)` - VULNERABILITY_FINDING_2002 * `Compliance Finding (2003)` - COMPLIANCE_FINDING_2003 * `Detection Finding (2004)` - DETECTION_FINDING_2004 * `Incident Finding (2005)` - INCIDENT_FINDING_2005 * `Account Change (3001)` - ACCOUNT_CHANGE_3001 * `Authentication (3002)` - AUTHENTICATION_3002 * `Authorize Session (3003)` - AUTHORIZE_SESSION_3003 * `Entity Management (3004)` - ENTITY_MANAGEMENT_3004 * `User Access Management (3005)` - USER_ACCESS_MANAGEMENT_3005 * `Group Management (3006)` - GROUP_MANAGEMENT_3006 * `Network Activity (4001)` - NETWORK_ACTIVITY_4001 * `HTTP Activity (4002)` - HTTP_ACTIVITY_4002 * `DNS Activity (4003)` - DNS_ACTIVITY_4003 * `DHCP Activity (4004)` - DHCP_ACTIVITY_4004 * `RDP Activity (4005)` - RDP_ACTIVITY_4005 * `SMB Activity (4006)` - SMB_ACTIVITY_4006 * `SSH Activity (4007)` - SSH_ACTIVITY_4007 * `FTP Activity (4008)` - FTP_ACTIVITY_4008 * `Email Activity (4009)` - EMAIL_ACTIVITY_4009 * `Network File Activity (4010)` - NETWORK_FILE_ACTIVITY_4010 * `Email File Activity (4011)` - EMAIL_FILE_ACTIVITY_4011 * `Email URL Activity (4012)` - EMAIL_URL_ACTIVITY_4012 * `NTP Activity (4013)` - NTP_ACTIVITY_4013 * `Device Inventory Info (5001)` - DEVICE_INVENTORY_INFO_5001 * `Device Config State (5002)` - DEVICE_CONFIG_STATE_5002 * `User Inventory Info (5003)` - USER_INVENTORY_INFO_5003 * `Operating System Patch State (5004)` - OPERATING_SYSTEM_PATCH_STATE_5004 * `Device Config State Change (5019)` - DEVICE_CONFIG_STATE_CHANGE_5019 * `Web Resources Activity (6001)` - WEB_RESOURCES_ACTIVITY_6001 * `Application Lifecycle (6002)` - APPLICATION_LIFECYCLE_6002 * `API Activity (6003)` - API_ACTIVITY_6003 * `Web Resource Access Activity (6004)` - WEB_RESOURCE_ACCESS_ACTIVITY_6004 * `Datastore Activity (6005)` - DATASTORE_ACTIVITY_6005 * `File Hosting Activity (6006)` - FILE_HOSTING_ACTIVITY_6006 * `Scan Activity (6007)` - SCAN_ACTIVITY_6007
  * @export
  * @enum {string}
  */
@@ -37,6 +37,10 @@ export const OcsfCategoryEnum = {
     ModuleActivity1005: 'Module Activity (1005)',
     ScheduledJobActivity1006: 'Scheduled Job Activity (1006)',
     ProcessActivity1007: 'Process Activity (1007)',
+    VulnerabilityFinding2002: 'Vulnerability Finding (2002)',
+    ComplianceFinding2003: 'Compliance Finding (2003)',
+    DetectionFinding2004: 'Detection Finding (2004)',
+    IncidentFinding2005: 'Incident Finding (2005)',
     AccountChange3001: 'Account Change (3001)',
     Authentication3002: 'Authentication (3002)',
     AuthorizeSession3003: 'Authorize Session (3003)',
@@ -389,11 +393,11 @@ export interface TransformerEntitiesV110ExtractResponsePatternsInnerMapping {
      */
     'id': string;
     /**
-     * 
-     * @type {TransformerEntitiesV110AnalyzeResponseMappingsInnerEntitiesInner}
+     * List of entities associated with this mapping
+     * @type {Array<TransformerEntitiesV110AnalyzeResponseMappingsInnerEntitiesInner>}
      * @memberof TransformerEntitiesV110ExtractResponsePatternsInnerMapping
      */
-    'entity': TransformerEntitiesV110AnalyzeResponseMappingsInnerEntitiesInner;
+    'entities'?: Array<TransformerEntitiesV110AnalyzeResponseMappingsInnerEntitiesInner>;
     /**
      * Period-delimited path in OCSF schema (e.g., \'http_request.url.port\')
      * @type {string}

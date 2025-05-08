@@ -199,7 +199,7 @@ class TransformerLogicV1_1_0CreateView(APIView):
             # Validate the transform
             report = self._validate(
                 request.validated_data["transform_language"],
-                request.validated_data["ocsf_category"].get_category_name(),
+                request.validated_data["ocsf_category"].get_event_name(),
                 transformer,
                 request.validated_data["input_entry"]
             )
@@ -246,7 +246,7 @@ class TransformerLogicV1_1_0CreateView(APIView):
         # Validate the transform
         if language == TransformLanguage.PYTHON:
             validator = PythonOcsfV1_1_0TransformValidator(
-                category_name=category_name,
+                event_name=category_name,
                 input_entry=input_entry,
                 transformer=transformer
             )
@@ -301,9 +301,9 @@ class TransformerEntitiesV1_1_0AnalyzeView(APIView):
         return Response(response.data, status=status.HTTP_200_OK)
 
     def _analyze(self, task_id: str, request: TransformerEntitiesV1_1_0AnalyzeRequestSerializer) -> AnalysisTask:
-            category_name = request.validated_data["ocsf_category"].get_category_name()
+            event_name = request.validated_data["ocsf_category"].get_event_name()
             
-            expert = get_analysis_expert(OcsfVersion.V1_1_0, category_name)
+            expert = get_analysis_expert(OcsfVersion.V1_1_0, event_name)
 
             system_message = expert.system_prompt_factory(
                 input_entry=request.validated_data["input_entry"]
@@ -379,7 +379,7 @@ class TransformerEntitiesV1_1_0ExtractView(APIView):
             # Perform the inference task to create the extraction patterns
             expert = get_extraction_expert(
                 ocsf_version=OcsfVersion.V1_1_0,
-                ocsf_category_name=request.validated_data["ocsf_category"].get_category_name()
+                ocsf_event_name=request.validated_data["ocsf_category"].get_event_name()
             )
 
             system_message = expert.system_prompt_factory(

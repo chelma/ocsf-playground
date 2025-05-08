@@ -4,7 +4,7 @@ from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 
 from backend.core.ocsf.ocsf_versions import OcsfVersion
-from backend.core.ocsf.ocsf_categories import OcsfCategoriesV1_1_0
+from backend.core.ocsf.ocsf_event_classes import OcsfEventClassesV1_1_0
 from backend.transformers.parameters import TransformLanguage
 
 class EnumChoiceField(serializers.ChoiceField):
@@ -50,7 +50,7 @@ class TransformerCategorizeV1_1_0RequestSerializer(serializers.Serializer):
     user_guidance = serializers.CharField(required=False, default=None, allow_blank=True)
     
 class TransformerCategorizeV1_1_0ResponseSerializer(serializers.Serializer):
-    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    ocsf_category = EnumChoiceField(enum=OcsfEventClassesV1_1_0)
     ocsf_version = EnumChoiceField(enum=OcsfVersion)
     rationale = serializers.CharField()
 
@@ -165,12 +165,12 @@ class EntityMappingField(serializers.Field):
         return value
 
 class TransformerEntitiesV1_1_0AnalyzeRequestSerializer(serializers.Serializer):
-    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    ocsf_category = EnumChoiceField(enum=OcsfEventClassesV1_1_0)
     input_entry = serializers.CharField()
 
 class TransformerEntitiesV1_1_0AnalyzeResponseSerializer(serializers.Serializer):
     ocsf_version = EnumChoiceField(enum=OcsfVersion)
-    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    ocsf_category = EnumChoiceField(enum=OcsfEventClassesV1_1_0)
     input_entry = serializers.CharField()
     data_type = serializers.CharField()
     type_rationale = serializers.CharField()
@@ -362,14 +362,14 @@ class ExtractionPatternField(serializers.Field):
 
 class TransformerEntitiesV1_1_0ExtractRequestSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)
-    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    ocsf_category = EnumChoiceField(enum=OcsfEventClassesV1_1_0)
     input_entry = serializers.CharField()
     mappings = serializers.ListField(child=EntityMappingField())
 
 class TransformerEntitiesV1_1_0ExtractResponseSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)
     ocsf_version = EnumChoiceField(enum=OcsfVersion)
-    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    ocsf_category = EnumChoiceField(enum=OcsfEventClassesV1_1_0)
     input_entry = serializers.CharField()
     patterns = serializers.ListField(child=ExtractionPatternField())
     
@@ -389,7 +389,7 @@ class TransformerEntitiesV1_1_0ExtractResponseSerializer(serializers.Serializer)
 
 class TransformerEntitiesV1_1_0TestRequestSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)
-    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    ocsf_category = EnumChoiceField(enum=OcsfEventClassesV1_1_0)
     input_entry = serializers.CharField()
     patterns = serializers.ListField(child=ExtractionPatternField())
     
@@ -405,7 +405,7 @@ class TransformerEntitiesV1_1_0TestRequestSerializer(serializers.Serializer):
 class TransformerEntitiesV1_1_0TestResponseSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)
     ocsf_version = EnumChoiceField(enum=OcsfVersion)
-    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    ocsf_category = EnumChoiceField(enum=OcsfEventClassesV1_1_0)
     input_entry = serializers.CharField()
     patterns = serializers.ListField(child=ExtractionPatternField())
     
@@ -420,7 +420,7 @@ class TransformerEntitiesV1_1_0TestResponseSerializer(serializers.Serializer):
 
 class TransformerLogicV1_1_0CreateRequestSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)
-    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    ocsf_category = EnumChoiceField(enum=OcsfEventClassesV1_1_0)
     input_entry = serializers.CharField()
     patterns = serializers.ListField(child=ExtractionPatternField())
     
@@ -513,5 +513,5 @@ class TransformerField(serializers.Field):
 class TransformerLogicV1_1_0CreateResponseSerializer(serializers.Serializer):
     transform_language = EnumChoiceField(enum=TransformLanguage)
     ocsf_version = EnumChoiceField(enum=OcsfVersion)
-    ocsf_category = EnumChoiceField(enum=OcsfCategoriesV1_1_0)
+    ocsf_category = EnumChoiceField(enum=OcsfEventClassesV1_1_0)
     transformer = TransformerField()
