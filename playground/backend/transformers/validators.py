@@ -4,8 +4,6 @@ import logging
 from types import ModuleType
 from typing import Any, Callable, Dict
 
-from ocsf.schema import OcsfSchema
-
 from backend.core.ocsf.ocsf_schema_v1_1_0 import OCSF_SCHEMA as OCSF_SCHEMA_V1_1_0
 from backend.core.ocsf.ocsf_schemas import make_get_ocsf_event_schema, make_get_ocsf_object_schemas, PrintableOcsfObject
 from backend.core.ocsf.ocsf_versions import OcsfVersion

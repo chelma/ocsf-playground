@@ -93,6 +93,16 @@ The backend uses `drf-spectacular` to auto-supply an OpenAPI schema to the front
 (cd playground_frontend && npm install && npm run generate-api-client)
 ```
 
+### Where can I find logs?
+
+The Playground's backend produces a fair amount of logs, which you can find in the logs directory:
+
+```bash
+# Start in the repo root
+
+ls ./playground/logs
+```
+
 ### Testing the backend
 
 You can then hit the backend API directly with curl like so:
