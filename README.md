@@ -22,7 +22,7 @@ Next, you'll want to create the entity mappings.  Each entity mapping represents
 
 Breaking that down more, we need to first identify which OCSF schema fields we must supply values for to be spec compliant and which other fields we can fulfill using the information in the data entry.  We must then figure out which sections of the data entry provide useful details to fulfill each OCSF schema field.  Next, we need to create some logic to extract those sections of the data entry for transformation, and another piece of logic to transform those sections into the final value we want to store in our OCSF output.  
 
-You can either manually build these mappings using the UI (clicking `Create Entity Mapping` and then filling in the fields) or get a GenAI recommendations.  The `Analyze Entities` button gets an GenAI recommendation for the initial mapping between sections the data entry and OCSF paths, while the `Extract Entity Mappings` button gets GenAI recommendations for the extraction/transformation logic.  You can see a visual representation of which portions of the original entry are being extracted/transformed in the `Extraction Visualization` section.
+You can either manually build these mappings using the UI (clicking `Create Entity Mapping` and then filling in the fields) or get a GenAI recommendation.  The `Analyze Entities` button gets a GenAI recommendation for the initial mapping between sections of the data entry and OCSF paths, while the `Extract Entity Mappings` button gets GenAI recommendations for the extraction/transformation logic.  You can see a visual representation of which portions of the original entry are being extracted/transformed in the `Extraction Visualization` section.
 
 ![Creating entity mappings](./resources/ocsf_playground_analyze_extract.png)
 
@@ -38,7 +38,7 @@ This final Transformer logic can be stored for use outside the app.
 
 ### Known issues and caveats
 
-* **Token Usage:** The `Analyze Entities` button which creates the initial mapping between the data entry and OCSF paths uses quite a few input tokens (tens of thousands) to accomplish its task because it's passing the full spec for the OCSF Event Class class and all OCSF Objects used in that event class to the LLM.  Additionally, it currently uses Claude 3.7 in "Thinking Mode", which uses even more tokens (though it does improve accuracy).  This can result in a variety of downstream issues, such as throttling and long response times.  The `Extract Entity Mappings` is uses many fewer input tokens by only sending the portions of the OCSF specification to the LLM relevant to the specific OCSF paths being worked with, but may trigger throttling as well if it's run immediately after the `Analyze Entities` call.
+* **Token Usage:** The `Analyze Entities` button which creates the initial mapping between the data entry and OCSF paths uses quite a few input tokens (tens of thousands) to accomplish its task because it's passing the full spec for the OCSF Event Class class and all OCSF Objects used in that event class to the LLM.  Additionally, it currently uses Claude 3.7 in "Thinking Mode", which uses even more tokens (though it does improve accuracy).  This can result in a variety of downstream issues, such as throttling and long response times.  The `Extract Entity Mappings` uses many fewer input tokens by only sending the portions of the OCSF specification to the LLM relevant to the specific OCSF paths identified in the analysis step, but may trigger throttling as well if it's run immediately after the `Analyze Entities` call.
 * **Validation:** Further work is needed to validate the output of the transform functions for individual OCSF paths.  Currently, the validation performed is that the transform logic can be loaded/executed.  We need to go a step further and verify the value returned matches the OCSF specification as well.  This should be straightforward because that type information is available in the spec, but it has not been implemented yet.
 * **OCSF Version Support:** The tool currently supports OCSF v1.1.0.  Adding support for additional versions should be straightforward using existing code pathways and conventions, but has not been implemented yet.
 * **Transform Language Support:** The tool currently supports Python.  Adding support for additional languages should be straightforward using existing code pathways and conventions, but has not been implemented yet.
@@ -52,7 +52,7 @@ You'll need the following apps installed:
 * NodeJS 20+/NPM 10+ (this is what powers the NextJS/React frontend)
 
 Additionally, you'll need to provide access to AWS Bedrock, which is what the app uses for inference:
-* Have AWS credentials capable of doing inference against Bedrock in `us-west-2` either in your `~/.aws/credentials` file or in environment variables
+* Have AWS credentials capable of doing inference against Bedrock in `us-west-2` either in your `~/.aws/credentials` file or in environment variables.  See [the AWS docs](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-authentication.html) for more details.
 * Have onboarded your AWS account to use Claude 3.7 Sonnet (`us.anthropic.claude-3-7-sonnet-20250219-v1:0`), also in `us-west-2`.  See here for [an explanation for how to do this](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html).
 
 #### Starting the app
