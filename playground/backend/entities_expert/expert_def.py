@@ -22,12 +22,12 @@ def get_analysis_expert(ocsf_version: OcsfVersion, ocsf_event_name: str) -> Expe
     llm = ChatBedrockConverse(
             model="us.anthropic.claude-3-7-sonnet-20250219-v1:0", 
             temperature=1, # Must be 1 for "thinking" mode
-            max_tokens=16001,
+            max_tokens=30001,
             region_name="us-west-2", # Models are only available in limited regions
             additional_model_request_fields={
                 "thinking": {
                     "type": "enabled",
-                    "budget_tokens": 16000
+                    "budget_tokens": 30000
                 }
             },
             config=DEFULT_BOTO_CONFIG
@@ -59,7 +59,7 @@ def get_extraction_expert(ocsf_version: OcsfVersion, ocsf_event_name: str) -> Ex
     llm = ChatBedrockConverse(
             model="us.anthropic.claude-3-7-sonnet-20250219-v1:0", 
             temperature=0, # Good for straightforward, practical code generation
-            max_tokens=16000,
+            max_tokens=30000,
             region_name="us-west-2", # Models are only available in limited regions
             additional_model_request_fields={
                 "thinking": {

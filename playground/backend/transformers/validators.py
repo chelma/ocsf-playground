@@ -93,6 +93,11 @@ class OcsfV1_1_0TransformValidator(TransformerValidatorBase):
         logger.debug(f"Object data: {json.dumps(obj_data, indent=4)}")
 
         valid = True
+
+        # The unmapped path is a special case; we want to accept any data for it
+        if path == "unmapped":
+            report.append_entry(f"Special field 'unmapped' present; no schema requirements for this field", logger.debug)
+            return valid
         
         # Check that all keys in obj_data are valid attributes in the schema
         for key in obj_data:

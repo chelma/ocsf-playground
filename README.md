@@ -12,6 +12,13 @@ In this context, a Transformer is composed of (1) a targeting heuristic, such as
 
 If you have special knowledge of a particular stream, such as all of its events being of the same type, then you can skip the targeting heuristic and the OCSF categorization steps and proceed directly to making the transformation logic.
 
+### Known issues and caveats
+
+* **Token Usage:** The `Analyze Entities` button which creates the initial mapping between the data entry and OCSF paths uses quite a few input tokens (tens of thousands) to accomplish its task because it's being passed the full spec for the OCSF Event Class class and all OCSF Objects used in that even class.  Additionally, it currently uses Claude 3.7 in "Thinking Mode", which uses even more tokens (though it does improve accuracty).  This can result in a variety of downstream issues, such as throttling and long response times.  The `Extract Entity Mappings` is able to use many fewer input tokens by only sending the portions of the OCSF specification to the LLM relevant to the specific OCSF paths being worked with, but may trigger throttling as well if it's run immediately after the `Analyze Entities` call.
+* **Validation:** Further work is needed to validate the output of the transform functions for individual OCSF paths.  Currently, the validation performed is that the transform logic can be loaded/executed.  We need to go a step further and verify the value returned matches the OCSF specification as well.  This should be straightforward because that type information is available in the spec, but it has not been implemented yet.
+* **OCSF Version Support:** The tool currently supports OCSF v1.1.0.  Adding support for additional versions should be straightforward using existing code pathways and conventions, but has not been implemented yet.
+* **Transform Language Support:** The tool currently supports Python.  Adding support for additional languages should be straightforward using existing code pathways and conventions, but has not been implemented yet.
+
 ### The OCSF Normalization Playground workflow
 
 After [launching the app](#launching-the-app), it will surface the web app at `http://127.0.0.1:3000` which you can hit in your web browser of choice.  The first step is to import some log entries, which you can do by pasting them into the modal window that pop up when you hit the `Import Logs` button in the top left corner.  It will split the log dump into entries by newline.  You can then either manually create the regex targeting heuristic and select the category, or get a GenAI recomendation (and review its rationale).
