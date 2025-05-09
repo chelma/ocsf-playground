@@ -384,7 +384,7 @@ class TransformerEntitiesV1_1_0ExtractView(APIView):
 
             system_message = expert.system_prompt_factory(
                 input_entry=request.validated_data["input_entry"],
-                mapping_list=request.validated_data["mappings"]
+                mapping_list=[EntityMapping.from_json(raw) for raw in request.validated_data["mappings"]]
             )
 
             turns = [

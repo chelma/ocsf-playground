@@ -158,8 +158,8 @@ class OcsfV1_1_0TransformValidator(TransformerValidatorBase):
         
         # Get the specific schemas in use for the event class
         try:
-            event_schema = make_get_ocsf_event_schema(schema)(self.event_name)
-            object_schemas = make_get_ocsf_object_schemas(schema)(self.event_name)
+            event_schema = make_get_ocsf_event_schema(schema)(self.event_name, [])
+            object_schemas = make_get_ocsf_object_schemas(schema)(self.event_name, [])
         except ValueError as e:
             report.append_entry(f"Schema validation error: {str(e)}", logger.error)
             raise

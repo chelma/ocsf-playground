@@ -16,14 +16,14 @@ def get_ocsf_event_class_knowledge(ocsf_version: OcsfVersion, ocsf_event_name: s
     
     return ""
 
-def get_ocsf_event_schema(ocsf_version: OcsfVersion, event_name: str) -> PrintableOcsfEvent:
+def get_ocsf_event_schema(ocsf_version: OcsfVersion, event_name: str, paths: List[str]) -> PrintableOcsfEvent:
     if ocsf_version == OcsfVersion.V1_1_0:
-        return make_get_ocsf_event_schema(v1_1_0_schema)(event_name)
+        return make_get_ocsf_event_schema(v1_1_0_schema)(event_name, paths)
     
     return None
 
-def get_ocsf_shape_schemas(ocsf_version: OcsfVersion, category_name: str) -> List[PrintableOcsfObject]:
+def get_ocsf_object_schemas(ocsf_version: OcsfVersion, category_name: str, paths: List[str]) -> List[PrintableOcsfObject]:
     if ocsf_version == OcsfVersion.V1_1_0:
-        return make_get_ocsf_object_schemas(v1_1_0_schema)(category_name)
+        return make_get_ocsf_object_schemas(v1_1_0_schema)(category_name, paths)
     
     return []
